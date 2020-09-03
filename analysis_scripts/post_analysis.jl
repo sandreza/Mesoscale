@@ -61,4 +61,3 @@ function (p::PartialDerivative)(ϕ::AbstractArray)
 end
 
 *(∇::PartialDerivative, ϕ::Field) = *(∇, ϕ.data)
-##

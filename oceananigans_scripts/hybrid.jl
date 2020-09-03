@@ -106,7 +106,6 @@ B₀(x, y, z) = ΔT * ( exp(z/h) - exp(-Lz/h) ) / (1 - exp(-Lz/h)) + ε(1e-8)
 bcs = (b = b_bcs,  u = u_bcs, v = v_bcs)
 
 # checkpointing
-# checkpointing
 searchdir(path, key) = filter(x -> occursin(key, x), readdir(path))
 checkpoints = searchdir(pwd(), filename_1 * "_checkpoint_iteration")
 if length(checkpoints) > 0
@@ -155,12 +154,11 @@ meridional_output_writer =
                        time_interval=output_interval, xC=Int(Nx/2), xF=Int(Nx/2))
 
 checkpointer = Checkpointer(model, prefix = filename_1 * "_checkpoint", time_interval = 365 * 4 * day, force = true)
-###
-# kinetic_energy = @at (Cell, Cell, Cell) (u^2 + v^2 + w^2) / 2 where u = models.velocities.u, etc
+##
 #bouyancy profile
 Uz = Average(model.velocities.u; return_type=Array, dims = (1,))
 Bz = Average(model.tracers.b; return_type=Array, dims = (1,))
-# Example = ZonalAverage(∂x(model.tracers.b) * ∂y(model.tracers.u); return_type = Array)
+
 # Create output writer that writes vertical profiles to JLD2 output files.
 zonal_averages = Dict(
 	"Uz" => model -> Uz(model)[1, 2:end-1, 2:end-1],

@@ -1,5 +1,7 @@
 [deps]
 CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+DocumenterTools = "35a29f4d-8980-5a13-9543-d66fff28ecb8"
 JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
 NetCDF = "30363a11-5582-574a-97bb-aa9a979735b9"
 Oceananigans = "9e8cae18-63c1-5223-a75c-80ca9d6e9a09"

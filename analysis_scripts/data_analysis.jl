@@ -3,7 +3,7 @@ include(pwd() * "/analysis_scripts/" * "post_analysis.jl")
 searchdir(path, key) = filter(x -> occursin(key, x), readdir(path))
 mesoscale_dir = pwd()
 checkpoints = searchdir(mesoscale_dir, "iteration")
-file = jldopen( mesoscale_dir * "/" * checkpoints[91])
+file = jldopen( mesoscale_dir * "/" * checkpoints[50])
 b = file["tracers"]["b"]["data"][2:end-1, 2:end-1, 2:end-1]
 u = file["velocities"]["u"]["data"][2:end-1, 2:end-1, 2:end-1]
 v = file["velocities"]["v"]["data"][2:end-1, 2:end-1, 2:end-1]
@@ -74,7 +74,7 @@ p1 = contourf(y, z, ϕ',
 
 ##
 field_label = [(u, "u"), (v, "v"), (w, "w"), (b, "b"), (w .* w, "ww"), (u .* u, "uu"), (v .* v, "vv"), (∂z( w .* w), "d(w .* w) / dz")]
-selection = 4
+selection = 1
 field = sum(field_label[selection][1], dims = (1,2)) ./ (Nx * Ny)
 label = field_label[selection][2]
 cmax = maximum(field)
@@ -88,7 +88,7 @@ p1 = scatter(field[1,1,:],  z,
 ##
 # day_label = @sprintf("%.2f ", sim_day[i])
 # surface values
-field_label = [(u, "u"), (v, "v"), (w, "w"), (b, "b")]
+field_label = [(u, "u"), (v, "v"), (w, "w"), (b, "b"), (u .* b, "ub")]
 selection = 4
 field = field_label[selection][1]
 label = field_label[selection][2]
@@ -99,10 +99,8 @@ p1 = contourf(x, y, field[ :, :, end]',
     color = :thermometer, title = "Surface " * label,
     xlabel = "Zonal [m]", ylabel = "Meridional [m]"
     , clims = clims, linewidth = 0)
-##
-# Ertel potential vorticity
-##
-# assume data is loaded
+
+## Ertel potential vorticity
 U  = [u, v, w]
 ω  = ∇ × U
 ∇b = [∂x(b), ∂y(b), ∂z(b)]
@@ -168,8 +166,12 @@ relaxation_profile_north_2(k) = Δb * ( exp(zC(k)/h) - exp(-Lz/h) ) / (1 - exp(-
 tmp1 = relaxation_profile.( collect(1:192))
 tmp2 = relaxation_profile_north_2.( collect(1:32))
 
+zonal_average_b = sum(b, dims = (1, )) ./ Nx
+tmp1 = reshape(tmp1, (1, 192, 1))
 plot( b[1, : , end])
 plot!(tmp1)
+new_field = zonal_average_b .- tmp1
+plot(y, new_field[1, :, end])
 ##
 plot( b[2, end , :], legend = false)
 for i in 1:10:192

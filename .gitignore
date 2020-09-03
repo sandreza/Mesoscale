@@ -2,3 +2,5 @@
 *.nc*
 *.DS*
 *download*
+*scratch*
+*build*
