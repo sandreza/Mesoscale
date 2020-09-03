@@ -1,3 +1,8 @@
+name = "Mesoscale"
+uuid = "09495e27-9943-4799-950a-33034d5b3961"
+authors = ["sandreza <andrenogueirasouza@gmail.com>"]
+version = "0.1.0"
+
 [deps]
 CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
