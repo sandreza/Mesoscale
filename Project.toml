@@ -1,0 +1,4 @@
+[deps]
+CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
+NetCDF = "30363a11-5582-574a-97bb-aa9a979735b9"
+Oceananigans = "9e8cae18-63c1-5223-a75c-80ca9d6e9a09"
