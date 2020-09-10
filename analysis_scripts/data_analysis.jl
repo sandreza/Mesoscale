@@ -179,3 +179,45 @@ for i in 1:10:192
 end
 
 plot!(tmp2)
+
+##
+# Check Geostrophy
+∇pʰ = hydrostatic_pressure(b,x,y,z)
+zero_ϕ = zeros(size(∇pʰ[1]))
+f  = -1e-4
+β  = 1e-11
+Ω = [zero_ϕ, zero_ϕ, zero_ϕ .+ -1e-4 .+ β .* reshape(y2, (1,length(y2),1))]
+u_avg = (avg_other(u,1)[1:end-1,:,:] + avg_other(u,1)[2:end,:,:]) ./ 2
+v_avg = (avg_other(v,1)[1:end-1,:,:] + avg_other(v,1)[2:end,:,:]) ./ 2
+w_avg = (avg_other(w,1)[1:end-1,:,:] + avg_other(w,1)[2:end,:,:]) ./ 2
+U = [u_avg, v_avg, w_avg]
+coriolis_force = [Ω[3] .* v_avg, - Ω[3] .* u_avg, zero_ϕ]
+
+norm(coriolis_force[1] .+ ∇pʰ[1]) / norm(coriolis_force[1])
+norm(coriolis_force[2] .+ ∇pʰ[2]) / norm(coriolis_force[2])
+
+##
+field_label = [(coriolis_force[1], "Ω u"), (-∇pʰ[1], "-∂x(pʰ)"), (coriolis_force[2], "-Ω v"), (-∇pʰ[2], "-∂y(pʰ)")]
+selection = 2
+field = field_label[selection][1]
+label = field_label[selection][2]
+cmax = maximum(field)
+cmin = minimum(field)
+clims = (cmin, cmax)
+p1 = contourf(x2, y2, field[ :, :, end]', 
+    color = :thermometer, title = "Surface " * label,
+    xlabel = "Zonal [m]", ylabel = "Meridional [m]"
+    , clims = clims, linewidth = 0)
+
+selection = 1
+field = field_label[selection][1]
+label = field_label[selection][2]
+p2 = contourf(x2, y2, field[ :, :, end]', 
+    color = :thermometer, title = "Surface " * label,
+    xlabel = "Zonal [m]", yaxis = false
+    , clims = clims, linewidth = 0)
+plot(p1,p2)
+##
+gr(size=(700,400))
+p3 = plot(p1,p2)
+savefig(p3, pwd() * "/geostrophic_1.pdf")

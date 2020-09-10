@@ -90,12 +90,13 @@ end
 function hydrostatic_pressure(b,x,y,z)
     p = ∫dz(b, z)
     ∂ᶻp = (b[:,:,1:end-1] + b[:,:,2:end]) ./ 2 
+    ∂ᶻp = avg_other(∂ᶻp, 3)
     Δx = reshape(x[1:end-1] - x[2:end], (length(x)-1, 1, 1))
     ∂ˣp = (p[1:end-1,:,:] - p[2:end,:,:]) ./ Δx
-    ∂ˣp = (p[:,1:end-1,:] + p[:,2:end,:]) ./ 2
+    ∂ˣp = (∂ˣp[:,1:end-1,:] + ∂ˣp[:,2:end,:]) ./ 2
     Δy = reshape(x[1:end-1] - x[2:end], (1,length(y)-1, 1))
     ∂ʸp = (p[:,1:end-1,:] - p[:,2:end,:]) ./ Δy
-    ∂ʸp = (p[1:end-1,:,:] + p[2:end,:,:]) ./ 2
-    ∇p = [∂ˣp, ∂ˣp, ∂ᶻp]
+    ∂ʸp = (∂ʸp[1:end-1,:,:] + ∂ʸp[2:end,:,:]) ./ 2
+    ∇p = [∂ˣp, ∂ʸp, ∂ᶻp]
     return ∇p
 end
