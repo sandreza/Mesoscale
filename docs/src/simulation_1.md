@@ -49,19 +49,24 @@ with ``f`` and ``\beta`` values
 The sponge layer for buoyancy at northern wall is of the form
 
 ```math
-\mathcal{S}^b(b,y,z) = -\left(b - \Delta b  \frac{\exp \left( z/h \right) - \exp \left( -L/h \right)}{\exp \left( 1 \right) - \exp \left( -L/h \right)} \right) \exp()
+\mathcal{S}^b(b,y,z) = - \frac{1}{\lambda^t}\left(b - \Delta b  \frac{\exp \left( z/h \right) - \exp \left( -L/h \right)}{\exp \left( 1 \right) - \exp \left( -L/h \right)} \right) \exp( \frac{y - L^y}{\lambda^N})
 ```
 
 and the surface relaxation for buoyancy is
+
 ```math
-c = b - y/L\^y
+\left. \Phi^*_b \right|_{\text{surface}} = \lambda^s \left(b - \Delta b \frac{y}{L^y} \right)
 ```
+
 with parameter values
 
 |   Parameter             | Value       | Units | Description |
 |   :-------:             | :---:       | :---:  |:---:       |
-| ``h``           | ``20,000 `` |  ``\frac{1}{\text{m}}``      | vertical e-folding scale|
-| ``\Delta b``           | ``10 \times \alpha \times g`` | ``\frac{1}{\text{m}} \frac{1}{\text{ s}}``           | linear term|
+| ``\lambda^s``           | ``10^{-4} `` |  ``\frac{m}{\text{s}}``      | surface buoyancy velocity constant|
+| ``\Delta b``           | ``10 \times \alpha \times 10`` | ``\frac{\text{m}}{\text{ s}^2}``           | buoyancy jump|
+| ``h``           | ``1`` | ``\text{km}``           | northern wall stratification e-folding length|
+| ``\lambda^t``           | ``\frac{1}{28 \times 86400}`` | ``\frac{1}{\text{ s}}``           | relaxation time|
+| ``\lambda^N``           | ``20`` | ``\text{km}``           | northern wall horizontal e-folding length|
 
 The surface flux for the zonal velocity, (``u`` where ``\bm{u} = (u,v,w) ``) is
 ```math
@@ -74,5 +79,13 @@ with parameters
 | ``\tau``           | ``0.2 `` |  ``\frac{N}{\text{m}^2}``      | wind-stress magnitude|
 | ``\lambda^u``           | ``32`` | dimensionless           | decay constant|
 
-The purpose of the parameter ``\lambda^u`` us to remove any windstress being applied near the norther sponge relaxation. 
+The purpose of the parameter ``\lambda^u`` is to remove any windstress being applied near the norther sponge relaxation. 
+
+And finally, the linear drag was chosen to be
+|   Parameter             | Value       | Units | Description |
+|   :-------:             | :---:       | :---:  |:---:       |
+| ``\mu``           | ``10^{-3}`` |  ``\frac{m}{\text{s}}``      | linear drag velocity|
+
+
+
 
