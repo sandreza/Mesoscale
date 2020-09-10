@@ -1,10 +1,10 @@
 # Mesoscale Channel Setup
-The equations of motion are [here](@ref sec:eom). 
+The equations of motion are [here](@ref sec:eom). The Oceananigans script is the hybrid.jl setup [here](https://github.com/sandreza/Mesoscale/blob/master/oceananigans_scripts/hybrid.jl).
 
 # Boundary Conditions / Source Terms
 
 - Buoyancy : Linear relaxation to the surface, insulating boundary conditions elsewhere. A sponge layer relaxation to the northern wall.
-- Momentum : Linear drag and no penetration on the bottom, gaussian wind-stress for the zonal velocity at the surface, stress-free boundary conditions for the meridional velocity and no penetration at the surface
+- Momentum : Linear drag for the horizontal velocities, gaussian wind-stress for the zonal velocity at the surface, stress-free boundary conditions for the meridional velocity, no penetration for the wall normal velocities.
 
 # Table of model parameters and functional form
 
@@ -49,7 +49,7 @@ with ``f`` and ``\beta`` values
 The sponge layer for buoyancy at northern wall is of the form
 
 ```math
-\mathcal{S}^b(b,y,z) = - \frac{1}{\lambda^t}\left[ b - \Delta b  \frac{\exp \left( z/h \right) - \exp \left( -L_z/h \right)}{\exp \left( 1 \right) - \exp \left( -L_z/h \right)} \right] \exp \left( \frac{y - L_y}{\lambda^N} \right)
+\mathcal{S}^b(b,y,z) = - \frac{1}{\lambda^t}\left[ b - \Delta b  \frac{\exp \left( z/h \right) - \exp \left( -L_z/h \right)}{\exp \left( 0 \right) - \exp \left( -L_z/h \right)} \right] \exp \left( \frac{y - L_y}{\lambda^N} \right)
 ```
 
 and the surface relaxation for buoyancy is
