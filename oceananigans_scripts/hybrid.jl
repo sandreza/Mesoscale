@@ -16,11 +16,12 @@ output_interval = 365 * 24hour # 48hour
 const scale = 20;
 filename_1 = "Hybrid_" * string(scale)
 
-const Lx = scale * 50kilometer # 2000km cos( 5 * π * y / p.Ly ) 
-const Ly = scale * 50kilometer # 2000km
+const Lx = scale * 50kilometer # 1000km 
+const Ly = scale * 50kilometer # 1000km
 const Lz = 3kilometer          # 3km
 
-Δx = Δy = scale * 250meter # 8x larger?
+# Rough resolution
+Δx = Δy = scale * 250meter # 5km
 Δz = 100meter
 
 const Nx = round(Int, Lx/ Δx / 16) * 16
@@ -38,49 +39,44 @@ coriolis = BetaPlane(FT, f₀ = f, β = β)
 α = 2e-4  # Thermal expansion coefficient [K⁻¹]
 eos = LinearEquationOfState(FT, α=α, β=0)
 buoyancy = BuoyancyTracer()
-# buoyancy = SeawaterBuoyancy(FT, equation_of_state=eos, constant_salinity=true)
-const vis_scale = 1.0;
-κh = 0.5e-5*vis_scale
-νh = 12.0   # Horizontal diffusivity and viscosity [m²/s]
-κv = 0.5e-5 *vis_scale
-νv = 3e-4 * vis_scale  # Vertical diffusivity and viscosity [m²/s]
+
+κh = 0.5e-5
+νh = 12.0 
+κv = 0.5e-5 
+νv = 3e-4 
 closure = AnisotropicDiffusivity(νx = νh, νy = νh, νz =νv, κx = κh, κy = κh, κz=κv)
-# closure = AnisotropicMinimumDissipation(FT)
 
 bc_params = (
     Ly = Ly,
-    B½ = 1.96e-7 / 40,    # Buoyancy flux at midchannel [m²/s³]
-    Lᶠ = scale * 2kilometer, # Characteristic length scale of the forcing [m]
     τ = 0.2, # [N m⁻²] Zonal stress
     ρ = 1024, # [kg / m³]
     μ = 1.0e-3,  # [m/s] linear drag decay scale
     H = Lz, 
-    λ = 1e-4, # [m/s] relaxation boundary condition
+    λˢ = 1e-4, # [m/s] relaxation boundary condition
     h = 1000.0, # [m] relexaction profile scale
     ΔB = 10 * 2e-3, # buoyancy jump
     Lz = Lz,
-    sf_escale = 32, # surface forcing e-folding length scale
-    sponge_relaxation = 1/(28.0 * 86400.0), # [s]
-    bd_escale = 1.0/200.0,  # [1/m] sponge layer for bottom drag
-    nw_escale = 2.0 * 10^4, #[m] northern wall e-folding scale
+    λᵘ = 32, # surface forcing e-folding length scale
+    λᵗ = 28.0 * 86400.0, # [s]
+    λᴺ = 2.0 * 10^4, #[m] northern wall e-folding scale
 )
 
-@inline wind_stress(x, y, t, p) = - p.τ / p.ρ * ( exp( -(y - p.Ly/2)^2 / (p.Ly^2 / p.sf_escale) ) - exp( -( p.Ly/2)^2 / (p.Ly^2 / p.sf_escale) ) )
+@inline wind_stress(x, y, t, p) = - p.τ / p.ρ * ( exp( -(y - p.Ly/2)^2 / (p.Ly^2 / p.λᵘ) ) - exp( -( p.Ly/2)^2 / (p.Ly^2 / p.λᵘ) ) )
 @inline τ₁₃_linear_drag(i, j, grid, clock, state, p) = @inbounds - p.μ * state.velocities.u[i, j, 1]
 @inline τ₂₃_linear_drag(i, j, grid, clock, state, p) = @inbounds - p.μ * state.velocities.v[i, j, 1]
 
 const h = 1000.0 # [m]
-const ΔT = 10 * 2e-3
+const ΔB = 10 * 2e-3
 
 @inline relaxation_profile(j, grid, p) = p.ΔB * (grid.yC[j]/ p.Ly)
-@inline relaxation(i, j, grid, clock, state, p) = @inbounds p.λ * ( state.tracers.b[i, j, grid.Nz] - relaxation_profile(j, grid, p))
+@inline relaxation(i, j, grid, clock, state, p) = @inbounds p.λˢ * ( state.tracers.b[i, j, grid.Nz] - relaxation_profile(j, grid, p))
 
 # Sponge layers
 # Northern Wall Relaxation
 @inline relaxation_profile_north(k, grid, p) = p.ΔB * ( exp(grid.zC[k]/p.h) - exp(-p.Lz/p.h) ) / (1 - exp(-p.Lz/p.h))
 function Fb_function(i, j, k, grid, clock, state, p)
-    return @inbounds - p.sponge_relaxation  * (state.tracers.b[i,j,k] 
-        - relaxation_profile_north(k, grid, p)) * exp( (grid.yC[j] - p.Ly) / p.nw_escale ) 
+    return @inbounds - (1/p.λᵗ)  * (state.tracers.b[i,j,k] 
+        - relaxation_profile_north(k, grid, p)) * exp( (grid.yC[j] - p.Ly) / p.λᴺ ) 
 end
 
 Fb = ParameterizedForcing(Fb_function, bc_params)
@@ -101,7 +97,7 @@ v_bcs = VVelocityBoundaryConditions(grid, bottom = bottom_v_bc)
 # Initial Conditions
 ε(σ) = σ * randn()
 # make initial condition same as relaxation to northern wall
-B₀(x, y, z) = ΔT * ( exp(z/h) - exp(-Lz/h) ) / (1 - exp(-Lz/h)) + ε(1e-8)
+B₀(x, y, z) = ΔB * ( exp(z/h) - exp(-Lz/h) ) / (1 - exp(-Lz/h)) + ε(1e-8)
 # boundary conditions
 bcs = (b = b_bcs,  u = u_bcs, v = v_bcs)
 
