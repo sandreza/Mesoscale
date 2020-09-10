@@ -79,11 +79,20 @@ with parameters
 | ``\tau``           | ``0.2 `` |  ``\frac{N}{\text{m}^2}``      | wind-stress magnitude|
 | ``\lambda^u``           | ``32`` | dimensionless           | decay constant|
 
-And finally, the linear drag was chosen to be
+The linear drag was chosen to be
 
 |   Parameter             | Value       | Units | Description |
 |   :-------:             | :---:       | :---:  |:---:       |
 | ``\mu``           | ``10^{-3}`` |  ``\frac{m}{\text{s}}``      | linear drag velocity parameter|
+
+And finally the numerical parameters were
+
+|   Parameter             | Value       | Units | Description |
+|   :-------:             | :---:       | :---:  |:---:       |
+| ``\Delta t``           | ``300`` |  ``\text{s}``      | time-step size|
+| ``N_x``           | ``192`` |  dimensionless     | zonal grid points|
+| ``N_y``           | ``192`` |  dimensionless    | meridional grid points|
+| ``N_z``           | ``32`` |  dimensionless    | vertical levels|
 
 # Comments on Parameter Choices
 
