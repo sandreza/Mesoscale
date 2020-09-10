@@ -79,14 +79,17 @@ with parameters
 | ``\tau``           | ``0.2 `` |  ``\frac{N}{\text{m}^2}``      | wind-stress magnitude|
 | ``\lambda^u``           | ``32`` | dimensionless           | decay constant|
 
-The purpose of the parameter ``\lambda^u`` is to remove any windstress being applied near the northern sponge relaxation. 
-
 And finally, the linear drag was chosen to be
 
 |   Parameter             | Value       | Units | Description |
 |   :-------:             | :---:       | :---:  |:---:       |
 | ``\mu``           | ``10^{-3}`` |  ``\frac{m}{\text{s}}``      | linear drag velocity parameter|
 
+# Comments on Parameter Choices
+
+- ``\Delta b`` is the buoyancy jump from the bottom of the domain and the top of the domain. It is chosen so that the buoyancy should remain between ``0`` and ``\Delta b``. The relaxation on the surface is chosen so that the minimum on the surface matches with the minimum on the bottom, and similarly for the maximum. Since the smallest temperature on the surface occurs in the south, this induces isopycnals from the southern surface to the northern bottom.
+- The parameters ``\lambda^N`` and ``\lambda^u`` were chosen so that there was little overlap in momentum windstress and buoyancy sponge relaxation 
+- The simulation was insensitive to ``\kappa^h``, suggesting that there is a substantial amount of horizontal numerical diffusion
 
 
 
