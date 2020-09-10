@@ -9,6 +9,22 @@ function ∂(field, grid, direction)
     return Δf ./ Δg 
 end
 
+function ∫dz(field, grid; direction = 3)
+    gp = length(grid)
+    access = define_shifts(1:gp-1, :, direction)
+    access_shift = define_shifts(2:gp, :, direction)
+    f_avg = (field[access...] + field[access_shift...]) ./ 2
+    Δg = grid[1:end-1] - grid[2:end]
+    reshape_Δg = define_shifts(gp-1, 1, direction)
+    Δg = reshape(Δg, reshape_Δg)
+    ∫f = zeros(size(field[access...]))
+    ∫f[:, :, 1] = Δg[1] * field[:, :, 1]
+    for i in 2:length(Δg)
+        ∫f[:, :, i] = Δg[i] * field[:, :, i] + ∫f[:, :, i-1]
+    end
+    return ∫f
+end
+
 function define_shifts(tmp, tmp2, direction)
     if direction==1
         return (tmp, tmp2, tmp2)
@@ -19,7 +35,14 @@ function define_shifts(tmp, tmp2, direction)
     end
     return nothing
 end
-
+#=
+# this instead?
+function appropriate_dims(n1, n2, N)
+    y = ones(Int, n1)
+    y[n2] = N
+    return Tuple(y)
+end
+=# 
 function avg_other(a, direction)
     nx, ny, nz = size(a)
     if direction==1
@@ -37,6 +60,8 @@ function avg_other(a, direction)
     end
     return nothing
 end
+
+
 
 import Base: *
 
@@ -61,3 +86,16 @@ function (p::PartialDerivative)(ϕ::AbstractArray)
 end
 
 *(∇::PartialDerivative, ϕ::Field) = *(∇, ϕ.data)
+
+function hydrostatic_pressure(b,x,y,z)
+    p = ∫dz(b, z)
+    ∂ᶻp = (b[:,:,1:end-1] + b[:,:,2:end]) ./ 2 
+    Δx = reshape(x[1:end-1] - x[2:end], (length(x)-1, 1, 1))
+    ∂ˣp = (p[1:end-1,:,:] - p[2:end,:,:]) ./ Δx
+    ∂ˣp = (p[:,1:end-1,:] + p[:,2:end,:]) ./ 2
+    Δy = reshape(x[1:end-1] - x[2:end], (1,length(y)-1, 1))
+    ∂ʸp = (p[:,1:end-1,:] - p[:,2:end,:]) ./ Δy
+    ∂ʸp = (p[1:end-1,:,:] + p[2:end,:,:]) ./ 2
+    ∇p = [∂ˣp, ∂ˣp, ∂ᶻp]
+    return ∇p
+end
