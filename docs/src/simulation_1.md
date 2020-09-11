@@ -153,7 +153,7 @@ This implies that ``v`` must be independent of the vertical coordinate ``z``. In
 Since ``\partial_y b(y,\zeta)`` is independent of ``z`` we can carry out the integral and get
  ```math
 \begin{aligned}
-(f+\beta y)u &= - (z+L_z)b'_s(y) + F'(y) 
+(f+\beta y)u &= - (z+L_z)b'_s(y) - F'(y) 
 \end{aligned}
 ```
 We can determine ``F'(y) = 0`` by evaluating the above expression at ``z = -L_z`` and using that ``u  = 0`` at the bottom of the domain. We can then determine that 
