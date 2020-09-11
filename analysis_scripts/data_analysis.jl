@@ -186,7 +186,7 @@ plot!(tmp2)
 zero_ϕ = zeros(size(∇pʰ[1]))
 f  = -1e-4
 β  = 1e-11
-Ω = [zero_ϕ, zero_ϕ, zero_ϕ .+ -1e-4 .+ β .* reshape(y2, (1,length(y2),1))]
+Ω = [zero_ϕ, zero_ϕ, zero_ϕ .+ f .+ β .* reshape(y2, (1,length(y2),1))]
 u_avg = (avg_other(u,1)[1:end-1,:,:] + avg_other(u,1)[2:end,:,:]) ./ 2
 v_avg = (avg_other(v,1)[1:end-1,:,:] + avg_other(v,1)[2:end,:,:]) ./ 2
 w_avg = (avg_other(w,1)[1:end-1,:,:] + avg_other(w,1)[2:end,:,:]) ./ 2
@@ -197,7 +197,7 @@ norm(coriolis_force[1] .+ ∇pʰ[1]) / norm(coriolis_force[1])
 norm(coriolis_force[2] .+ ∇pʰ[2]) / norm(coriolis_force[2])
 
 ##
-field_label = [(coriolis_force[1], "Ω u"), (-∇pʰ[1], "-∂x(pʰ)"), (coriolis_force[2], "-Ω v"), (-∇pʰ[2], "-∂y(pʰ)")]
+field_label = [(coriolis_force[1], "Ω v"), (-∇pʰ[1], "-∂x(pʰ)"), (coriolis_force[2], "-Ω u"), (-∇pʰ[2], "-∂y(pʰ)")]
 selection = 2
 field = field_label[selection][1]
 label = field_label[selection][2]
@@ -221,3 +221,7 @@ plot(p1,p2)
 gr(size=(700,400))
 p3 = plot(p1,p2)
 savefig(p3, pwd() * "/geostrophic_1.pdf")
+##
+p = ∫dz(b, z)
+h_p = sum(p, dims = (1,2)) ./ ( (Nx -1) * (Ny-1))
+plot(h_p[:], z2)

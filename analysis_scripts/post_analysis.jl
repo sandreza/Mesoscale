@@ -2,8 +2,8 @@ function ∂(field, grid, direction)
     gp = length(grid)
     access = define_shifts(1:gp-1, :, direction)
     access_shift = define_shifts(2:gp, :, direction)
-    Δf = field[access...] - field[access_shift...]
-    Δg = grid[1:end-1] - grid[2:end]
+    Δf = field[access_shift...] - field[access...] 
+    Δg = grid[2:end] - grid[1:end-1]
     reshape_Δg = define_shifts(gp-1, 1, direction)
     Δg = reshape(Δg, reshape_Δg)
     return Δf ./ Δg 
@@ -14,7 +14,7 @@ function ∫dz(field, grid; direction = 3)
     access = define_shifts(1:gp-1, :, direction)
     access_shift = define_shifts(2:gp, :, direction)
     f_avg = (field[access...] + field[access_shift...]) ./ 2
-    Δg = grid[1:end-1] - grid[2:end]
+    Δg = grid[2:end] - grid[1:end-1]
     reshape_Δg = define_shifts(gp-1, 1, direction)
     Δg = reshape(Δg, reshape_Δg)
     ∫f = zeros(size(field[access...]))
