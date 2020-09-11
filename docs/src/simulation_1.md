@@ -125,22 +125,22 @@ b(x, y, z, t= 0 ) &=  \underbrace{\Delta b\frac{y}{L_y}}_{\text{surface relaxati
 From the initial condition for buoyancy we will derive the initial condition for velocity assuming [Geostrophic Balance](https://en.wikipedia.org/wiki/Geostrophic_current),
 ```math
 \begin{aligned}
-- (f+\beta y) v &= -\partial_x p  \\
-(f+\beta y)u &= - \partial_y p \\ 
-b &=  \partial_z p 
+- (f+\beta y) v &= -\frac{1}{\rho^0}\partial_x p  \\
+(f+\beta y)u &= - \frac{1}{\rho^0}\partial_y p \\ 
+b &=  \frac{1}{\rho^0}\partial_z p 
 \end{aligned}
 ```
 Integrating the last equation yields
 ```math
-p(x,y,z) - p(x,y,-L_z) = \int_{-L_z}^z b(y,\zeta) d\zeta,
+p(x,y,z) - p(x,y,-L_z) = \rho^0 \int_{-L_z}^z b(y,\zeta) d\zeta,
 ```
 which can then be differentiated with respect to ``x`` to give an expression for ``v``
 ```math
 \begin{aligned}
-(f+\beta y)v &= -\partial_x p(x,y,-Lz) .
+(f+\beta y)v &= -\frac{1}{\rho^0}\partial_x p(x,y,-Lz) .
 \end{aligned}
 ```
-This implies that ``v`` must be independent of the vertical coordinate ``z``. In particular we assign the value ``v = 0`` at the bottom of the domain since we have a linear drag bottom boundary condition (relaxation to zero). Thus ``\partial_x p(x,y,-Lz) = 0 \Rightarrow p(x,y,-Lz) = F(y)`` where ``F(y)`` is some arbitrary function of ``y``.
+This implies that ``v`` must be independent of the vertical coordinate ``z``. In particular we assign the value ``v = 0`` at the bottom of the domain since we have a linear drag bottom boundary condition (relaxation to zero). Thus ``\partial_x p(x,y,-Lz) = 0 \Rightarrow p(x,y,-Lz) = \rho^0 F(y)`` where ``F(y)`` is some arbitrary function of ``y``.
 
  We now differentiate pressure with respect to ``y`` to get an expression for the zonal velocity 
  ```math
