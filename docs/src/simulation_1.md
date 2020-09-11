@@ -150,7 +150,7 @@ This implies that ``v`` must be independent of the vertical coordinate ``z``. In
 &= -  \int_{-L_z}^z \partial_y b(y,\zeta) d\zeta - F'(y) 
 \end{aligned}
 ```
-Since ``\partial_y b(y,\zeta)`` is independent of ``z`` we can carry out the integral and get
+Since ``\partial_y b(y,\zeta)`` is independent of ``\zeta`` we can carry out the integral and get
  ```math
 \begin{aligned}
 (f+\beta y)u &= - (z+L_z)b'_s(y) - F'(y) 
