@@ -111,14 +111,14 @@ b(x, y, z, t= 0 ) &= b_s(y) + b_n(z) - b_n(0)
 with ``b_s(L_y) = b_n(0)`` where ``b_s(y)`` is the surface relaxation profile and ``b_n(z)`` is the northern wall relaxation. Observe that this choice of initial condition implies
 ```math
 \begin{aligned}
-b(x, y = L_y, z, t= 0 ) &= b^n(z)  \\
-b(x, y , z = 0, t= 0 ) &= b^s(y)  \\
+b(x, y = L_y, z, t= 0 ) &= b_n(z)  \\
+b(x, y , z = 0, t= 0 ) &= b_s(y)  \\
 \end{aligned} 
 ```
 In the context of the simulation above this means 
 ```math
 \begin{aligned}
-b(x, y, z, t= 0 ) &=  \underbrace{\Delta b\frac{y}{L_y}}_{\text{surface relaxation}} + \underbrace{\Delta b \frac{\exp(z/h)- \exp(-L_z / h)}{1- \exp(-L_z / h)}}_{\text{northern wall relaxation}} - \underbrace{\Delta b}_{b_s(L_y) = b_n(0)} 
+b(x, y, z, t= 0 ) &=  \underbrace{\Delta b\frac{y}{L_y}}_{\text{surface relaxation}} + \underbrace{\Delta b \frac{\exp(z/h)- \exp(-L_z / h)}{1- \exp(-L_z / h)}}_{\text{northern wall sponge relaxation}} - \underbrace{\Delta b}_{b_s(L_y) = b_n(0)} 
 \end{aligned} 
 ```
 
@@ -159,7 +159,7 @@ Since ``\partial_y b(y,\zeta)`` is independent of ``\zeta`` we can carry out the
 We can determine ``F'(y) = 0`` by evaluating the above expression at ``z = -L_z`` and using that ``u  = 0`` at the bottom of the domain. We can then determine that 
  ```math
 \begin{aligned}
-u &= - \frac{(z+L_z)}{f+\beta y}b'_s(y)
+u &= - \frac{z+L_z}{f+\beta y}b'_s(y)
 \end{aligned}
 ```
 The last velocity field ``w`` can be determined from the continuity equation and the condition that ``w=0`` at the surface and the bottom to get that the initial condition for ``w = 0``.
@@ -168,7 +168,7 @@ Thus in total we have the following concrete initial conditions
 ```math
 \begin{aligned}
 b^0 &= \Delta b \left(\frac{y}{L_y} +  \frac{\exp(z/h)- \exp(-L_z / h)}{1- \exp(-L_z / h)} - 1\right) \\ 
-u^0 &= - \frac{(z+L_z)}{f+\beta y}\frac{\Delta b}{L_y} \\ 
+u^0 &= - \frac{z+L_z}{f+\beta y}\frac{\Delta b}{L_y} \\ 
 v^0 &= w^0 = 0
 \end{aligned}
 ```
