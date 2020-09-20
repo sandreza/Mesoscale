@@ -3,7 +3,7 @@ include(pwd() * "/analysis_scripts/" * "post_analysis.jl")
 searchdir(path, key) = filter(x -> occursin(key, x), readdir(path))
 mesoscale_dir = pwd()
 checkpoints = searchdir(mesoscale_dir, "iteration")
-file = jldopen( mesoscale_dir * "/" * checkpoints[50])
+file = jldopen( mesoscale_dir * "/" * checkpoints[1])
 b = file["tracers"]["b"]["data"][2:end-1, 2:end-1, 2:end-1]
 u = file["velocities"]["u"]["data"][2:end-1, 2:end-1, 2:end-1]
 v = file["velocities"]["v"]["data"][2:end-1, 2:end-1, 2:end-1]

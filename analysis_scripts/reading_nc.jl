@@ -1,5 +1,6 @@
 using NetCDF, Plots, Printf
 
+sub_directory = "/Geostrophic_Start_20"
 filename = pwd() * sub_directory * "_middepth.nc"
 ncinfo(filename)
 x = Array(NetCDF.open(filename, "xC"))
@@ -77,15 +78,16 @@ b = NetCDF.open(filename, "b")
 t = Array(NetCDF.open(filename, "time"))
 sim_day = t ./ 86400
 start_time = 1
-end_time = 220
-cmax = maximum(Array(b[2:end-1, 2:end-1, 1, start_time:end_time]))
-cmin = minimum(Array(b[2:end-1, 2:end-1, 1, start_time:end_time]))
+skip = 1
+end_time = 180
+cmax = maximum(Array(b[2:end-1, 2:end-1, 1, start_time:skip:end_time]))
+cmin = minimum(Array(b[2:end-1, 2:end-1, 1, start_time:skip:end_time]))
 clims = (cmin, cmax)
 anim = @animate for i in start_time:end_time
     b_array = Array(b[:, :,1, i])
     day_label = @sprintf("%.2f ", sim_day[i])
     p1 = contourf(x, y, b_array', 
-        color = :thermometer, title = "Surface Buoyancy at " * day_label ,
+        color = :thermometer, title = "Buoyancy at 50 [m] on day " * day_label ,
         xlabel = "Zonal [m]", ylabel = "Meridional [m]"
         , clims = clims, linewidth = 0)
 end

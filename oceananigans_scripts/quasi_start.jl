@@ -6,17 +6,17 @@ using Oceananigans.OutputWriters
 using Oceananigans.Diagnostics
 using Oceananigans.Utils
 using Oceananigans.AbstractOperations
-using CUDA
-CUDA.allowscalar(true)
+
 arch = GPU()
 FT   = Float64
 
 write_output = true 
-geostrophic_balance = false
-output_interval = 365 * 24hour # 48hour makes nice movies
-end_time = 100*365day
+geostrophic_balance = true
+output_interval = 2day # 2day makes nice movies
+checkpointer_output_time = 5day
+end_time =  30day
 const scale = 20;
-filename_1 = "Hybrid_" * string(scale)
+filename_1 = "Geostrophic_Start_" * string(scale)
 
 const Lx = scale * 50kilometer # 1000km 
 const Ly = scale * 50kilometer # 1000km
@@ -85,15 +85,14 @@ Fb = ParameterizedForcing(Fb_function, bc_params)
 
 # Boundary Conditions
 # Buoyancy
-top_b_bc = ParameterizedBoundaryCondition(Flux, relaxation, bc_params)
+top_b_bc = BoundaryCondition(Flux, relaxation, discrete_form = true, parameters = bc_params)
 b_bcs = TracerBoundaryConditions(grid, top = top_b_bc)
 # Zonal Velocity
-u_velocity_flux_bf = BoundaryFunction{:z, Face, Cell}(wind_stress, bc_params)
-top_u_bc = FluxBoundaryCondition(u_velocity_flux_bf)
-bottom_u_bc =  ParameterizedBoundaryCondition(Flux, τ₁₃_linear_drag, bc_params)
+top_u_bc = BoundaryCondition(Flux, wind_stress, parameters = bc_params)
+bottom_u_bc =  BoundaryCondition(Flux, τ₁₃_linear_drag, discrete_form = true, parameters = bc_params)
 u_bcs = UVelocityBoundaryConditions(grid, top = top_u_bc, bottom = bottom_u_bc)
 # Meridional Velocity
-bottom_v_bc =  ParameterizedBoundaryCondition(Flux, τ₂₃_linear_drag, bc_params)
+bottom_v_bc =  BoundaryCondition(Flux, τ₂₃_linear_drag, discrete_form = true, parameters = bc_params)
 v_bcs = VVelocityBoundaryConditions(grid, bottom = bottom_v_bc)
 
 # Initial Conditions
@@ -101,7 +100,7 @@ if !geostrophic_balance
     # initial condition the same as the northern wall relaxation
     B₀(x, y, z) = ΔB * ( exp(z/h) - exp(-Lz/h) ) / (1 - exp(-Lz/h)) + ε(1e-8)
 else
-    U₀(x,y,z) = (z + Lz)/(f + β * y) * (ΔB / Ly)
+    U₀(x,y,z) = -(z + Lz)/(f + β * y) * (ΔB / Ly)
     B₀(x, y, z) = ΔB * (y / Ly +  ( exp(z/h) - exp(-Lz/h) ) / (1 - exp(-Lz/h)) - 1)
 end
 
@@ -130,6 +129,7 @@ else
 	)
 end
 if !checkpointed
+    print("Setting Initial Conditions")
     if !geostrophic_balance
         set!(model, b=B₀)
     else
@@ -160,7 +160,7 @@ meridional_output_writer =
     NetCDFOutputWriter(model, fields, filename= filename_1 * "_meridional.nc",
                        time_interval=output_interval, xC=Int(Nx/2), xF=Int(Nx/2))
 
-checkpointer = Checkpointer(model, prefix = filename_1 * "_checkpoint", time_interval = 365 * 4 * day, force = true)
+checkpointer = Checkpointer(model, prefix = filename_1 * "_checkpoint", time_interval = checkpointer_output_time, force = true)
 ##
 #bouyancy profile
 Uz = Average(model.velocities.u; return_type=Array, dims = (1,))
@@ -183,10 +183,10 @@ dimensions = Dict(
 )
 
 zonal_average_output_writer = NetCDFOutputWriter(model, zonal_averages, filename =  filename_1 * "_zonal_average.nc", time_interval=output_interval, output_attributes=output_attributes, dimensions = dimensions)
-# close(zonal_average_output_writer)
-###
+
+##
 if !checkpointed
-	Δt= 120.0
+	Δt = 300.0
 else
 	Δt = 300.0
 end
@@ -222,6 +222,5 @@ if write_output
     simulation.output_writers[:zonal_average] = zonal_average_output_writer
 end
 simulation.output_writers[:checkpoint] = checkpointer
-###
+##
 run!(simulation)
-write_output(model, checkpointer)
