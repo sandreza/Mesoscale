@@ -15,7 +15,7 @@ write_output = false
 geostrophic_balance = false
 output_interval = 365 * 24hour # 48hour makes nice movies
 time_avg_window =  output_interval / 2.0 # needs to be a float
-checkpoint_interval = 365 * 5 * day
+checkpoint_interval = 365 * 1 * day
 
 end_time = 100 * 365day
 const scale = 20;
@@ -64,27 +64,30 @@ bc_params = (
     λᵘ = 32, # surface forcing e-folding length scale
     λᵗ = 7.0 * 86400.0, # [s]
     λᴺ = 2.0 * 10^4, #[m] northern wall e-folding scale
-    τᵇ = 600.0 # [s] bottom sponge relaxation time-scale
+    τᵇ = 600.0, # [s] bottom sponge relaxation time-scale
     λᵇ = 200.0 # [m] bottom sponge relaxation length
 )
 
-@inline wind_stress(x, y, t, p) = - p.τ / p.ρ * ( exp( -(y - p.Ly/2)^2 / (p.Ly^2 / p.sf_escale) ) - exp( -( p.Ly/2)^2 / (p.Ly^2 / p.sf_escale) ) )
-
 const h = 1000.0 # [m]
+const ΔB = 10 * 2e-3
 const ΔT = 10 * 2e-3
 
+
+@inline wind_shape(y, p) = exp( -(y - p.Ly/2)^2 / (p.Ly^2 / p.λᵘ) ) - exp( -( p.Ly/2)^2 / (p.Ly^2 / p.λᵘ) )
+@inline wind_stress(x, y, t, p) = - p.τ / p.ρ * wind_shape(y, p)
+
 @inline relaxation_profile(j, grid, p) = p.ΔB * (grid.yC[j]/ p.Ly)
-@inline relaxation(i, j, grid, clock, state, p) = @inbounds p.λ * ( state.tracers.b[i, j, grid.Nz] - relaxation_profile(j, grid, p))
+@inline relaxation(i, j, grid, clock, state, p) = @inbounds p.λˢ * ( state.tracers.b[i, j, grid.Nz] - relaxation_profile(j, grid, p))
 
 ## Sponge layers
 # U, V bottom relaxation
-function Fu_function(i, j, k, grid, clock, state, p)
+@inline function Fu_function(i, j, k, grid, clock, state, p)
     return @inbounds ( -1.0/p.τᵇ * state.velocities.u[i,j,k] *
                     exp(- (1/p.λᵇ) * ( grid.zC[k] + grid.Lz))
                       )
 end
 
-function Fv_function(i, j, k, grid, clock, state, p)
+@inline function Fv_function(i, j, k, grid, clock, state, p)
     return @inbounds ( -1.0/p.τᵇ * state.velocities.v[i,j,k] *
                     exp(- (1/p.λᵇ) * ( grid.zC[k] + grid.Lz))
                       )

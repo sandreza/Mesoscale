@@ -66,13 +66,15 @@ bc_params = (
     λᴺ = 2.0 * 10^4, #[m] northern wall e-folding scale
 )
 
+const h = 1000.0 # [m]
+const ΔB = 10 * 2e-3
+
 @inline wind_shape(y, p) = exp( -(y - p.Ly/2)^2 / (p.Ly^2 / p.λᵘ) ) - exp( -( p.Ly/2)^2 / (p.Ly^2 / p.λᵘ) )
 @inline wind_stress(x, y, t, p) = - p.τ / p.ρ * wind_shape(y, p)
 @inline τ₁₃_linear_drag(i, j, grid, clock, state, p) = @inbounds - p.μ * state.velocities.u[i, j, 1]
 @inline τ₂₃_linear_drag(i, j, grid, clock, state, p) = @inbounds - p.μ * state.velocities.v[i, j, 1]
 
-const h = 1000.0 # [m]
-const ΔB = 10 * 2e-3
+
 
 @inline relaxation_profile(j, grid, p) = p.ΔB * (grid.yC[j]/ p.Ly)
 @inline relaxation(i, j, grid, clock, state, p) = @inbounds p.λˢ * ( state.tracers.b[i, j, grid.Nz] - relaxation_profile(j, grid, p))
