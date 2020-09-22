@@ -8,7 +8,7 @@ using Oceananigans.Utils
 using Oceananigans.AbstractOperations
 using CUDA
 CUDA.allowscalar(true)
-arch = GPU()
+arch = CPU()
 FT   = Float64
 
 write_output = true 

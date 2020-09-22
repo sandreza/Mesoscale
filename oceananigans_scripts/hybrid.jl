@@ -14,10 +14,10 @@ FT   = Float64
 write_output = false
 geostrophic_balance = false
 output_interval = 365 * 24hour # 48hour makes nice movies
-time_avg_window = floor(Int, output_interval / 2)
+time_avg_window =  output_interval / 2.0 # needs to be a float
 checkpoint_interval = 365 * 4 * day
 
-end_time = 100*365day
+end_time = 100 * 365day
 const scale = 20;
 filename_1 = "Hybrid_" * string(scale)
 
