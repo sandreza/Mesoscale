@@ -15,7 +15,7 @@ write_output = false
 geostrophic_balance = false
 output_interval = 365 * 24hour # 48hour makes nice movies
 time_avg_window =  output_interval / 2.0 # needs to be a float
-checkpoint_interval = 365 * 4 * day
+checkpoint_interval = 365 * 5 * day
 
 end_time = 100 * 365day
 const scale = 20;
@@ -86,6 +86,7 @@ function Fb_function(i, j, k, grid, clock, state, p)
 end
 
 Fb = ParameterizedForcing(Fb_function, bc_params)
+forcings = ModelForcing(b = Fb)
 
 # Boundary Conditions
 # Buoyancy
@@ -112,7 +113,7 @@ end
 # boundary conditions
 bcs = (b = b_bcs,  u = u_bcs, v = v_bcs)
 
-## checkpointing
+## checkpointing / model construction
 include(pwd() * "/oceananigans_scripts/checkpointing.jl")
 
 ## Diagnostics
