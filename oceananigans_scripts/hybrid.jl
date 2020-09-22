@@ -11,9 +11,12 @@ CUDA.allowscalar(true)
 arch = GPU()
 FT   = Float64
 
-write_output = true 
+write_output = false
 geostrophic_balance = false
 output_interval = 365 * 24hour # 48hour makes nice movies
+time_avg_window = floor(Int, output_interval / 2)
+checkpoint_interval = 365 * 4 * day
+
 end_time = 100*365day
 const scale = 20;
 filename_1 = "Hybrid_" * string(scale)
@@ -59,11 +62,12 @@ bc_params = (
     ΔB = 10 * 2e-3, # buoyancy jump
     Lz = Lz,
     λᵘ = 32, # surface forcing e-folding length scale
-    λᵗ = 28.0 * 86400.0, # [s]
+    λᵗ = 7.0 * 86400.0, # [s]
     λᴺ = 2.0 * 10^4, #[m] northern wall e-folding scale
 )
 
-@inline wind_stress(x, y, t, p) = - p.τ / p.ρ * ( exp( -(y - p.Ly/2)^2 / (p.Ly^2 / p.λᵘ) ) - exp( -( p.Ly/2)^2 / (p.Ly^2 / p.λᵘ) ) )
+@inline wind_shape(y, p) = exp( -(y - p.Ly/2)^2 / (p.Ly^2 / p.λᵘ) ) - exp( -( p.Ly/2)^2 / (p.Ly^2 / p.λᵘ) )
+@inline wind_stress(x, y, t, p) = - p.τ / p.ρ * wind_shape(y, p)
 @inline τ₁₃_linear_drag(i, j, grid, clock, state, p) = @inbounds - p.μ * state.velocities.u[i, j, 1]
 @inline τ₂₃_linear_drag(i, j, grid, clock, state, p) = @inbounds - p.μ * state.velocities.v[i, j, 1]
 
@@ -85,18 +89,18 @@ Fb = ParameterizedForcing(Fb_function, bc_params)
 
 # Boundary Conditions
 # Buoyancy
-top_b_bc = ParameterizedBoundaryCondition(Flux, relaxation, bc_params)
+top_b_bc = BoundaryCondition(Flux, relaxation, discrete_form = true, parameters = bc_params)
 b_bcs = TracerBoundaryConditions(grid, top = top_b_bc)
 # Zonal Velocity
-u_velocity_flux_bf = BoundaryFunction{:z, Face, Cell}(wind_stress, bc_params)
-top_u_bc = FluxBoundaryCondition(u_velocity_flux_bf)
-bottom_u_bc =  ParameterizedBoundaryCondition(Flux, τ₁₃_linear_drag, bc_params)
+top_u_bc = BoundaryCondition(Flux, wind_stress, parameters = bc_params)
+bottom_u_bc =  BoundaryCondition(Flux, τ₁₃_linear_drag, discrete_form = true, parameters = bc_params)
 u_bcs = UVelocityBoundaryConditions(grid, top = top_u_bc, bottom = bottom_u_bc)
 # Meridional Velocity
-bottom_v_bc =  ParameterizedBoundaryCondition(Flux, τ₂₃_linear_drag, bc_params)
+bottom_v_bc =  BoundaryCondition(Flux, τ₂₃_linear_drag, discrete_form = true, parameters = bc_params)
 v_bcs = VVelocityBoundaryConditions(grid, bottom = bottom_v_bc)
 
 # Initial Conditions
+ε(σ) = σ * randn()
 if !geostrophic_balance
     # initial condition the same as the northern wall relaxation
     B₀(x, y, z) = ΔB * ( exp(z/h) - exp(-Lz/h) ) / (1 - exp(-Lz/h)) + ε(1e-8)
@@ -108,120 +112,23 @@ end
 # boundary conditions
 bcs = (b = b_bcs,  u = u_bcs, v = v_bcs)
 
-# checkpointing
-searchdir(path, key) = filter(x -> occursin(key, x), readdir(path))
-checkpoints = searchdir(pwd(), filename_1 * "_checkpoint_iteration")
-if length(checkpoints) > 0
-    checkpointed = true
-    checkpoint_filepath = joinpath(pwd(), checkpoints[end])
-    @info "Restoring from checkpoint: $checkpoint_filepath"
-    model = restore_from_checkpoint(checkpoint_filepath, boundary_conditions = bcs)
-else
-    checkpointed = false
-	model = IncompressibleModel(
-	           architecture = arch,
-	             float_type = FT,
-	                   grid = grid,
-	               coriolis = coriolis,
-	               buoyancy = buoyancy,
-	                closure = closure,
-	                tracers = (:b,),
-	    boundary_conditions = bcs
-	)
-end
-if !checkpointed
-    if !geostrophic_balance
-        set!(model, b=B₀)
-    else
-        set!(model, u = U₀, b=B₀)
-    end
-end
+## checkpointing
+include(pwd() * "/oceananigans_scripts/checkpointing.jl")
 
-fields = Dict(
-    "u" => model.velocities.u,
-    "v" => model.velocities.v,
-    "w" => model.velocities.w,
-    "b" => model.tracers.b
-)
+## Diagnostics
+include(pwd() * "/oceananigans_scripts/diagnostics.jl")
 
-surface_output_writer =
-    NetCDFOutputWriter(model, fields, filename= filename_1 * "_surface.nc",
-			           time_interval=output_interval, zC=Nz, zF=Nz)
-
-middepth_output_writer =
-    NetCDFOutputWriter(model, fields, filename= filename_1 * "_middepth.nc",
-                       time_interval=output_interval, zC=Int(Nz/2), zF=Int(Nz/2))
-
-zonal_output_writer =
-    NetCDFOutputWriter(model, fields, filename= filename_1 * "_zonal.nc",
-                       time_interval=output_interval, yC=Int(Ny/2), yF=Int(Ny/2))
-
-meridional_output_writer =
-    NetCDFOutputWriter(model, fields, filename= filename_1 * "_meridional.nc",
-                       time_interval=output_interval, xC=Int(Nx/2), xF=Int(Nx/2))
-
-checkpointer = Checkpointer(model, prefix = filename_1 * "_checkpoint", time_interval = 365 * 4 * day, force = true)
-##
-#bouyancy profile
-Uz = Average(model.velocities.u; return_type=Array, dims = (1,))
-Bz = Average(model.tracers.b; return_type=Array, dims = (1,))
-
-# Create output writer that writes vertical profiles to JLD2 output files.
-zonal_averages = Dict(
-	"Uz" => model -> Uz(model)[1, 2:end-1, 2:end-1],
-	"Bz" => model -> Bz(model)[1, 2:end-1, 2:end-1],
-)
-
-output_attributes = Dict(
-    "Uz" => Dict("longname" => "Zonal Average Velocity in the x-direction", "units" => "m/s"),
-    "Bz" => Dict("longname" => "Zonal Average Buoyancy", "units" => "m/s²"),
-)
-# Should probably output error if this is not supplied for nonfield objects
-dimensions = Dict(
-	"Uz" => ("yC", "zC"),
-	"Bz" => ("yC", "zC"),
-)
-
-zonal_average_output_writer = NetCDFOutputWriter(model, zonal_averages, filename =  filename_1 * "_zonal_average.nc", time_interval=output_interval, output_attributes=output_attributes, dimensions = dimensions)
-# close(zonal_average_output_writer)
-###
-if !checkpointed
-	Δt= 120.0
-else
-	Δt = 300.0
-end
-Δt_wizard = TimeStepWizard(cfl=0.3, Δt= Δt, max_change=1.1, max_Δt= 300.0)
+## Set timestep
+# Δt is defined in checkpointing
+Δt_wizard = TimeStepWizard(cfl = 0.3, Δt = Δt, max_change = 1.1, max_Δt = 300.0)
 cfl = AdvectiveCFL(Δt_wizard)
 
-
-# Take Ni "intermediate" time steps at a time before printing a progress
-# statement and updating the time step.
-Ni = 1000
-
-function print_progress(simulation)
-    model = simulation.model
-    i, t = model.clock.iteration, model.clock.time
-
-    progress = 100 * (model.clock.time / end_time)
-
-    umax = maximum(abs, model.velocities.u.data.parent)
-    vmax = maximum(abs, model.velocities.v.data.parent)
-    wmax = maximum(abs, model.velocities.w.data.parent)
-
-    @printf("[%05.2f%%] i: %d, t: %.2e days, umax: (%6.3e, %6.3e, %6.3e) m/s, CFL: %6.4e, next Δt: %.1e s\n",
-    	    progress, i, t / day, umax, vmax, wmax, cfl(model), Δt_wizard.Δt)
-end
-
+## Progress Printing
+include(pwd() * "/oceananigans_scripts/progress_printer.jl")
 
 simulation = Simulation(model, Δt=Δt_wizard, stop_time=end_time, progress=print_progress, iteration_interval=Ni)
-if write_output
-    simulation.output_writers[:surface] = surface_output_writer
-    simulation.output_writers[:middepth] = middepth_output_writer
-    simulation.output_writers[:zonal] = zonal_output_writer
-    simulation.output_writers[:meridional] = meridional_output_writer
-    simulation.output_writers[:zonal_average] = zonal_average_output_writer
-end
-simulation.output_writers[:checkpoint] = checkpointer
-###
+
+include(pwd() * "/oceananigans_scripts/output_writing.jl")
+
+## Run Simulation
 run!(simulation)
-write_output(model, checkpointer)

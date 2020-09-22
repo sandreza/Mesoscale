@@ -96,6 +96,7 @@ bottom_v_bc =  BoundaryCondition(Flux, τ₂₃_linear_drag, discrete_form = tru
 v_bcs = VVelocityBoundaryConditions(grid, bottom = bottom_v_bc)
 
 # Initial Conditions
+ε(σ) = σ * randn()
 if !geostrophic_balance
     # initial condition the same as the northern wall relaxation
     B₀(x, y, z) = ΔB * ( exp(z/h) - exp(-Lz/h) ) / (1 - exp(-Lz/h)) + ε(1e-8)
