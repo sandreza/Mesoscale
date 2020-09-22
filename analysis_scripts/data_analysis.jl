@@ -3,7 +3,7 @@ include(pwd() * "/analysis_scripts/" * "post_analysis.jl")
 searchdir(path, key) = filter(x -> occursin(key, x), readdir(path))
 mesoscale_dir = pwd()
 checkpoints = searchdir(mesoscale_dir, "iteration")
-file = jldopen( mesoscale_dir * "/" * checkpoints[1])
+file = jldopen( mesoscale_dir * "/" * checkpoints[end-1])
 b = file["tracers"]["b"]["data"][2:end-1, 2:end-1, 2:end-1]
 u = file["velocities"]["u"]["data"][2:end-1, 2:end-1, 2:end-1]
 v = file["velocities"]["v"]["data"][2:end-1, 2:end-1, 2:end-1]
@@ -59,8 +59,8 @@ p1 = contourf(y, z, field[ 1, :, :]',
     xlabel = "Meridional [m]", ylabel = "Depth [m]"
     , clims = clims, linewidth = 0)
 ##
-field_label = [(u, "u"), (v, "v"), (w, "w"), (b, "b"), ( w .* w, "ww")]
-selection = 4
+field_label = [(u, "u"), (v, "v"), (w, "w"), (b, "b"), ( w .* w, "ww"), (v .* b, "vb")]
+selection = 6
 field = field_label[selection][1]
 label = field_label[selection][2]
 cmax = maximum(field)
@@ -73,8 +73,8 @@ p1 = contourf(y, z, ϕ',
     , clims = clims, linewidth = 0)
 
 ##
-field_label = [(u, "u"), (v, "v"), (w, "w"), (b, "b"), (w .* w, "ww"), (u .* u, "uu"), (v .* v, "vv"), (∂z( w .* w), "d(w .* w) / dz")]
-selection = 1
+field_label = [(u, "u"), (v, "v"), (w, "w"), (b, "b"), (w .* w, "ww"), (u .* u, "uu"), (v .* v, "vv"), (∂z( w .* w), "d(w .* w) / dz"), (v .* b, "vb"), (∂z(b), "∂z(b)")]
+selection = 10
 field = sum(field_label[selection][1], dims = (1,2)) ./ (Nx * Ny)
 label = field_label[selection][2]
 cmax = maximum(field)
@@ -88,8 +88,8 @@ p1 = scatter(field[1,1,:],  z,
 ##
 # day_label = @sprintf("%.2f ", sim_day[i])
 # surface values
-field_label = [(u, "u"), (v, "v"), (w, "w"), (b, "b"), (u .* b, "ub")]
-selection = 4
+field_label = [(u, "u"), (v, "v"), (w, "w"), (b, "b"), (u .* b, "ub"), (v .* b , "vb")]
+selection = length(field_label)
 field = field_label[selection][1]
 label = field_label[selection][2]
 cmax = maximum(field)
@@ -108,12 +108,12 @@ f  = -1e-4
 β  = 1e-11
 zero_ϕ = ω[1] .* 0
 Ω = [zero_ϕ, zero_ϕ, zero_ϕ .+ -1e-4 .+ β .* reshape(y2, (1,191,1))]
-@. ω +=  Ω
-vec_pv = [ω[1] .* ∇b[1] ,  ω[2] .* ∇b[2] , ω[3] .* ∇b[3]]
+total_ω =  ω +  Ω
+vec_pv = [total_ω[1] .* ∇b[1] ,  total_ω[2] .* ∇b[2] , total_ω[3] .* ∇b[3]]
 pv = vec_pv[1] + vec_pv[2] + vec_pv[3]
 magnitude = zeros(size(ω[1]))
 @inbounds @simd for i in 1:length(ω[1])
-    ω1  = sqrt(ω[1][i]^2  + ω[2][i]^2  + ω[3][i]^2)
+    ω1  = sqrt(total_ω[1][i]^2  + total_ω[2][i]^2  + total_ω[3][i]^2)
     ∇b1 = sqrt(∇b[1][i]^2 + ∇b[2][i]^2 + ∇b[3][i]^2)
     magnitude[i] = ω1 * ∇b1
 end
@@ -121,14 +121,16 @@ alignment = pv ./ magnitude
 
 
 ##
-field = pv
-label = "Alignment"
-ϕ = field[ :, :, end]
+layer_index = length(z2) - 8
+field = ω[3] ./ Ω[3] 
+label = "instantaneous ω_3 / f "
+ϕ = field[ :, :, layer_index]
+location_label = @sprintf("%.2f ", z2[layer_index])
 cmax = maximum(ϕ)
 cmin = minimum(ϕ)
 clims = (cmin, cmax)
 p1 = contourf(x2, y2, ϕ', 
-    color = :thermometer, title = "Potential Vorticity ",
+    color = :thermometer, title = label * " at z=" * location_label * "[m]",
     xlabel = "Zonal [m]", ylabel = "Meridional [m]"
     , clims = clims, linewidth = 0)
 
@@ -198,18 +200,20 @@ norm(coriolis_force[2] .+ ∇pʰ[2]) / norm(coriolis_force[2])
 
 ##
 field_label = [(coriolis_force[1], "-Ω v"), (-∇pʰ[1], "-∂x(pʰ)"), (coriolis_force[2], "Ω u"), (-∇pʰ[2], "-∂y(pʰ)")]
-selection = 2+2
+selection = 2+0
 field = field_label[selection][1]
 label = field_label[selection][2]
 cmax = maximum(field)
 cmin = minimum(field)
 clims = (cmin, cmax)
+
+##
 p1 = contourf(x2, y2, field[ :, :, end]', 
     color = :thermometer, title = "100 [m] depth " * label,
     xlabel = "Zonal [m]", ylabel = "Meridional [m]"
     , clims = clims, linewidth = 0)
 
-selection = 1+2
+selection = 1+0
 field = field_label[selection][1]
 label = field_label[selection][2]
 p2 = contourf(x2, y2, field[ :, :, end]', 
@@ -225,3 +229,58 @@ savefig(p3, pwd() * "/geostrophic_1.pdf")
 p = ∫dz(b, z)
 h_p = sum(p, dims = (1,2)) ./ ( (Nx -1) * (Ny-1))
 plot(h_p[:], z2)
+
+##
+u_prime = u .- mean(u, dims = (1,))
+v_prime = v .- mean(v, dims = (1,))
+b_prime = b .- mean(b, dims = (1,))
+mean_b = mean(b, dims = (1,))
+field = b_prime
+p1 = contourf(x, y, field[ :, :, end]', 
+    color = :thermometer, title = "100 [m] depth ",
+    xlabel = "Zonal [m]", ylabel = "Meridional [m]"
+    ,  linewidth = 0)
+
+mean_vb = mean(v_prime .* b_prime, dims = (1,))
+mean_uv = mean(u_prime .* v_prime, dims = (1,))
+
+p1 = contourf(y, z, mean_vb[1,:,:]', 
+    color = :thermometer, title = "<v'b'> ",
+    ylabel = "Depth [m]", xlabel = "Meridional [m]"
+    ,  linewidth = 0)
+
+    contourf(y, z, mean_vb[1,:,:]', 
+    color = :thermometer, title = "<u'v'> ",
+    ylabel = "Depth [m]", xlabel = "Meridional [m]"
+    ,  linewidth = 0)
+##
+p2 = contourf(y, z, mean_b[1,:,:]', 
+    color = :thermometer, title = "<b> ",
+    ylabel = "Depth [m]", xlabel = "Meridional [m]"
+    ,  linewidth = 0)
+##
+∂zb_mean = mean(∂z(b), dims = (1,))
+p2 = contourf(y2, z2, ∂zb_mean[1,:,:]', 
+    color = :thermometer, title = "<∂z(b)> ",
+    ylabel = "Depth [m]", xlabel = "Meridional [m]"
+    ,  linewidth = 0)    
+
+𝐟 = reshape(f .+ β * y, (1,192,1))
+fvb = 𝐟 .* mean_vb
+compare_fvb = avg_other(fvb,1)
+##
+p3 = contourf(y2, z2, compare_fvb[1,:,:]', 
+    color = :thermometer, title = "f<v'b'> ",
+    ylabel = "Depth [m]", xlabel = "Meridional [m]"
+    ,  linewidth = 0)
+
+
+plot(p2,p3)
+
+##
+johns_thing = compare_fvb ./ mean(∂zb_mean, dims = (2,)) .* 1027
+clims = (minimum(johns_thing[1,:,21:end]), maximum(johns_thing[1,:,21:end]))
+p3 = contourf(y2, z2, johns_thing[1,:,:]', 
+    color = :thermometer, title = "rho x f x <v'b'>/db/dz ",
+    ylabel = "Depth [m]", xlabel = "Meridional [m]"
+    ,  linewidth = 0, ylims = (-1000,0), clims = clims)
