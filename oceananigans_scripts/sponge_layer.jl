@@ -1,4 +1,4 @@
-using Printf
+using Printf, Statistics
 using Oceananigans
 using Oceananigans.BoundaryConditions
 using Oceananigans.Fields

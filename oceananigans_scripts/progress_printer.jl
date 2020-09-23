@@ -11,7 +11,11 @@ function print_progress(simulation)
     umax = maximum(abs, model.velocities.u.data.parent)
     vmax = maximum(abs, model.velocities.v.data.parent)
     wmax = maximum(abs, model.velocities.w.data.parent)
+    meanb = mean(view(model.tracers.b.data, 2:Nx-1, 2:Ny-1, 2:Nz-1))
 
     @printf("[%05.2f%%] i: %d, t: %.2e days, umax: (%6.3e, %6.3e, %6.3e) m/s, CFL: %6.4e, next Δt: %.1e s\n",
-    	    progress, i, t / day, umax, vmax, wmax, cfl(model), Δt_wizard.Δt)
+            progress, i, t / day, umax, vmax, wmax, cfl(model), Δt_wizard.Δt)
+    println(" ")
+    @printf("The mean value of b is %.2e", meanb)
+    println(" ")
 end
