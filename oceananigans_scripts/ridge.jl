@@ -82,8 +82,10 @@ const ΔT = 10 * 2e-3
 
 ## Sponge layers
 # U, V bottom relaxation
-@inline smoothed_ridge(y,z,p) =  (tanh(-z  -2800 + 800*exp(-40 *(y-p.Ly/2)^2 / p.Ly^2)) +1)/2
-@inline ridge(y,z,p) = z  < -2800 + 800*exp(-40 *(y-p.Ly/2)^2 / p.Ly^2) ? 1.0 : -0.0
+const ridge_height = 1800.0 #[m]
+const ridge_base = -2800.0 #[m]
+@inline smoothed_ridge(y,z,p) =  (tanh(-z + ridge_base + ridge_height*exp(-40 *(y-p.Ly/2)^2 / p.Ly^2)) +1)/2
+@inline ridge(y,z,p) = z  < ridge_base + ridge_height*exp(-40 *(y-p.Ly/2)^2 / p.Ly^2) ? 1.0 : -0.0
 @inline function Fu_function(i, j, k, grid, clock, state, p)
     return @inbounds ( -1.0/p.τᵇ * state.velocities.u[i,j,k] *
                     smoothed_ridge(grid.yC[j], grid.zC[k], p) 
@@ -96,6 +98,12 @@ end
                       )
 end
 
+@inline function Fw_function(i, j, k, grid, clock, state, p)
+    return @inbounds ( -1.0/p.τᵇ * state.velocities.w[i,j,k] *
+                       smoothed_ridge(grid.zC[j], grid.zF[k], p)
+                      )
+end
+
 # Northern Wall Relaxation
 @inline relaxation_profile_north(k, grid, p) = p.ΔB * ( exp(grid.zC[k]/p.h) - exp(-p.Lz/p.h) ) / (1 - exp(-p.Lz/p.h))
 function Fb_function(i, j, k, grid, clock, state, p)
@@ -105,8 +113,9 @@ end
 
 Fu = ParameterizedForcing(Fu_function, bc_params)
 Fv = ParameterizedForcing(Fv_function, bc_params)
+Fw = ParameterizedForcing(Fw_function, bc_params)
 Fb = ParameterizedForcing(Fb_function, bc_params)
-forcings = ModelForcing(u = Fu, v = Fv, b = Fb)
+forcings = ModelForcing(u = Fu, v = Fv, w = Fw, b = Fb)
 
 # Boundary Conditions
 # Buoyancy
