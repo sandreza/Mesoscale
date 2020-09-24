@@ -84,23 +84,24 @@ const ΔT = 10 * 2e-3
 # U, V bottom relaxation
 const ridge_height = 1800.0 #[m]
 const ridge_base = -2800.0 #[m]
-@inline smoothed_ridge(x,z,p) =  (tanh(-z + ridge_base + ridge_height*exp(-40 *(x-p.Lx/2)^2 / p.Lx^2)) +1)/2
-@inline ridge(x,z,p) = z  < ridge_base + ridge_height*exp(-40 *(x-p.Lx/2)^2 / p.Lx^2) ? 1.0 : -0.0
+@inline ridge_shape(x,z,L) = -z + ridge_base + ridge_height * exp(-40 *(x-L/2)^2 / L^2)
+@inline smoothed_ridge(x,z,L) =  (tanh(ridge_shape(x,z,L)) +1)/2
+@inline ridge(x,z,L) = O < ridge_shape(x,z,L) ? 1.0 : -0.0
 @inline function Fu_function(i, j, k, grid, clock, state, p)
     return @inbounds ( -1.0/p.τᵇ * state.velocities.u[i,j,k] *
-                    smoothed_ridge(grid.xF[j], grid.zC[k], p) 
+                    smoothed_ridge(grid.xF[i], grid.zC[k], p.Lx) 
                       )
 end
 
 @inline function Fv_function(i, j, k, grid, clock, state, p)
     return @inbounds ( -1.0/p.τᵇ * state.velocities.v[i,j,k] *
-                       smoothed_ridge(grid.xC[j], grid.zC[k], p)
+                       smoothed_ridge(grid.xC[i], grid.zC[k], p.Lx)
                       )
 end
 
 @inline function Fw_function(i, j, k, grid, clock, state, p)
     return @inbounds ( -1.0/p.τᵇ * state.velocities.w[i,j,k] *
-                       smoothed_ridge(grid.xC[j], grid.zF[k], p)
+                       smoothed_ridge(grid.xF[i], grid.zF[k], p.Lx)
                       )
 end
 
