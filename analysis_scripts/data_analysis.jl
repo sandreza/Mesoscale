@@ -1,9 +1,13 @@
-using JLD2, Plots, Printf, LinearAlgebra
+using JLD2, Plots, Printf, LinearAlgebra, Statistics
 include(pwd() * "/analysis_scripts/" * "post_analysis.jl")
 searchdir(path, key) = filter(x -> occursin(key, x), readdir(path))
 mesoscale_dir = pwd()
 checkpoints = searchdir(mesoscale_dir, "iteration")
-file = jldopen( mesoscale_dir * "/" * checkpoints[end-1])
+println("The checkpoints are", checkpoints)
+filename = mesoscale_dir * "/" * checkpoints[5]
+println("we are looking at ")
+println(filename)
+file = jldopen( filename )
 b = file["tracers"]["b"]["data"][2:end-1, 2:end-1, 2:end-1]
 u = file["velocities"]["u"]["data"][2:end-1, 2:end-1, 2:end-1]
 v = file["velocities"]["v"]["data"][2:end-1, 2:end-1, 2:end-1]
@@ -54,13 +58,15 @@ label = field_label[selection][2]
 cmax = maximum(field)
 cmin = minimum(field)
 clims = (cmin, cmax)
-p1 = contourf(y, z, field[ 1, :, :]', 
-    color = :thermometer, title = "Zonal Slice " * label,
+xind = 96
+xloc = @sprintf("%.2f ", x[xind])
+p1 = contourf(y, z, field[ xind, :, :]', 
+    color = :thermometer, title = "Zonal Slice " * label * " at x=" * xloc,
     xlabel = "Meridional [m]", ylabel = "Depth [m]"
     , clims = clims, linewidth = 0)
 ##
 field_label = [(u, "u"), (v, "v"), (w, "w"), (b, "b"), ( w .* w, "ww"), (v .* b, "vb")]
-selection = 6
+selection = 4
 field = field_label[selection][1]
 label = field_label[selection][2]
 cmax = maximum(field)
@@ -74,7 +80,7 @@ p1 = contourf(y, z, ϕ',
 
 ##
 field_label = [(u, "u"), (v, "v"), (w, "w"), (b, "b"), (w .* w, "ww"), (u .* u, "uu"), (v .* v, "vv"), (∂z( w .* w), "d(w .* w) / dz"), (v .* b, "vb"), (∂z(b), "∂z(b)")]
-selection = 10
+selection = 1
 field = sum(field_label[selection][1], dims = (1,2)) ./ (Nx * Ny)
 label = field_label[selection][2]
 cmax = maximum(field)
@@ -89,7 +95,7 @@ p1 = scatter(field[1,1,:],  z,
 # day_label = @sprintf("%.2f ", sim_day[i])
 # surface values
 field_label = [(u, "u"), (v, "v"), (w, "w"), (b, "b"), (u .* b, "ub"), (v .* b , "vb")]
-selection = length(field_label)
+selection = 1 # length(field_label)
 field = field_label[selection][1]
 label = field_label[selection][2]
 cmax = maximum(field)
@@ -121,7 +127,7 @@ alignment = pv ./ magnitude
 
 
 ##
-layer_index = length(z2) - 8
+layer_index = length(z2) - 25
 field = ω[3] ./ Ω[3] 
 label = "instantaneous ω_3 / f "
 ϕ = field[ :, :, layer_index]
@@ -171,7 +177,7 @@ tmp2 = relaxation_profile_north_2.( collect(1:32))
 zonal_average_b = sum(b, dims = (1, )) ./ Nx
 tmp1 = reshape(tmp1, (1, 192, 1))
 plot( b[1, : , end])
-plot!(tmp1)
+plot!(tmp1[:])
 new_field = zonal_average_b .- tmp1
 plot(y, new_field[1, :, end])
 ##
@@ -200,20 +206,19 @@ norm(coriolis_force[2] .+ ∇pʰ[2]) / norm(coriolis_force[2])
 
 ##
 field_label = [(coriolis_force[1], "-Ω v"), (-∇pʰ[1], "-∂x(pʰ)"), (coriolis_force[2], "Ω u"), (-∇pʰ[2], "-∂y(pʰ)")]
-selection = 2+0
+selection = 2+2
 field = field_label[selection][1]
 label = field_label[selection][2]
 cmax = maximum(field)
 cmin = minimum(field)
 clims = (cmin, cmax)
 
-##
 p1 = contourf(x2, y2, field[ :, :, end]', 
     color = :thermometer, title = "100 [m] depth " * label,
     xlabel = "Zonal [m]", ylabel = "Meridional [m]"
     , clims = clims, linewidth = 0)
 
-selection = 1+0
+selection = 1+2
 field = field_label[selection][1]
 label = field_label[selection][2]
 p2 = contourf(x2, y2, field[ :, :, end]', 
@@ -278,9 +283,9 @@ p3 = contourf(y2, z2, compare_fvb[1,:,:]',
 plot(p2,p3)
 
 ##
-johns_thing = compare_fvb ./ mean(∂zb_mean, dims = (2,)) .* 1027
-clims = (minimum(johns_thing[1,:,21:end]), maximum(johns_thing[1,:,21:end]))
-p3 = contourf(y2, z2, johns_thing[1,:,:]', 
+ratio = compare_fvb ./ mean(∂zb_mean, dims = (2,)) .* 1027
+clims = (minimum(ratio[1,:,21:end]), maximum(ratio[1,:,21:end]))
+p3 = contourf(y2, z2, ratio[1,:,:]', 
     color = :thermometer, title = "rho x f x <v'b'>/db/dz ",
     ylabel = "Depth [m]", xlabel = "Meridional [m]"
     ,  linewidth = 0, ylims = (-1000,0), clims = clims)
