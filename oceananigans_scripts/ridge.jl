@@ -101,7 +101,7 @@ end
 
 @inline function Fw_function(i, j, k, grid, clock, state, p)
     return @inbounds ( -1.0/p.τᵇ * state.velocities.w[i,j,k] *
-                       smoothed_ridge(grid.xF[i], grid.zF[k], p.Lx)
+                       smoothed_ridge(grid.xC[i], grid.zF[k], p.Lx)
                       )
 end
 
