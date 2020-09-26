@@ -176,12 +176,12 @@ v^0 &= w^0 = 0
 We have also starting with the initial condtion
 ```math
 \begin{aligned}
-b^0 &= \Delta b \left(\frac{y}{L_y} +  \frac{\exp(z/h)- \exp(-L_z / h)}{1- \exp(-L_z / h)} - 1\right) + \mathcal{N}(0,10^{-8}) \\ 
+b^0 &= \Delta b \left(  \frac{\exp(z/h)- \exp(-L_z / h)}{1- \exp(-L_z / h)} \right) + \mathcal{N}(0,10^{-8}) \\ 
 u^0 &= 0\\ 
 v^0 &= w^0 = 0
 \end{aligned}
 ``` 
-where ``\mathcal{N}(\mu , \sigma)`` is a [Gaussian random variable](https://en.wikipedia.org/wiki/Normal_distribution) with mean ``\mu`` and standard deviation ``\sigma``. The noise is added independently to each grid point.
+where ``\mathcal{N}(\mu , \sigma)`` is a [Gaussian random variable](https://en.wikipedia.org/wiki/Normal_distribution) with mean ``\mu`` and standard deviation ``\sigma``. The noise is added independently to each grid point. The noise was necessary to ensure a quick transition to turbulence.
 
 
 
