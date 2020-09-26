@@ -65,7 +65,7 @@ with parameter values
 | ``\lambda^s``           | ``10^{-4} `` |  ``\frac{m}{\text{s}}``      | surface buoyancy velocity constant|
 | ``\Delta b``           | ``10 \times \alpha \times 10`` | ``\frac{\text{m}}{\text{ s}^2}``           | buoyancy jump|
 | ``h``           | ``1`` | ``\text{km}``           | northern wall stratification e-folding length|
-| ``\lambda^t``           | ``28 \times 86400`` | ``\text{s}``           | relaxation time|
+| ``\lambda^t``           | ``7 \times 86400`` | ``\text{s}``           | relaxation time|
 | ``\lambda^N``           | ``20`` | ``\text{km}``           | northern wall horizontal e-folding length|
 
 The surface flux for the zonal velocity, (``u`` where ``\bm{u} = (u,v,w) ``) is
@@ -172,6 +172,16 @@ u^0 &= - \frac{z+L_z}{f+\beta y}\frac{\Delta b}{L_y} \\
 v^0 &= w^0 = 0
 \end{aligned}
 ```
+
+We have also starting with the initial condtion
+```math
+\begin{aligned}
+b^0 &= \Delta b \left(\frac{y}{L_y} +  \frac{\exp(z/h)- \exp(-L_z / h)}{1- \exp(-L_z / h)} - 1\right) + \mathcal{N}(0,10^{-8}) \\ 
+u^0 &= 0\\ 
+v^0 &= w^0 = 0
+\end{aligned}
+``` 
+where ``\mathcal{N}(\mu , \sigma)`` is a [Gaussian random variable](https://en.wikipedia.org/wiki/Normal_distribution) with mean ``\mu`` and standard deviation ``\sigma``. The noise is added independently to each grid point.
 
 
 

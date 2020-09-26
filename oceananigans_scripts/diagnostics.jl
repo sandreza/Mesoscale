@@ -42,14 +42,12 @@ zonal_fields = Dict(
     :uu => AveragedField(u * u, dims=(1,), computed_data=u_scratch.data),
     :vv => AveragedField(v * v, dims=(1,), computed_data=v_scratch.data),
     :ww => AveragedField(w * w, dims=(1,), computed_data=w_scratch.data),
-    #=
     :uv => AveragedField(u * v, dims=(1,), computed_data=u_scratch.data),
     :vw => AveragedField(w * v, dims=(1,), computed_data=w_scratch.data),
     :uw => AveragedField(w * u, dims=(1,), computed_data=w_scratch.data),
-    :ub => AveragedField(u * b, dims=(1,), computed_data=b_scratch.data),
-    :vb => AveragedField(v * b, dims=(1,), computed_data=b_scratch.data),
-    :wb => AveragedField(w * b, dims=(1,), computed_data=b_scratch.data),
-    =#
+    :ub => AveragedField(u * b, dims=(1,), computed_data=u_scratch.data),
+    :vb => AveragedField(v * b, dims=(1,), computed_data=v_scratch.data),
+    :wb => AveragedField(w * b, dims=(1,), computed_data=w_scratch.data),
 )
 
 zonal_statistics = JLD2OutputWriter(model, zonal_fields,

@@ -11,13 +11,13 @@ CUDA.allowscalar(true)
 arch = GPU()
 FT   = Float64
 
-write_output = false
+write_output = true
 geostrophic_balance = false
-output_interval = 365 * 24hour # 48hour makes nice movies
+output_interval = 60 * 24hour # 48hour makes nice movies
 time_avg_window =  output_interval / 2.0 # needs to be a float
-checkpoint_interval = 365 * 5 * day
+checkpoint_interval = 365 * 1 * day
 
-end_time = 100 * 365day
+end_time = 103 * 365day
 const scale = 20;
 filename_1 = "Hybrid_" * string(scale)
 

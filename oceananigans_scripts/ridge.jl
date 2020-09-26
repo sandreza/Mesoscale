@@ -65,7 +65,7 @@ bc_params = (
     λᵘ = 32, # surface forcing e-folding length scale
     λᵗ = 7.0 * 86400.0, # [s]
     λᴺ = 2.0 * 10^4, #[m] northern wall e-folding scale
-    τᵇ = 600.0, # [s] bottom sponge relaxation time-scale
+    τᵇ = 600.0, # [s] bottom sponge relaxation time-scale (basically 2Δt)
     λᵇ = 200.0 # [m] bottom sponge relaxation length
 )
 
