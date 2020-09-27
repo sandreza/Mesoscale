@@ -12,16 +12,16 @@ CUDA.allowscalar(true)
 arch = GPU()
 FT   = Float64
 
-write_output = false
-advection_scheme = CenteredSecondOrder()
+write_output = true
 geostrophic_balance = false
-output_interval = 365 * 24hour # 48hour makes nice movies
-time_avg_window =  output_interval / 2.0 # needs to be a float
+advection_scheme = WENO5()
+output_interval = 60 * 24hour # 48hour makes nice movies
+time_avg_window =  output_interval / 1.0 # needs to be a float
 checkpoint_interval = 365 * 1 * day
 
-end_time = 100 * 365day
+end_time = 103 * 365day
 const scale = 20;
-filename_1 = "Sponge_" * string(scale)
+filename_1 = "Weno_" * string(scale)
 
 const Lx = scale * 50kilometer # 1000km 
 const Ly = scale * 50kilometer # 1000km
@@ -66,35 +66,22 @@ bc_params = (
     λᵘ = 32, # surface forcing e-folding length scale
     λᵗ = 7.0 * 86400.0, # [s]
     λᴺ = 2.0 * 10^4, #[m] northern wall e-folding scale
-    τᵇ = 600.0, # [s] bottom sponge relaxation time-scale
-    λᵇ = 200.0 # [m] bottom sponge relaxation length
 )
 
 const h = 1000.0 # [m]
 const ΔB = 10 * 2e-3
-const ΔT = 10 * 2e-3
-
 
 @inline wind_shape(y, p) = exp( -(y - p.Ly/2)^2 / (p.Ly^2 / p.λᵘ) ) - exp( -( p.Ly/2)^2 / (p.Ly^2 / p.λᵘ) )
 @inline wind_stress(x, y, t, p) = - p.τ / p.ρ * wind_shape(y, p)
+@inline τ₁₃_linear_drag(i, j, grid, clock, state, p) = @inbounds - p.μ * state.velocities.u[i, j, 1]
+@inline τ₂₃_linear_drag(i, j, grid, clock, state, p) = @inbounds - p.μ * state.velocities.v[i, j, 1]
+
+
 
 @inline relaxation_profile(j, grid, p) = p.ΔB * (grid.yC[j]/ p.Ly)
 @inline relaxation(i, j, grid, clock, state, p) = @inbounds p.λˢ * ( state.tracers.b[i, j, grid.Nz] - relaxation_profile(j, grid, p))
 
-## Sponge layers
-# U, V bottom relaxation
-@inline function Fu_function(i, j, k, grid, clock, state, p)
-    return @inbounds ( -1.0/p.τᵇ * state.velocities.u[i,j,k] *
-                    exp(- (1/p.λᵇ) * ( grid.zC[k] + grid.Lz))
-                      )
-end
-
-@inline function Fv_function(i, j, k, grid, clock, state, p)
-    return @inbounds ( -1.0/p.τᵇ * state.velocities.v[i,j,k] *
-                    exp(- (1/p.λᵇ) * ( grid.zC[k] + grid.Lz))
-                      )
-end
-
+# Sponge layers
 # Northern Wall Relaxation
 @inline relaxation_profile_north(k, grid, p) = p.ΔB * ( exp(grid.zC[k]/p.h) - exp(-p.Lz/p.h) ) / (1 - exp(-p.Lz/p.h))
 function Fb_function(i, j, k, grid, clock, state, p)
@@ -102,10 +89,8 @@ function Fb_function(i, j, k, grid, clock, state, p)
         - relaxation_profile_north(k, grid, p)) * exp( (grid.yC[j] - p.Ly) / p.λᴺ ) 
 end
 
-Fu = ParameterizedForcing(Fu_function, bc_params)
-Fv = ParameterizedForcing(Fv_function, bc_params)
 Fb = ParameterizedForcing(Fb_function, bc_params)
-forcings = ModelForcing(u = Fu, v = Fv, b = Fb)
+forcings = ModelForcing(b = Fb)
 
 # Boundary Conditions
 # Buoyancy
@@ -113,7 +98,11 @@ top_b_bc = BoundaryCondition(Flux, relaxation, discrete_form = true, parameters 
 b_bcs = TracerBoundaryConditions(grid, top = top_b_bc)
 # Zonal Velocity
 top_u_bc = BoundaryCondition(Flux, wind_stress, parameters = bc_params)
-u_bcs = UVelocityBoundaryConditions(grid, top = top_u_bc)
+bottom_u_bc =  BoundaryCondition(Flux, τ₁₃_linear_drag, discrete_form = true, parameters = bc_params)
+u_bcs = UVelocityBoundaryConditions(grid, top = top_u_bc, bottom = bottom_u_bc)
+# Meridional Velocity
+bottom_v_bc =  BoundaryCondition(Flux, τ₂₃_linear_drag, discrete_form = true, parameters = bc_params)
+v_bcs = VVelocityBoundaryConditions(grid, bottom = bottom_v_bc)
 
 # Initial Conditions
 ε(σ) = σ * randn()
@@ -126,11 +115,11 @@ else
 end
 
 # boundary conditions
-bcs = (b = b_bcs,  u = u_bcs)
+bcs = (b = b_bcs,  u = u_bcs, v = v_bcs)
 
 ## checkpointing / model construction
 include(pwd() * "/oceananigans_scripts/checkpointing.jl")
-
+@show model.advection
 ## Diagnostics
 include(pwd() * "/oceananigans_scripts/diagnostics.jl")
 

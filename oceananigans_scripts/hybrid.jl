@@ -6,12 +6,14 @@ using Oceananigans.OutputWriters
 using Oceananigans.Diagnostics
 using Oceananigans.Utils
 using Oceananigans.AbstractOperations
+using Oceananigans.Advection
 using CUDA
 CUDA.allowscalar(true)
 arch = GPU()
 FT   = Float64
 
 write_output = true
+advection_scheme = CenteredSecondOrder()
 geostrophic_balance = false
 output_interval = 60 * 24hour # 48hour makes nice movies
 time_avg_window =  output_interval / 2.0 # needs to be a float
