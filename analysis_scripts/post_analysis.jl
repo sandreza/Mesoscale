@@ -100,3 +100,20 @@ function hydrostatic_pressure(b,x,y,z)
     ∇p = [∂ˣp, ∂ʸp, ∂ᶻp]
     return ∇p
 end
+
+function get_data(file)
+    data_dictionary = Dict()
+    for key in keys(file["timeseries"])
+        println(key)
+        tmp = []
+        for t in keys(file["timeseries"]["t"])
+            if key != "t"
+                push!(tmp, file["timeseries"][key][t][1, :,:])
+            else
+                push!(tmp, file["timeseries"][key][t])
+            end
+        end
+        data_dictionary[key] = tmp
+    end
+    return data_dictionary
+end

@@ -66,7 +66,8 @@ bc_params = (
     λᴺ = 2.0 * 10^4, #[m] northern wall e-folding scale
 )
 
-@inline wind_shape(y, p) = exp( -(y - p.Ly/2)^2 / (p.Ly^2 / p.λᵘ) ) - exp( -( p.Ly/2)^2 / (p.Ly^2 / p.λᵘ) )
+@inline wind_shape(y, p) = exp( -(y - p.Ly/2)^2 / (p.Ly^2 / p.λᵘ) ) 
+                           - exp( -( p.Ly/2)^2 / (p.Ly^2 / p.λᵘ) )
 @inline wind_stress(x, y, t, p) = - p.τ / p.ρ * wind_shape(y, p)
 @inline τ₁₃_linear_drag(i, j, grid, clock, state, p) = @inbounds - p.μ * state.velocities.u[i, j, 1]
 @inline τ₂₃_linear_drag(i, j, grid, clock, state, p) = @inbounds - p.μ * state.velocities.v[i, j, 1]
@@ -116,7 +117,7 @@ bcs = (b = b_bcs,  u = u_bcs, v = v_bcs)
 include(pwd() * "/oceananigans_scripts/checkpointing.jl")
 
 ## Diagnostics
-include(pwd() * "/oceanangians_scripts/diagnostics.jl")
+include(pwd() * "/oceananigans_scripts/diagnostics.jl")
 
 ## Set timestep
 # Δt is defined in checkpointing
@@ -124,7 +125,7 @@ include(pwd() * "/oceanangians_scripts/diagnostics.jl")
 cfl = AdvectiveCFL(Δt_wizard)
 
 ## Progress Printing
-include(pwd() * "/oceanangians_scripts/progress_printer.jl")
+include(pwd() * "/oceananigans_scripts/progress_printer.jl")
 
 simulation = Simulation(model, Δt=Δt_wizard, stop_time=end_time, progress=print_progress, iteration_interval=Ni)
 

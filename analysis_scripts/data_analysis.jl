@@ -4,7 +4,7 @@ searchdir(path, key) = filter(x -> occursin(key, x), readdir(path))
 mesoscale_dir = pwd()
 checkpoints = searchdir(mesoscale_dir, "iteration")
 println("The checkpoints are", checkpoints)
-filename = mesoscale_dir * "/" * checkpoints[5]
+filename = mesoscale_dir * "/" * checkpoints[end]
 println("we are looking at ")
 println(filename)
 file = jldopen( filename )
@@ -95,7 +95,7 @@ p1 = scatter(field[1,1,:],  z,
 # day_label = @sprintf("%.2f ", sim_day[i])
 # surface values
 field_label = [(u, "u"), (v, "v"), (w, "w"), (b, "b"), (u .* b, "ub"), (v .* b , "vb")]
-selection = 1 # length(field_label)
+selection = 4 # length(field_label)
 field = field_label[selection][1]
 label = field_label[selection][2]
 cmax = maximum(field)
@@ -127,7 +127,7 @@ alignment = pv ./ magnitude
 
 
 ##
-layer_index = length(z2) - 25
+layer_index = length(z2) - 19
 field = ω[3] ./ Ω[3] 
 label = "instantaneous ω_3 / f "
 ϕ = field[ :, :, layer_index]
@@ -206,7 +206,7 @@ norm(coriolis_force[2] .+ ∇pʰ[2]) / norm(coriolis_force[2])
 
 ##
 field_label = [(coriolis_force[1], "-Ω v"), (-∇pʰ[1], "-∂x(pʰ)"), (coriolis_force[2], "Ω u"), (-∇pʰ[2], "-∂y(pʰ)")]
-selection = 2+2
+selection = 2+0
 field = field_label[selection][1]
 label = field_label[selection][2]
 cmax = maximum(field)
@@ -218,7 +218,7 @@ p1 = contourf(x2, y2, field[ :, :, end]',
     xlabel = "Zonal [m]", ylabel = "Meridional [m]"
     , clims = clims, linewidth = 0)
 
-selection = 1+2
+selection = 1+0
 field = field_label[selection][1]
 label = field_label[selection][2]
 p2 = contourf(x2, y2, field[ :, :, end]', 
@@ -229,7 +229,7 @@ plot(p1,p2)
 ##
 gr(size=(700,400))
 p3 = plot(p1,p2)
-savefig(p3, pwd() * "/geostrophic_1.pdf")
+savefig(p3, pwd() * "/geostrophic_0.pdf")
 ##
 p = ∫dz(b, z)
 h_p = sum(p, dims = (1,2)) ./ ( (Nx -1) * (Ny-1))
