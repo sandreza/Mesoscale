@@ -127,7 +127,7 @@ alignment = pv ./ magnitude
 
 
 ##
-layer_index = length(z2) - 1
+layer_index = length(z2) - 10
 field = ω[3] ./ Ω[3]
 label = "instantaneous ω_3 / f "
 ϕ = field[ :, :, layer_index]
@@ -152,7 +152,19 @@ p2 = contourf(x2, y2, ϕ',
     xlabel = "Zonal [m]", ylabel = "Meridional [m]"
     , clims = clims, linewidth = 0)
 
-plot(p1,p2)
+field = alignment
+label = "instantaneous alignment"
+ϕ = field[ :, :, layer_index]
+location_label = @sprintf("%.2f ", z2[layer_index])
+cmax = maximum(ϕ)
+cmin = minimum(ϕ)
+clims = (cmin, cmax)
+p3 = contourf(x2, y2, ϕ', 
+    color = :thermometer, title = label * " at z=" * location_label * "[m]",
+    xlabel = "Zonal [m]", ylabel = "Meridional [m]"
+    , clims = clims, linewidth = 0)
+
+plot(p1,p2,p3)
 ##
 sf_escale = 32
 sf = @. exp( -(y - Ly/2)^2 / (Ly^2 / sf_escale) ) - exp( -(Ly - Ly/2)^2 / (Ly^2 / sf_escale) )
