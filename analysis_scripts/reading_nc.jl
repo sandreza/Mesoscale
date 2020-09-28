@@ -1,6 +1,7 @@
 using NetCDF, Plots, Printf
 
-sub_directory = "/Geostrophic_Start_20"
+sub_directory = "/Weno_20"
+##
 filename = pwd() * sub_directory * "_middepth.nc"
 ncinfo(filename)
 x = Array(NetCDF.open(filename, "xC"))
@@ -79,7 +80,7 @@ t = Array(NetCDF.open(filename, "time"))
 sim_day = t ./ 86400
 start_time = 1
 skip = 1
-end_time = 180
+end_time = length(t)
 cmax = maximum(Array(b[2:end-1, 2:end-1, 1, start_time:skip:end_time]))
 cmin = minimum(Array(b[2:end-1, 2:end-1, 1, start_time:skip:end_time]))
 clims = (cmin, cmax)
