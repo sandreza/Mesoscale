@@ -12,14 +12,16 @@ CUDA.allowscalar(true)
 arch = GPU()
 FT   = Float64
 
-write_output = true
+write_slices = false
+write_zonal  = true
 geostrophic_balance = false
 advection_scheme = WENO5()
-output_interval = 60 * 24hour # 48hour makes nice movies
-time_avg_window =  output_interval / 1.0 # needs to be a float
-checkpoint_interval = 365 * 1 * day
+slice_output_interval = 48hour
+zonal_output_interval = 365day
+time_avg_window =  zonal_output_interval / 1.0 # needs to be a float
+checkpoint_interval = 365 * 5 *  day
 
-end_time = 103 * 365day
+end_time = 200 * 365day
 const scale = 20;
 filename_1 = "Weno_" * string(scale)
 

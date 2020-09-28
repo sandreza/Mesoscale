@@ -1,5 +1,5 @@
 # Slices
-if write_output
+if write_slices
 fields = Dict(
     "u" => model.velocities.u,
     "v" => model.velocities.v,
@@ -9,22 +9,22 @@ fields = Dict(
 
 surface_output_writer =
     NetCDFOutputWriter(model, fields, filename= filename_1 * "_surface.nc",
-			           time_interval=output_interval, zC=Nz, zF=Nz)
+			           time_interval= slice_output_interval, zC=Nz, zF=Nz)
 
 middepth_output_writer =
     NetCDFOutputWriter(model, fields, filename= filename_1 * "_middepth.nc",
-                       time_interval = output_interval, zC=Int(Nz/2), zF=Int(Nz/2))
+                       time_interval = slice_output_interval, zC=Int(Nz/2), zF=Int(Nz/2))
 
 zonal_output_writer =
     NetCDFOutputWriter(model, fields, filename= filename_1 * "_zonal.nc",
-                       time_interval=output_interval, yC=Int(Ny/2), yF=Int(Ny/2))
+                       time_interval=slice_output_interval, yC=Int(Ny/2), yF=Int(Ny/2))
 
 meridional_output_writer =
     NetCDFOutputWriter(model, fields, filename= filename_1 * "_meridional.nc",
-                       time_interval=output_interval, xC=Int(Nx/2), xF=Int(Nx/2))
-
+                       time_interval=slice_output_interval, xC=Int(Nx/2), xF=Int(Nx/2))
+end
 ## Zonal and Time Averages
-
+if write_zonal
 u, v, w = model.velocities
 b = getproperty(model.tracers, :b)
 
@@ -62,7 +62,7 @@ zonal_fields = Dict(
 
 zonal_statistics = JLD2OutputWriter(model, zonal_fields,
                      time_averaging_window = time_avg_window,
-                             time_interval = output_interval,
+                             time_interval = zonal_output_interval,
                                     prefix = filename_1 * "_zonal_averages",
                                      force = true)
 end
