@@ -19,7 +19,7 @@ advection_scheme = WENO5()
 slice_output_interval = 48hour
 zonal_output_interval = 365day
 time_avg_window =  zonal_output_interval / 1.0 # needs to be a float
-checkpoint_interval = 365 * 5 *  day
+checkpoint_interval = 365 * 1 *  day
 
 end_time = 200 * 365day
 const scale = 20;
@@ -51,7 +51,7 @@ cᵖ = 3994.0  # heat capacity
 ρ = 999.8    # density
 
 const h = 1000.0 # [m]
-const ΔB = 10 * α * g
+const ΔB = 8 * α * g
 
 eos = LinearEquationOfState(FT, α=α, β=0)
 buoyancy = BuoyancyTracer()
@@ -68,8 +68,8 @@ bc_params = (
     ρ = ρ,                     # [kg / m³]
     μ = 1.1e-3,                # [m/s]  linear drag
     H = Lz,                    # [m]
-    h = 1000.0,                # [m]    relexaction profile scale
-    ΔB = 8.0 * α * g,          # [m/s²] buoyancy jump
+    h = h,                # [m]    relexaction profile scale
+    ΔB = ΔB,          # [m/s²] buoyancy jump
     Lz = Lz,                   # [m]
     Lsponge = 1980kilometer,   # [m]
     λᵗ = 7.0*86400.0,          # [s]
@@ -133,7 +133,7 @@ include(pwd() * "/oceananigans_scripts/diagnostics.jl")
 
 ## Set timestep
 # Δt is defined in checkpointing
-Δt_wizard = TimeStepWizard(cfl = 0.3, Δt = Δt, max_change = 1.1, max_Δt = 300.0)
+Δt_wizard = TimeStepWizard(cfl = 0.3, Δt = Δt, max_change = 1.1, max_Δt = 2*300.0)
 cfl = AdvectiveCFL(Δt_wizard)
 
 ## Progress Printing
