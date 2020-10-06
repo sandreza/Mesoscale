@@ -47,7 +47,7 @@ coriolis = BetaPlane(FT, f₀ = f, β = β)
 
 α = 2e-4     # Thermal expansion coefficient [K⁻¹]
 g = 9.8061   # gravitational constant
-cᵖ = 3993.0  # heat capacity
+cᵖ = 3994.0  # heat capacity
 ρ = 999.8    # density
 
 const h = 1000.0 # [m]
