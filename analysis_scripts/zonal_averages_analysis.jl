@@ -3,7 +3,7 @@ using LaTeXStrings
 include(pwd() * "/analysis_scripts/" * "post_analysis.jl")
 
 
-filename = "/L_Weno_20_zonal_averages.jld2"
+filename = "/Abernathy_20_zonal_averages.jld2"
 file = jldopen( pwd() * filename)
 z = file["grid"]["zC"][2:end-1]
 y = file["grid"]["yC"][2:end-1]
