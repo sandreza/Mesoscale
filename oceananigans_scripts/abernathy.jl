@@ -27,7 +27,7 @@ filename_1 = "Abernathy_" * string(scale)
 
 const Lx = scale * 50.0kilometer  # 1000km 
 const Ly = scale * 100.0kilometer # 2000km
-const Lz = 2985.0               # 3km
+const Lz = 2985.0                 # 3km
 
 # Rough resolution
 Δx = Δy = scale * 250meter # 5km
@@ -45,13 +45,14 @@ const β = 1 * 10^(-11)
 coriolis = FPlane(FT, f=f)
 coriolis = BetaPlane(FT, f₀ = f, β = β)
 
+α = 2e-4     # Thermal expansion coefficient [K⁻¹]
+g = 9.8061   # gravitational constant
+cᵖ = 3993.0  # heat capacity
+ρ = 999.8    # density
+
 const h = 1000.0 # [m]
 const ΔB = 10 * α * g
 
-α = 2e-4  # Thermal expansion coefficient [K⁻¹]
-g = 9.8061
-cᵖ = 3993.0
-ρ = 999.8
 eos = LinearEquationOfState(FT, α=α, β=0)
 buoyancy = BuoyancyTracer()
 
@@ -72,8 +73,8 @@ bc_params = (
     Lz = Lz,                   # [m]
     Lsponge = 1980kilometer,   # [m]
     λᵗ = 7.0*86400.0,          # [s]
-    Qᵇ = 10/(ρ * cᵖ * α * g)   # [m² / s³]
-    Qᵇ_cutoff = Ly * 5/6       # [m]
+    Qᵇ = 10/(ρ * cᵖ) * α * g,  # [m² / s³]
+    Qᵇ_cutoff = Ly * 5/6.      # [m]
 )
 
 # Momentum Boundary Conditions
@@ -83,7 +84,7 @@ bc_params = (
 @inline τ₂₃_linear_drag(i, j, grid, clock, state, p) = @inbounds - p.μ * state.velocities.v[i, j, 1]
 
 # Buoyancy Boundary Conditions Forcing Note: Flux convention opposite of Abernathy
-@inline cutoff(j, grid, p ) = grid.yC[j] > Qᵇ_cutoff ? -0.0 : 1.0
+@inline cutoff(j, grid, p ) = grid.yC[j] > p.Qᵇ_cutoff ? -0.0 : 1.0
 @inline surface_flux(j, grid, p) = p.Qᵇ * cos(3π * grid.yC[j] / p.Ly) * cutoff(j, grid, p)
 @inline relaxation(i, j, grid, clock, state, p) = @inbounds surface_flux(j, grid, p)
 
