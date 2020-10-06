@@ -76,15 +76,15 @@ bc_params = (
     Qᵇ_cutoff = Ly * 5/6       # [m]
 )
 
+# Momentum Boundary Conditions
 @inline wind_shape(y, p) = sin( π * y / p.Ly)
 @inline wind_stress(x, y, t, p) = - p.τ / p.ρ * wind_shape(y, p)
 @inline τ₁₃_linear_drag(i, j, grid, clock, state, p) = @inbounds - p.μ * state.velocities.u[i, j, 1]
 @inline τ₂₃_linear_drag(i, j, grid, clock, state, p) = @inbounds - p.μ * state.velocities.v[i, j, 1]
 
-
-# Note: Flux convention opposite of Abernathy
+# Buoyancy Boundary Conditions Forcing Note: Flux convention opposite of Abernathy
 @inline cutoff(j, grid, p ) = grid.yC[j] > Qᵇ_cutoff ? -0.0 : 1.0
-@inline surface_flux(j, grid, p) = p.Qᵇ * cos(3π*grid.yC[j] / p.Ly) * cutoff(j, grid, p )
+@inline surface_flux(j, grid, p) = p.Qᵇ * cos(3π * grid.yC[j] / p.Ly) * cutoff(j, grid, p)
 @inline relaxation(i, j, grid, clock, state, p) = @inbounds surface_flux(j, grid, p)
 
 # Sponge layers
