@@ -94,7 +94,7 @@ function hydrostatic_pressure(b,x,y,z)
     Δx = reshape(x[1:end-1] - x[2:end], (length(x)-1, 1, 1))
     ∂ˣp = (p[1:end-1,:,:] - p[2:end,:,:]) ./ Δx
     ∂ˣp = (∂ˣp[:,1:end-1,:] + ∂ˣp[:,2:end,:]) ./ 2
-    Δy = reshape(x[1:end-1] - x[2:end], (1,length(y)-1, 1))
+    Δy = reshape(y[1:end-1] - y[2:end], (1,length(y)-1, 1))
     ∂ʸp = (p[:,1:end-1,:] - p[:,2:end,:]) ./ Δy
     ∂ʸp = (∂ʸp[1:end-1,:,:] + ∂ʸp[2:end,:,:]) ./ 2
     ∇p = [∂ˣp, ∂ʸp, ∂ᶻp]

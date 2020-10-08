@@ -26,7 +26,8 @@ const Nx = size(b)[1]
 const Ny = size(b)[2]
 const Nz = size(b)[3]
 const Lz = 3000.0
-const Lx = Ly = 10^6 * 1.0
+const Lx = 10^6 * 1.0
+const Ly = 2*10^6
 ##
 @inline function zC(k)
     return - Lz + (k-0.5) / Nz * Lz
@@ -63,7 +64,7 @@ xloc = @sprintf("%.2f ", x[xind])
 p1 = contourf(y, z, field[ xind, :, :]', 
     color = :thermometer, title = "Zonal Slice " * label * " at x=" * xloc,
     xlabel = "Meridional [m]", ylabel = "Depth [m]"
-    , clims = clims, linewidth = 0)
+    , clims = clims, linewidth = 0, levels = 10)
 ##
 field_label = [(u, "u"), (v, "v"), (w, "w"), (b, "b"), ( w .* w, "ww"), (v .* b, "vb")]
 selection = 4
@@ -76,7 +77,7 @@ clims = (cmin, cmax)
 p1 = contourf(y, z, ϕ', 
     color = :thermometer, title = "Zonal Average " * label,
     xlabel = "Meridional [m]", ylabel = "Depth [m]"
-    , clims = clims, linewidth = 0)
+    , clims = clims, linewidth = 0, levels = 10)
 
 ##
 field_label = [(u, "u"), (v, "v"), (w, "w"), (b, "b"), (w .* w, "ww"), (u .* u, "uu"), (v .* v, "vv"), (∂z( w .* w), "d(w .* w) / dz"), (v .* b, "vb"), (∂z(b), "∂z(b)")]
@@ -94,8 +95,9 @@ p1 = scatter(field[1,1,:],  z,
 ##
 # day_label = @sprintf("%.2f ", sim_day[i])
 # surface values
+pyplot(size = (500,500))
 field_label = [(u, "u"), (v, "v"), (w, "w"), (b, "b"), (u .* b, "ub"), (v .* b , "vb")]
-selection = 4 # length(field_label)
+selection = 1 # length(field_label)
 field = field_label[selection][1]
 label = field_label[selection][2]
 cmax = maximum(field)
@@ -104,7 +106,7 @@ clims = (cmin, cmax)
 p1 = contourf(x, y, field[ :, :, end]', 
     color = :thermometer, title = "Surface " * label,
     xlabel = "Zonal [m]", ylabel = "Meridional [m]"
-    , clims = clims, linewidth = 0)
+    , clims = clims, linewidth = 0, levels = 30, ratio = 1)
 
 ## Ertel potential vorticity
 U  = [u, v, w]
@@ -113,7 +115,7 @@ U  = [u, v, w]
 f  = -1e-4
 β  = 1e-11
 zero_ϕ = ω[1] .* 0
-Ω = [zero_ϕ, zero_ϕ, zero_ϕ .+ -1e-4 .+ β .* reshape(y2, (1,191,1))]
+Ω = [zero_ϕ, zero_ϕ, zero_ϕ .+ -1e-4 .+ β .* reshape(y2, (1,length(y2),1))]
 total_ω =  ω +  Ω
 vec_pv = [total_ω[1] .* ∇b[1] ,  total_ω[2] .* ∇b[2] , total_ω[3] .* ∇b[3]]
 pv = vec_pv[1] + vec_pv[2] + vec_pv[3]
@@ -138,7 +140,7 @@ clims = (cmin, cmax)
 p1 = contourf(x2, y2, ϕ', 
     color = :thermometer, title = label * " at z=" * location_label * "[m]",
     xlabel = "Zonal [m]", ylabel = "Meridional [m]"
-    , clims = clims, linewidth = 0)
+    , clims = clims, linewidth = 0, levels = 30, ratio = 1)
 
 field = pv
 label = "instantaneous ertel pv "
@@ -150,9 +152,9 @@ clims = (cmin, cmax)
 p2 = contourf(x2, y2, ϕ', 
     color = :thermometer, title = label * " at z=" * location_label * "[m]",
     xlabel = "Zonal [m]", ylabel = "Meridional [m]"
-    , clims = clims, linewidth = 0)
+    , clims = clims, linewidth = 0, levels = 30)
 
-plot(p1,p2)
+plot(p1)
 ##
 sf_escale = 32
 sf = @. exp( -(y - Ly/2)^2 / (Ly^2 / sf_escale) ) - exp( -(Ly - Ly/2)^2 / (Ly^2 / sf_escale) )
@@ -169,10 +171,10 @@ plot(z, bd, ylims = (0,1))
 
 ##
 # Checking relaxation profile
-Δb = 10 * 2e-3
+Δb = 8 * 2e-3
 h = 1000
-Nx = 192
-Nz = 32
+Nx = length(x)
+Nz = length(z)
 @inline function zC(k)
     return - Lz + (k-0.5) / Nz * Lz
 end

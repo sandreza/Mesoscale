@@ -1,6 +1,6 @@
 using JLD2, Plots, GLMakie, AbstractPlotting
 using ImageTransformations, Colors
-filename = "/Weno_20_checkpoint_iteration10834115.jld2"
+filename = "/Abernathy_20_checkpoint_iteration1261440.jld2"
 file = jldopen( pwd() * filename)
 B = file["tracers"]["b"]["data"][2:end-1, 2:end-1, 2:end-1]
 close(file)
@@ -15,6 +15,6 @@ cmapa1 = vcat(fill(RGBAf0(0,0,0,0), 10), cmapa);
 cmapa2 = vcat(cmapa, fill(RGBAf0(0,0,0,0), 1));
 x, y, z = size(B)
 scene = volume(0..x, 0..y, 0..z, T, colorrange=clims, algorithm=:absorption, absorption=10.0f0, colormap=cmapa2, show_axis=false)
-volume!(x..(2x), 0..y, 0..z, T, colorrange=clims, algorithm=:absorption, absorption=3f0, colormap=cmapa1, show_axis=false)
+# volume!(x..(2x), 0..y, 0..z, T, colorrange=clims, algorithm=:absorption, absorption=3f0, colormap=cmapa1, show_axis=false)
 scene
 ##
