@@ -66,7 +66,7 @@ p1 = contourf(y, z, field[ xind, :, :]',
     , clims = clims, linewidth = 0)
 ##
 field_label = [(u, "u"), (v, "v"), (w, "w"), (b, "b"), ( w .* w, "ww"), (v .* b, "vb")]
-selection = 4
+selection = 5
 field = field_label[selection][1]
 label = field_label[selection][2]
 cmax = maximum(field)
@@ -80,7 +80,7 @@ p1 = contourf(y, z, ϕ',
 
 ##
 field_label = [(u, "u"), (v, "v"), (w, "w"), (b, "b"), (w .* w, "ww"), (u .* u, "uu"), (v .* v, "vv"), (∂z( w .* w), "d(w .* w) / dz"), (v .* b, "vb"), (∂z(b), "∂z(b)")]
-selection = 1
+selection = 8
 field = sum(field_label[selection][1], dims = (1,2)) ./ (Nx * Ny)
 label = field_label[selection][2]
 cmax = maximum(field)
@@ -95,7 +95,7 @@ p1 = scatter(field[1,1,:],  z,
 # day_label = @sprintf("%.2f ", sim_day[i])
 # surface values
 field_label = [(u, "u"), (v, "v"), (w, "w"), (b, "b"), (u .* b, "ub"), (v .* b , "vb")]
-selection = 4 # length(field_label)
+selection = 3 # length(field_label)
 field = field_label[selection][1]
 label = field_label[selection][2]
 cmax = maximum(field)
@@ -231,7 +231,7 @@ norm(coriolis_force[2] .+ ∇pʰ[2]) / norm(coriolis_force[2])
 
 ##
 field_label = [(coriolis_force[1], "-Ω v"), (-∇pʰ[1], "-∂x(pʰ)"), (coriolis_force[2], "Ω u"), (-∇pʰ[2], "-∂y(pʰ)")]
-selection = 2+0
+selection = 2+2*0
 field = field_label[selection][1]
 label = field_label[selection][2]
 cmax = maximum(field)
@@ -243,14 +243,119 @@ p1 = contourf(x2, y2, field[ :, :, end]',
     xlabel = "Zonal [m]", ylabel = "Meridional [m]"
     , clims = clims, linewidth = 0)
 
-selection = 1+0
+selection = 1+2*0
 field = field_label[selection][1]
 label = field_label[selection][2]
 p2 = contourf(x2, y2, field[ :, :, end]', 
     color = :thermometer, title = "100 [m] depth " * label,
     xlabel = "Zonal [m]", yaxis = false
     , clims = clims, linewidth = 0)
-plot(p1,p2)
+
+field = field_label[selection][1] .- field_label[selection+1][1]
+cmax = maximum(field)
+cmin = minimum(field)
+clims = (cmin, cmax)
+label = "deviation"
+p3 = contourf(x2, y2, field[ :, :, end]', 
+    color = :thermometer, title = "100 [m] depth " * label,
+    xlabel = "Zonal [m]", yaxis = false
+    , clims = clims, linewidth = 0)
+plot(p1,p2,p3)
+##
+field_label = [(coriolis_force[1], "-Ω v"), (-∇pʰ[1], "-∂x(pʰ)"), (coriolis_force[2], "Ω u"), (-∇pʰ[2], "-∂y(pʰ)")]
+selection = 2+2
+field = field_label[selection][1]
+label = field_label[selection][2]
+cmax = maximum(field)
+cmin = minimum(field)
+clims = (cmin, cmax)
+
+p1 = contourf(x2, y2, field[ :, :, end]', 
+    color = :thermometer, title = "100 [m] depth " * label,
+    xlabel = "Zonal [m]", ylabel = "Meridional [m]"
+    , clims = clims, linewidth = 0)
+
+selection = 1+2
+field = field_label[selection][1]
+label = field_label[selection][2]
+p2 = contourf(x2, y2, field[ :, :, end]', 
+    color = :thermometer, title = "100 [m] depth " * label,
+    xlabel = "Zonal [m]", yaxis = false
+    , clims = clims, linewidth = 0)
+
+field = field_label[selection][1] .- field_label[selection+1][1]
+cmax = maximum(field)
+cmin = minimum(field)
+clims = (cmin, cmax)
+label = "deviation"
+p3 = contourf(x2, y2, field[ :, :, end]', 
+    color = :thermometer, title = "100 [m] depth " * label,
+    xlabel = "Zonal [m]", yaxis = false
+    , clims = clims, linewidth = 0)
+plot(p1,p2,p3)
+##
+# zonal_average checks 
+selection = 2+2
+field = mean(field_label[selection][1], dims = 1)[1,:,:]
+label = field_label[selection][2]
+cmax = maximum(field)
+cmin = minimum(field)
+clims = (cmin, cmax)
+
+p1 = contourf(y2, z2, field', 
+    color = :thermometer, title = "Zonal Average" * label,
+    xlabel = "Zonal [m]", ylabel = "Depth [m]"
+    , clims = clims, linewidth = 0)
+
+selection = 1+2
+field = mean(field_label[selection][1], dims = 1)[1,:,:]
+label = field_label[selection][2]
+p2 = contourf(y2, z2, field', 
+    color = :thermometer, title = "Zonal Average " * label,
+    xlabel = "Meriodional [m]", yaxis = false
+    , clims = clims, linewidth = 0)
+
+field = mean(field_label[selection][1] .- field_label[selection+1][1], dims = 1)[1,:,:]
+# cmax = maximum(field)
+# cmin = minimum(field)
+clims = (cmin, cmax)
+label = "deviation"
+p3 = contourf(y2, z2, field', 
+    color = :thermometer, title = "Zonal Average " * label,
+    xlabel = "Meriodional [m]", yaxis = false
+    , clims = clims, linewidth = 0)
+plot(p1,p2,p3)
+##
+selection = 2
+field = mean(field_label[selection][1], dims = 1)[1,:,:]
+label = field_label[selection][2]
+cmax = maximum(field)
+cmin = minimum(field)
+clims = (cmin, cmax)
+
+p1 = contourf(y2, z2, field', 
+    color = :thermometer, title = "Zonal Average" * label,
+    xlabel = "Zonal [m]", ylabel = "Depth [m]"
+    , clims = clims, linewidth = 0)
+
+selection = 1
+field = mean(field_label[selection][1], dims = 1)[1,:,:]
+label = field_label[selection][2]
+p2 = contourf(y2, z2, field', 
+    color = :thermometer, title = "Zonal Average " * label,
+    xlabel = "Meriodional [m]", yaxis = false
+    , clims = clims, linewidth = 0)
+
+field = mean(field_label[selection][1] .- field_label[selection+1][1], dims = 1)[1,:,:]
+# cmax = maximum(field)
+# cmin = minimum(field)
+clims = (cmin, cmax)
+label = "deviation"
+p3 = contourf(y2, z2, field', 
+    color = :thermometer, title = "Zonal Average " * label,
+    xlabel = "Meriodional [m]", yaxis = false
+    , clims = clims, linewidth = 0)
+plot(p1,p2,p3)
 ##
 gr(size=(700,400))
 p3 = plot(p1,p2)
@@ -314,3 +419,37 @@ p3 = contourf(y2, z2, ratio[1,:,:]',
     color = :thermometer, title = "rho x f x <v'b'>/db/dz ",
     ylabel = "Depth [m]", xlabel = "Meridional [m]"
     ,  linewidth = 0, ylims = (-1000,0), clims = clims)
+
+##
+∇b = gradient(b)
+b̂ = unitvec(∇b)
+norm(sqrt.(b̂[1].^2 .+ b̂[2].^2 .+ b̂[3].^2) .-1)
+ba = average_once(b)
+ua = average_once(u)
+va = average_once(v)
+wa = average_once(w)
+##
+vecu = [ua, va, wa]
+vecua = vecu[1] .* b̂[1] + vecu[2] .* b̂[2] + vecu[3] .* b̂[3]
+norm(u), norm(v), norm(w)
+norm(vecua)
+# field = mean(abs.(vecua) , dims=1)[1, :, :]
+field = vecua[60,:,:] 
+label = " diapycnal velocity "
+cmax = maximum(field)
+cmin = minimum(field)
+clims = (cmin , cmax )
+
+p1 = contourf(y2, z2, field', color = :thermometer, title = "Zonal Slice" * label,
+    xlabel = "Zonal [m]", ylabel = "Depth [m]"
+    , clims = clims, linewidth = 0)
+##
+field = vecua[60,:,:] ./ (va[60,:,:] )  .> 0.5
+p1 = heatmap(field', color = :blues )
+field = vecua[60,:,:] ./ ua[60,:,:] .> 0.5
+p2 = heatmap(field', color = :blues )
+field = vecua[60,:,:] ./ sqrt.(ua[60,:,:] .^2 .+ va[60,:,:] .^2) .> 0.1
+p3 = heatmap(field', color = :blues )
+plot(p1,p2,p3)
+
+##

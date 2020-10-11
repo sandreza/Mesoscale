@@ -32,12 +32,12 @@ end
 ##
 
 
-vb = mean(data_dictionary["vb"][2:end])
+vb = mean(data_dictionary["vb"][end-20:end])
 vb = (vb[2:end, :] + vb[1:end-1, :]) ./ 2
-b = mean(data_dictionary["b"][2:end])
+b = mean(data_dictionary["b"][end-20:end])
 # plot_field(b, name = "b")
-u = mean(data_dictionary["u"][2:end])
-v = mean(data_dictionary["v"][2:end])
+u = mean(data_dictionary["u"][end-20:end])
+v = mean(data_dictionary["v"][end-20:end])
 v = (v[2:end, :] + v[1:end-1, :]) ./ 2
 vpbp = vb - v .* b
 f  = -1e-4

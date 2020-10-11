@@ -117,3 +117,27 @@ function get_data(file)
     end
     return data_dictionary
 end
+
+
+##
+# Get diapycnal component
+function gradient(field)
+    return [∂x(field), ∂y(field), ∂z(field)]
+end
+
+function unitvec(∇b)
+    ∂ˣb, ∂ʸb, ∂ᶻb = ∇b
+    magnitude = copy(∂ˣb)
+    for i in 1:length(∂ˣb)
+        magnitude[i] = sqrt(∂ˣb[i]^2 + ∂ʸb[i]^2 + ∂ᶻb[i]^2)
+    end
+    return [∂ˣb ./ magnitude, ∂ʸb ./ magnitude, ∂ᶻb ./ magnitude]
+end
+
+function average_once(b)
+    c = (b[2:end, :, :] + b[1:end-1, :, :]) ./2
+    c = (c[:, 2:end, :] + c[:, 1:end-1 , :]) ./2
+    c = (c[:, :, 2:end] + c[:, :, 1:end-1]) ./2
+    return c
+end
+    
