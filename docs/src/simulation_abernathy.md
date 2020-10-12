@@ -92,7 +92,7 @@ The linear drag was chosen to be
 
 |   Parameter             | Value       | Units | Description |
 |   :-------:             | :---:       | :---:  |:---:       |
-| ``\mu``           | ``10^{-3}`` |  ``\frac{m}{\text{s}}``      | linear drag velocity parameter|
+| ``\mu``           | ``1.1 \times 10^{-3}`` |  ``\frac{m}{\text{s}}``      | linear drag velocity parameter|
 
 And finally the numerical parameters were
 
