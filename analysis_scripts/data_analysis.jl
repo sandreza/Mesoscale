@@ -4,7 +4,7 @@ searchdir(path, key) = filter(x -> occursin(key, x), readdir(path))
 mesoscale_dir = pwd()
 checkpoints = searchdir(mesoscale_dir, "iteration")
 println("The checkpoints are", checkpoints)
-filename = mesoscale_dir * "/" * checkpoints[end]
+filename = mesoscale_dir * "/" * checkpoints[1]
 println("we are looking at ")
 println(filename)
 file = jldopen( filename )
@@ -66,7 +66,7 @@ p1 = contourf(y, z, field[ xind, :, :]',
     , clims = clims, linewidth = 0)
 ##
 field_label = [(u, "u"), (v, "v"), (w, "w"), (b, "b"), ( w .* w, "ww"), (v .* b, "vb")]
-selection = 5
+selection = 4
 field = field_label[selection][1]
 label = field_label[selection][2]
 cmax = maximum(field)
