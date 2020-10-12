@@ -9,7 +9,7 @@ The equations of motion are [here](@ref sec:eom). The Oceananigans script is the
 # Numerics 
 
 - Advection Scheme: 3rd-5th order, WENO5
-- Timestepping: 1st-2nd order, Quasi-AB2
+- Timestepping: 1st-2nd order, Quasi-AB2 projection method
 
 # Table of model parameters and functional form
 
@@ -74,6 +74,7 @@ with parameter values
 |   Parameter             | Value       | Units | Description |
 |   :-------:             | :---:       | :---:  |:---:       |
 | ``Q``           | ``10 `` |  ``\frac{W}{\text{m}^2}``      | surface flux|
+| ``\Delta b``           | ``8 \times \alpha \times 10`` | ``\frac{\text{m}}{\text{ s}^2}``           | buoyancy jump|
 | ``h``           | ``1`` | ``\text{km}``           | northern wall stratification e-folding length|
 | ``\lambda^t``           | ``7 \times 86400`` | ``\text{s}``           | relaxation time|
 | ``L_{\text{sponge}}``           | ``1980`` | ``\text{km}``           | northern wall meridional activation level |
