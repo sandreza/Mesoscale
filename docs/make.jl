@@ -3,6 +3,7 @@ using Documenter
 channel_simulations = [
     "Home" => "channels_home.md",
     "Simulation 1" => "simulation_1.md",
+    "Abernathy Setup" => "simulation_abernathy.md",
 ]
 makedocs(
     pages = [
