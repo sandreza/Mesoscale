@@ -3,7 +3,7 @@ using LaTeXStrings
 include(pwd() * "/analysis_scripts/" * "post_analysis.jl")
 
 
-filename = "/Weno_20_zonal_averages.jld2"
+filename = "/Abernathy_20_zonal_averages.jld2"
 file = jldopen( pwd() * filename)
 z = file["grid"]["zC"][2:end-1]
 y = file["grid"]["yC"][2:end-1]
@@ -30,7 +30,8 @@ function plot_field(a; name = " ")
     display(p1)
 end
 ##
-
+tmp = norm(data_dictionary["u"][end] - data_dictionary["u"][end-1])
+tmp /= norm(data_dictionary["u"][end])
 
 vb = mean(data_dictionary["vb"][end-20:end])
 vb = (vb[2:end, :] + vb[1:end-1, :]) ./ 2
@@ -66,8 +67,8 @@ p1 = contourf(py, pz, a',
 
 
 ##
-b = mean(data_dictionary["v"][2:end])
-plot_field(b, name = "v")
+b = mean(data_dictionary["b"][2:end])
+plot_field(b, name = "b")
 
 ##
 

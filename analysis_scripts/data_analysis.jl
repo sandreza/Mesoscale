@@ -4,7 +4,7 @@ searchdir(path, key) = filter(x -> occursin(key, x), readdir(path))
 mesoscale_dir = pwd()
 checkpoints = searchdir(mesoscale_dir, "iteration")
 println("The checkpoints are", checkpoints)
-filename = mesoscale_dir * "/" * checkpoints[1]
+filename = mesoscale_dir * "/" * checkpoints[7]
 println("we are looking at ")
 println(filename)
 file = jldopen( filename )
@@ -26,7 +26,8 @@ const Nx = size(b)[1]
 const Ny = size(b)[2]
 const Nz = size(b)[3]
 const Lz = 3000.0
-const Lx = Ly = 10^6 * 1.0
+const Lx = 10^6 * 1.0
+const Ly = 10^6
 ##
 @inline function zC(k)
     return - Lz + (k-0.5) / Nz * Lz
@@ -63,7 +64,7 @@ xloc = @sprintf("%.2f ", x[xind])
 p1 = contourf(y, z, field[ xind, :, :]', 
     color = :thermometer, title = "Zonal Slice " * label * " at x=" * xloc,
     xlabel = "Meridional [m]", ylabel = "Depth [m]"
-    , clims = clims, linewidth = 0)
+    , clims = clims, linewidth = 0, levels = 10)
 ##
 field_label = [(u, "u"), (v, "v"), (w, "w"), (b, "b"), ( w .* w, "ww"), (v .* b, "vb")]
 selection = 4
@@ -76,7 +77,7 @@ clims = (cmin, cmax)
 p1 = contourf(y, z, ϕ', 
     color = :thermometer, title = "Zonal Average " * label,
     xlabel = "Meridional [m]", ylabel = "Depth [m]"
-    , clims = clims, linewidth = 0)
+    , clims = clims, linewidth = 0, levels = 10)
 
 ##
 field_label = [(u, "u"), (v, "v"), (w, "w"), (b, "b"), (w .* w, "ww"), (u .* u, "uu"), (v .* v, "vv"), (∂z( w .* w), "d(w .* w) / dz"), (v .* b, "vb"), (∂z(b), "∂z(b)")]
@@ -94,17 +95,18 @@ p1 = scatter(field[1,1,:],  z,
 ##
 # day_label = @sprintf("%.2f ", sim_day[i])
 # surface values
+# pyplot(size = (500,500))
 field_label = [(u, "u"), (v, "v"), (w, "w"), (b, "b"), (u .* b, "ub"), (v .* b , "vb")]
-selection = 3 # length(field_label)
+selection = 4 # length(field_label)
 field = field_label[selection][1]
 label = field_label[selection][2]
 cmax = maximum(field)
 cmin = minimum(field)
 clims = (cmin, cmax)
-p1 = contourf(x, y, field[ :, :, end]', 
+p1 = contourf(x, y, field[ :, :, end-10]', 
     color = :thermometer, title = "Surface " * label,
     xlabel = "Zonal [m]", ylabel = "Meridional [m]"
-    , clims = clims, linewidth = 0)
+    , clims = clims, linewidth = 0, levels = 30, ratio = 1)
 
 ## Ertel potential vorticity
 U  = [u, v, w]
@@ -113,7 +115,7 @@ U  = [u, v, w]
 f  = -1e-4
 β  = 1e-11
 zero_ϕ = ω[1] .* 0
-Ω = [zero_ϕ, zero_ϕ, zero_ϕ .+ -1e-4 .+ β .* reshape(y2, (1,191,1))]
+Ω = [zero_ϕ, zero_ϕ, zero_ϕ .+ -1e-4 .+ β .* reshape(y2, (1,length(y2),1))]
 total_ω =  ω +  Ω
 vec_pv = [total_ω[1] .* ∇b[1] ,  total_ω[2] .* ∇b[2] , total_ω[3] .* ∇b[3]]
 pv = vec_pv[1] + vec_pv[2] + vec_pv[3]
@@ -138,7 +140,7 @@ clims = (cmin, cmax)
 p1 = contourf(x2, y2, ϕ', 
     color = :thermometer, title = label * " at z=" * location_label * "[m]",
     xlabel = "Zonal [m]", ylabel = "Meridional [m]"
-    , clims = clims, linewidth = 0)
+    , clims = clims, linewidth = 0, levels = 30, ratio = 1)
 
 field = pv
 label = "instantaneous ertel pv "
@@ -150,7 +152,7 @@ clims = (cmin, cmax)
 p2 = contourf(x2, y2, ϕ', 
     color = :thermometer, title = label * " at z=" * location_label * "[m]",
     xlabel = "Zonal [m]", ylabel = "Meridional [m]"
-    , clims = clims, linewidth = 0)
+    , clims = clims, linewidth = 0, levels = 30)
 
 field = alignment
 label = "instantaneous alignment"
@@ -181,10 +183,10 @@ plot(z, bd, ylims = (0,1))
 
 ##
 # Checking relaxation profile
-Δb = 10 * 2e-3
+Δb = 8 * 2e-3
 h = 1000
-Nx = 192
-Nz = 32
+Nx = length(x)
+Nz = length(z)
 @inline function zC(k)
     return - Lz + (k-0.5) / Nz * Lz
 end
@@ -196,11 +198,11 @@ end
 relaxation_profile(j) = Δb * (yC(j)/ Ly)
 relaxation_profile_north_2(k) = Δb * ( exp(zC(k)/h) - exp(-Lz/h) ) / (1 - exp(-Lz/h))
 
-tmp1 = relaxation_profile.( collect(1:192))
+tmp1 = relaxation_profile.( collect(1:length(y)))
 tmp2 = relaxation_profile_north_2.( collect(1:32))
 
 zonal_average_b = sum(b, dims = (1, )) ./ Nx
-tmp1 = reshape(tmp1, (1, 192, 1))
+tmp1 = reshape(tmp1, (1, length(y), 1))
 plot( b[1, : , end])
 plot!(tmp1[:])
 new_field = zonal_average_b .- tmp1
@@ -230,6 +232,7 @@ norm(coriolis_force[1] .+ ∇pʰ[1]) / norm(coriolis_force[1])
 norm(coriolis_force[2] .+ ∇pʰ[2]) / norm(coriolis_force[2])
 
 ##
+gr()
 field_label = [(coriolis_force[1], "-Ω v"), (-∇pʰ[1], "-∂x(pʰ)"), (coriolis_force[2], "Ω u"), (-∇pʰ[2], "-∂y(pʰ)")]
 selection = 2+2*0
 field = field_label[selection][1]
@@ -273,7 +276,7 @@ clims = (cmin, cmax)
 p1 = contourf(x2, y2, field[ :, :, end]', 
     color = :thermometer, title = "100 [m] depth " * label,
     xlabel = "Zonal [m]", ylabel = "Meridional [m]"
-    , clims = clims, linewidth = 0)
+    , clims = clims, linewidth = 0, levels = 30)
 
 selection = 1+2
 field = field_label[selection][1]
@@ -357,9 +360,32 @@ p3 = contourf(y2, z2, field',
     , clims = clims, linewidth = 0)
 plot(p1,p2,p3)
 ##
-gr(size=(700,400))
-p3 = plot(p1,p2)
-savefig(p3, pwd() * "/geostrophic_0.pdf")
+field_label = [(coriolis_force[1], "-Ω v"), (-∇pʰ[1], "-∂x(pʰ)"), (coriolis_force[2], "Ω u"), (-∇pʰ[2], "-∂y(pʰ)")]
+selection = 2+2
+field = field_label[selection][1]
+label = field_label[selection][2]
+cmax = maximum(field)
+cmin = minimum(field)
+clims = (cmin, cmax)
+
+p3 = contourf(x2, y2, field[ :, :, end]', 
+    color = :thermometer, title = "100 [m] depth " * label,
+    xlabel = "Zonal [m]", ylabel = "Meridional [m]"
+    , clims = clims, linewidth = 0, levels = 30)
+
+selection = 1+2
+field = field_label[selection][1]
+label = field_label[selection][2]
+p4 = contourf(x2, y2, field[ :, :, end]', 
+    color = :thermometer, title = "100 [m] depth " * label,
+    xlabel = "Zonal [m]", yaxis = false
+    , clims = clims, linewidth = 0, levels = 30)
+plot(p3,p4)
+##
+p5 = plot(p1,p2)
+savefig(p5, pwd() * "/geostrophic_v.pdf")
+p5 = plot(p3,p4)
+savefig(p5, pwd() * "/geostrophic_u.pdf")
 ##
 p = ∫dz(b, z)
 h_p = sum(p, dims = (1,2)) ./ ( (Nx -1) * (Ny-1))
@@ -400,7 +426,7 @@ p2 = contourf(y2, z2, ∂zb_mean[1,:,:]',
     ylabel = "Depth [m]", xlabel = "Meridional [m]"
     ,  linewidth = 0)    
 
-𝐟 = reshape(f .+ β * y, (1,192,1))
+𝐟 = reshape(f .+ β * y, (1,length(y),1))
 fvb = 𝐟 .* mean_vb
 compare_fvb = avg_other(fvb,1)
 ##
