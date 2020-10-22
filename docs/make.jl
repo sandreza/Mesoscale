@@ -4,6 +4,7 @@ channel_simulations = [
     "Home" => "channels_home.md",
     "Simulation 1" => "simulation_1.md",
     "Abernathy Setup" => "simulation_abernathy.md",
+    "No Flux Setup" => "simulation_noflux.md",
 ]
 makedocs(
     pages = [
