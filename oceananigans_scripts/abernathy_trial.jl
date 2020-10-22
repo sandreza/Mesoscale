@@ -13,7 +13,7 @@ arch = GPU()
 FT   = Float64
 
 write_slices = false
-write_zonal  = false
+write_zonal  = true
 geostrophic_balance = false
 advection_scheme = WENO5()
 timestepping_scheme = :RungeKutta3
@@ -24,11 +24,11 @@ checkpoint_interval = 365 * 1 *  day
 
 end_time = 200 * 365day
 const scale = 20;
-filename_1 = "NoFlux_" * string(scale)
+filename_1 = "Abernathy_trial_" * string(scale)
 
 const Lx = scale * 50.0kilometer  # 1000km 
-const Ly = scale * 50.0kilometer # 2000km
-const Lz = 3000.0                 # 3km
+const Ly = scale * 100.0kilometer # 2000km
+const Lz = 2985.0                 # 3km
 
 # Rough resolution
 Δx = Δy = scale * 250meter # 5km
@@ -69,13 +69,13 @@ bc_params = (
     ρ = ρ,                     # [kg / m³]
     μ = 1.1e-3,                # [m/s]  linear drag
     H = Lz,                    # [m]
-    h = h,                     # [m]    relaxation profile scale
-    ΔB = ΔB,                   # [m/s²] buoyancy jump
+    h = h,                # [m]    relexaction profile scale
+    ΔB = ΔB,          # [m/s²] buoyancy jump
     Lz = Lz,                   # [m]
     Lsponge = 1980kilometer,   # [m]
-    λᵗ = 1000*356.0*86400.0,   # [s]
+    λᵗ = 7.0*86400.0,          # [s]
     Qᵇ = 10/(ρ * cᵖ) * α * g,  # [m² / s³]
-    Qᵇ_cutoff = Ly * 1/2.      # [m]
+    Qᵇ_cutoff = Ly * 5/6.      # [m]
 )
 
 # Momentum Boundary Conditions
@@ -86,12 +86,20 @@ bc_params = (
 
 # Buoyancy Boundary Conditions Forcing Note: Flux convention opposite of Abernathy
 @inline cutoff(j, grid, p ) = grid.yC[j] > p.Qᵇ_cutoff ? -0.0 : 1.0
-@inline surface_flux(j, grid, p) = p.Qᵇ * sin(4π * grid.yC[j] / p.Ly) * cutoff(j, grid, p)
+@inline surface_flux(j, grid, p) = p.Qᵇ * cos(3π * grid.yC[j] / p.Ly) * cutoff(j, grid, p)
 @inline relaxation(i, j, grid, clock, state, p) = @inbounds surface_flux(j, grid, p)
-# surface_flux(i) = surface_flux(i, grid, bc_params)
-# using UnicodePlots
-# lineplot(surface_flux.(collect(1:192)))
-forcings = ModelForcing()
+
+# Sponge layers
+relu(y) = (abs(y) + y) * 0.5
+# Northern Wall Relaxation
+@inline relaxation_profile_north(k, grid, p) = p.ΔB * ( exp(grid.zC[k]/p.h) - exp(-p.Lz/p.h) ) / (1 - exp(-p.Lz/p.h))
+function Fb_function(i, j, k, grid, clock, state, p)
+    return @inbounds - (1/p.λᵗ)  * (state.tracers.b[i,j,k] 
+        - relaxation_profile_north(k, grid, p)) * relu( (grid.yC[j]-p.Lsponge) / (p.Ly - p.Lsponge))
+end
+
+Fb = ParameterizedForcing(Fb_function, bc_params)
+forcings = ModelForcing(b = Fb)
 
 # Boundary Conditions
 # Buoyancy
@@ -121,14 +129,12 @@ bcs = (b = b_bcs,  u = u_bcs, v = v_bcs)
 ## checkpointing / model construction
 include(pwd() * "/oceananigans_scripts/t_checkpointing.jl")
 @show model.advection
-@show model.timestepper
 ## Diagnostics
 include(pwd() * "/oceananigans_scripts/diagnostics.jl")
 
 ## Set timestep
 # Δt is defined in checkpointing
-Δt = 300.0
-Δt_wizard = TimeStepWizard(cfl = 1.0, Δt = Δt, max_change = 1.05, max_Δt = 4.0*300.0)
+Δt_wizard = TimeStepWizard(cfl = 1.0, Δt = Δt, max_change = 1.05, max_Δt = 5 * 300.0)
 cfl = AdvectiveCFL(Δt_wizard)
 
 ## Progress Printing
