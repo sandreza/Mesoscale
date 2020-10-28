@@ -2,9 +2,9 @@ using JLD2, Plots, Printf, LinearAlgebra, Statistics
 include(pwd() * "/analysis_scripts/" * "post_analysis.jl")
 searchdir(path, key) = filter(x -> occursin(key, x), readdir(path))
 mesoscale_dir = pwd()
-checkpoints = searchdir(mesoscale_dir, "Weno")
+checkpoints = searchdir(mesoscale_dir, "Weno_CPU")
 println("The checkpoints are", checkpoints)
-filename = mesoscale_dir * "/" * checkpoints[2]
+filename = mesoscale_dir * "/" * checkpoints[1]
 println("we are looking at ")
 println(filename)
 file = jldopen( filename )
@@ -81,6 +81,12 @@ p1 = contourf(y, z[zinds], ϕ',
     color = :thermometer, title = "Zonal Average " * label,
     xlabel = "Meridional [m]", ylabel = "Depth [m]"
     , clims = clims, linewidth = 0, levels = 10)
+p2 = contourf(avg(x,12), z, 
+             mean(avgxy(field,12), dims = 1)[1,:,:]',
+             color = :thermometer, title = "Zonal and Coarse Average " * label,
+    xlabel = "Meridional [m]", ylabel = "Depth [m]"
+    , clims = clims, linewidth = 0, levels = 10)
+plot(p1,p2)
 
 ##
 field_label = [(u, "u"), (v, "v"), (w, "w"), (b, "b"), (w .* w, "ww"), (u .* u, "uu"), (v .* v, "vv"), (∂z( w .* w), "d(w .* w) / dz"), (v .* b, "vb"), (∂z(b), "∂z(b)")]
