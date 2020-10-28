@@ -141,3 +141,51 @@ function average_once(b)
     return c
 end
     
+## Coarse-grained
+function avg(Φ, n)
+    m = size(Φ)[1]
+    scale = Int(floor(m/n))
+    if ( abs(Int(floor(m/n)) - m/n) > eps(1.0))
+        return error
+    end
+    Φ2 = zeros(n)
+    for i in 1:n
+        Φ2[i] = 0
+            for j in 1:scale
+                Φ2[i] += Φ[scale*(i-1) + j] / scale
+            end
+    end
+    return Φ2
+end
+function avgx(Φ, n)
+    m = size(Φ)[1]
+    scale = Int(floor(m/n))
+    if ( abs(Int(floor(m/n)) - m/n) > eps(1.0))
+        return error
+    end
+    nx, ny, nz = size(Φ)
+    Φ2 = zeros(n, ny, nz)
+    for i in 1:n
+        Φ2[i,:,:] .= 0
+            for j in 1:scale
+                Φ2[i,:,:] .+= Φ[scale*(i-1) + j,:,:] / scale
+            end
+    end
+    return Φ2
+end
+function avgy(Φ, n)
+    m = size(Φ)[2]
+    scale = Int(floor(m/n))
+    if ( abs(Int(floor(m/n)) - m/n) > eps(1.0))
+        return error
+    end
+    nx, ny, nz = size(Φ)
+    Φ2 = zeros(nx, n, nz)
+    for i in 1:n
+        Φ2[:,i,:] .= 0
+            for j in 1:scale
+                Φ2[:,i,:] .+= Φ[:,scale*(i-1) + j,:] / scale
+            end
+    end
+    return Φ2
+end

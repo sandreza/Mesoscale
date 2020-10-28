@@ -2,9 +2,9 @@ using JLD2, Plots, Printf, LinearAlgebra, Statistics
 include(pwd() * "/analysis_scripts/" * "post_analysis.jl")
 searchdir(path, key) = filter(x -> occursin(key, x), readdir(path))
 mesoscale_dir = pwd()
-checkpoints = searchdir(mesoscale_dir, "NoFlux")
+checkpoints = searchdir(mesoscale_dir, "Weno")
 println("The checkpoints are", checkpoints)
-filename = mesoscale_dir * "/" * checkpoints[end-1]
+filename = mesoscale_dir * "/" * checkpoints[2]
 println("we are looking at ")
 println(filename)
 file = jldopen( filename )
@@ -59,7 +59,7 @@ label = field_label[selection][2]
 cmax = maximum(field)
 cmin = minimum(field)
 clims = (cmin, cmax)
-xind = 96
+xind = 1
 xloc = @sprintf("%.2f ", x[xind])
 p1 = contourf(y, z, field[ xind, :, :]', 
     color = :thermometer, title = "Zonal Slice " * label * " at x=" * xloc,
@@ -80,7 +80,7 @@ clims = (cmin, cmax)
 p1 = contourf(y, z[zinds], ϕ', 
     color = :thermometer, title = "Zonal Average " * label,
     xlabel = "Meridional [m]", ylabel = "Depth [m]"
-    , clims = clims, linewidth = 0, levels = 30)
+    , clims = clims, linewidth = 0, levels = 10)
 
 ##
 field_label = [(u, "u"), (v, "v"), (w, "w"), (b, "b"), (w .* w, "ww"), (u .* u, "uu"), (v .* v, "vv"), (∂z( w .* w), "d(w .* w) / dz"), (v .* b, "vb"), (∂z(b), "∂z(b)")]
@@ -133,7 +133,7 @@ alignment = pv ./ magnitude
 
 
 ##
-layer_index = length(z2) - 5
+layer_index = length(z2) - 10
 field = ω[3] ./ Ω[3]
 label = "instantaneous ω_3 / f "
 ϕ = field[ :, :, layer_index]
