@@ -35,11 +35,11 @@ scene = volume(0..x, 0..y, 0..z, Ti, colorrange=clims, colormap=cmap_rgba, algor
 
 ##
 zoom!(scene, (100, 00, 00), -1.25, false)
-θ = 0.015 * 2π
+θ = 0.005 * 2π
 rotate_cam!(scene, (θ, 0, 0))
 
 ##
-record(scene, "oceananigans_makie.gif", 1:length(t), framerate=30) do n
+record(scene, "oceananigans_makie.gif", 1:length(t), framerate=10) do n
     obs[] = n
     n == 1 && zoom!(scene, (0, 0, 0), -1.25, false)
     rotate_cam!(scene, (θ, 0, 0))
