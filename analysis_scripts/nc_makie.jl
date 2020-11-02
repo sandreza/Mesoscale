@@ -34,12 +34,28 @@ clims = ( minimum(T[:,:,zind:end]) * 1.0, maximum(T[:,:,zind:end]))
 cmap_rgba = RGBAf0.(cmap_rgb, A)
 
 scene, layout = layoutscene(resolution = (1920, 1080),  backgroundcolor=:black)
-lscene = layout[1, 1] = LScene(scene)   
+lscene = layout[1:2, 1] = LScene(scene)   
 volumeobj = volume!(lscene, 0..x, 0..y, 0..z, Ti, colorrange=clims, colormap=cmap_rgba,
-                     algorithm=:absorption, absorption=10.0f0
+                     algorithm=:absorption, absorption=10.0f0,
+                     showaxis = false,
         )
-cbar = layout[1, 2] = LColorbar(scene,
-     volumeobj, width = 50, height = 1000, absorption=10.0f0, ticklabelcolor = :white, ticklabelsize = 50)           
+        #=
+cbar = layout[1, 2] = LColorbar(scene, volumeobj, 
+                label = "Buoyancy [m/s²]", labelcolor = :white,
+                labelsize = 50,
+                width = 50, height = 900, absorption=10.0f0, 
+                ticklabelcolor = :black, ticklabelsize = 50) 
+                =#
+lscene2 = layout[1, 2] = LScene(scene)
+volumeobj = volume!(lscene2, 0..x, 0..y, 0..z, Ti, colorrange=clims, colormap=cmap_rgba,
+                     algorithm=:absorption, absorption=10.0f0,
+                     showaxis = false,
+        )   
+lscene3 = layout[2, 2] = LScene(scene)
+volumeobj = volume!(lscene3, 0..x, 0..y, 0..z, Ti, colorrange=clims, colormap=cmap_rgba,
+                     algorithm=:absorption, absorption=10.0f0,
+                     showaxis = false,
+        )            
 # LColorbar(scene, colormap=cmap_rgba,  label = "Activity [spikes/sec]")
 scene
 ##
@@ -50,12 +66,21 @@ lscene
 zoom!(scene.children[1], (100, 00, 00), -1.25, false)
 θ = -0.005 * 2π
 rotate_cam!(scene.children[1], (θ, 0, 0))
+θ2 = -0.005 * 2π
+rotate_cam!(scene.children[2], (0, θ2, 0))
+θ3 = -0.005 * 2π
+rotate_cam!(scene.children[3], (0, 0, θ3))
 
 ##
 record(scene, "oceananigans_makie.gif", 1:length(t), framerate=10) do n
     obs[] = n
     n == 1 && zoom!(scene.children[1], (0, 0, 0), -1.25, false)
+    θ = -0.005 * 2π
     rotate_cam!(scene.children[1], (θ, 0, 0))
+    θ2 = -0.005 * 2π
+    rotate_cam!(scene.children[2], (0, θ2, 0))
+    θ3 = -0.005 * 2π
+    rotate_cam!(scene.children[3], (0, 0, θ3))
 end
 #=
 
