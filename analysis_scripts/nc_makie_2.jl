@@ -63,8 +63,8 @@ tmp = layout[1,2] = LText(scene, "Buoyancy [m/s²] ", color = :white, textsize =
 tmp2 = layout[1,4] = LText(scene, " ", color = :white, textsize = 50, rotation = π/2)
 tmp3 = layout[0,1] = LText(scene, "3D Buoyancy Field", color = :white, textsize = 50)
 tmp.padding = (100, 50, 0, 0) # left right bottom top
-tmp2.padding = (0, 50, 0, 0) # left right bottom top
-tmp3.padding = (200, 300, -10, 0) # left right bottom top
+tmp2.padding = (0, 0, 0, 0) # left right bottom top
+tmp3.padding = (200, 200, -10, 0) # left right bottom top
 display(scene)
 # slice = layout[2, 2]
 ##
