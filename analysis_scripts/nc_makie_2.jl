@@ -42,15 +42,23 @@ volumeobj = volume!(lscene, 0..x, 0..y, 0..z, Ti, colorrange=clims, colormap=cma
                      algorithm=:absorption, absorption=10.0f0,
                      showaxis = true, 
         )
-supertitle = layout[1, 2] = LText(scene,  " Buoyancy [m/s²] ", textsize = 50, color = :white)
-cbar = layout[2, 2] = LColorbar(scene, volumeobj, 
-                label = "Buoyancy [m/s²]", labelcolor = :white,
-                labelsize = 50, 
-                width = 5*5, height = 700, absorption=10.0f0, 
-                ticklabelcolor = :white, ticklabelsize = 50) 
 
-ax = layout[3,2] = LAxis(scene)
-AbstractPlotting.heatmap!(ax, 0..y,0..z, Ti_s, colormap=cgrad(:thermometer, categorical=true), interpolate=true)
+supertitle = layout[2, 2] = LText(scene,  " Zonal Average ", textsize = 50, color = :white)
+
+ax = layout[3,2] = LAxis(scene, xlabel = "South to North [m]", 
+                         xlabelcolor = :white, ylabel = "Depth [m]", 
+                         ylabelcolor = :white, xlabelsize = 40, ylabelsize = 40,
+                         xtickcolor = :white, ytickcolor = :white,
+                         xticklabelcolor  = :white, yticklabelcolor = :white, backgroundcolor = :black)
+zonalobj = AbstractPlotting.heatmap!(ax, 0..y,0..z, Ti_s, colorrange = clims, 
+                                    colormap=cgrad(:thermometer, categorical=true),     
+                                    interpolate=true, )
+cbar = layout[1, 2] = LColorbar(scene, zonalobj, 
+                label = " ", labelcolor = :white,
+                labelsize = 40, 
+                width = 5*5, height = 400, absorption=10.0f0, 
+                ticklabelcolor = :white, ticklabelsize = 50) 
+layout[0,:] = LText(scene, "Buoyancy [m/s²] ", color = :white, textsize = 50)
 display(scene)
 # slice = layout[2, 2]
 ##
