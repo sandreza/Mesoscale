@@ -48,9 +48,10 @@ supertitle = layout[2, 2:4] = LText(scene,  " Zonal Average ", textsize = 50, co
 zonal_ax = layout[3,2:4] = LAxis(scene, xlabel = "South to North [m]", 
                          xlabelcolor = :white, ylabel = "Depth [m]", 
                          ylabelcolor = :white, xlabelsize = 40, ylabelsize = 40,
+                         xticklabelsize = 25, yticklabelsize = 25,
                          xtickcolor = :white, ytickcolor = :white,
                          xticklabelcolor  = :white, yticklabelcolor = :white, backgroundcolor = :black)
-zonalobj = AbstractPlotting.heatmap!(zonal_ax, 0..y,0..z, Ti_s, colorrange = clims, 
+zonalobj = AbstractPlotting.heatmap!(zonal_ax, yC, zC[zind:end], Ti_s, colorrange = clims, 
                                     colormap=cgrad(:thermometer, categorical=true),     
                                     interpolate=true)          
 cbar = layout[1, 3] = LColorbar(scene, zonalobj, 
@@ -73,7 +74,7 @@ scene
 ##
 # LText(scene, "A", textsize = 35, font = "Noto Sans Bold", halign = :right)
 ##
-record(scene, "oceananigans_makie.gif", 1:30, framerate=10) do n
+record(scene, "oceananigans_makie.gif", 1:80, framerate=10) do n
     obs[] = n
     n == 1 && zoom!(scene.children[1], (0, 0, 0), -1.25, false)
     θ = -0.005 * 2π
