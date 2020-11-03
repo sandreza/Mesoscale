@@ -43,22 +43,27 @@ volumeobj = volume!(lscene, 0..x, 0..y, 0..z, Ti, colorrange=clims, colormap=cma
                      showaxis = true, 
         )
 
-supertitle = layout[2, 2] = LText(scene,  " Zonal Average ", textsize = 50, color = :white)
+supertitle = layout[2, 2:4] = LText(scene,  " Zonal Average ", textsize = 50, color = :white)
 
-ax = layout[3,2] = LAxis(scene, xlabel = "South to North [m]", 
+zonal_ax = layout[3,2:4] = LAxis(scene, xlabel = "South to North [m]", 
                          xlabelcolor = :white, ylabel = "Depth [m]", 
                          ylabelcolor = :white, xlabelsize = 40, ylabelsize = 40,
                          xtickcolor = :white, ytickcolor = :white,
                          xticklabelcolor  = :white, yticklabelcolor = :white, backgroundcolor = :black)
-zonalobj = AbstractPlotting.heatmap!(ax, 0..y,0..z, Ti_s, colorrange = clims, 
+zonalobj = AbstractPlotting.heatmap!(zonal_ax, 0..y,0..z, Ti_s, colorrange = clims, 
                                     colormap=cgrad(:thermometer, categorical=true),     
-                                    interpolate=true, )
-cbar = layout[1, 2] = LColorbar(scene, zonalobj, 
-                label = " ", labelcolor = :white,
+                                    interpolate=true)          
+cbar = layout[1, 3] = LColorbar(scene, zonalobj, 
+                label = " "^30, labelcolor = :white,
                 labelsize = 40, 
                 width = 5*5, height = 400, absorption=10.0f0, 
                 ticklabelcolor = :white, ticklabelsize = 50) 
-layout[0,:] = LText(scene, "Buoyancy [m/s²] ", color = :white, textsize = 50)
+tmp = layout[1,2] = LText(scene, "Buoyancy [m/s²] ", color = :white, textsize = 40, rotation = π/2)
+tmp2 = layout[1,4] = LText(scene, " ", color = :white, textsize = 50, rotation = π/2)
+tmp3 = layout[0,1] = LText(scene, "3D Buoyancy Field", color = :white, textsize = 50)
+tmp.padding = (100, 50, 0, 0) # left right bottom top
+tmp2.padding = (0, 50, 0, 0) # left right bottom top
+tmp3.padding = (200, 300, -10, 0) # left right bottom top
 display(scene)
 # slice = layout[2, 2]
 ##
