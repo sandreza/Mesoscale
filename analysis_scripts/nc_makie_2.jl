@@ -1,4 +1,5 @@
 using NetCDF, Plots, GLMakie, AbstractPlotting
+using Printf
 using ImageTransformations, Colors
 using AbstractPlotting.MakieLayout
 ##
@@ -28,6 +29,8 @@ zind = 20
 obs = Node(1) # make index a "node" to allow for movie making
 Ti = @lift Array(b[:,:,zind:end,$obs])
 Ti_s = @lift Array(mean(b[:,:,zind:end,$obs], dims = 1)[1,:,:])
+hack(t) = t > 10 ? "" : "  " # spacing is silly (otherwise title moves)
+day = @lift "3D Buoyancy Field at day " * hack((t[$obs] .- t[1]) ./ 864000) * @sprintf("%2.2f ", (t[$obs] .- t[1]) ./ 864000)
 α(ξ) = ξ^(1.2)  # Opacity/alpha along the cmap (0 <= ξ <= 1)
 cmap_rgb = to_colormap(:thermometer)
 A = α.(range(0, 1, length=length(cmap_rgb)))
@@ -61,18 +64,12 @@ cbar = layout[1, 3] = LColorbar(scene, zonalobj,
                 ticklabelcolor = :white, ticklabelsize = 50) 
 tmp = layout[1,2] = LText(scene, "Buoyancy [m/s²] ", color = :white, textsize = 40, rotation = π/2)
 tmp2 = layout[1,4] = LText(scene, " ", color = :white, textsize = 50, rotation = π/2)
-tmp3 = layout[0,1] = LText(scene, "3D Buoyancy Field", color = :white, textsize = 50)
-tmp.padding = (100, 50, 0, 0) # left right bottom top
-tmp2.padding = (0, 0, 0, 0) # left right bottom top
-tmp3.padding = (200, 200, -10, 0) # left right bottom top
+tmp3 = layout[0, 1:4] = LText(scene, day, color = :white, textsize = 50)
+layout[0, 2:3] = LText(scene, " ", color = :white, textsize = 50)
+tmp.padding = (100, 100, 0, 0) # left right bottom top
+tmp2.padding = (0, 100, 0, 0) # left right bottom top
+tmp3.padding = (200, 800, -10, 0) # left right bottom top
 display(scene)
-# slice = layout[2, 2]
-##
-##     
-# LColorbar(scene, colormap=cmap_rgba,  label = "Activity [spikes/sec]")
-scene
-##
-# LText(scene, "A", textsize = 35, font = "Noto Sans Bold", halign = :right)
 ##
 record(scene, "oceananigans_makie.gif", 1:80, framerate=10) do n
     obs[] = n
