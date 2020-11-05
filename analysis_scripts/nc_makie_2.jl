@@ -1,5 +1,5 @@
 using NetCDF, Plots, GLMakie, AbstractPlotting
-using Printf
+using Printf, Statistics
 using ImageTransformations, Colors
 using AbstractPlotting.MakieLayout
 ##
@@ -66,12 +66,12 @@ tmp = layout[1,2] = LText(scene, "Buoyancy [m/s²] ", color = :white, textsize =
 tmp2 = layout[1,4] = LText(scene, " ", color = :white, textsize = 50, rotation = π/2)
 tmp3 = layout[0, 1:4] = LText(scene, day, color = :white, textsize = 50)
 layout[0, 2:3] = LText(scene, " ", color = :white, textsize = 50)
-tmp.padding = (100, 100, 0, 0) # left right bottom top
+tmp.padding = (100, 50, 0, 0) # left right bottom top
 tmp2.padding = (0, 100, 0, 0) # left right bottom top
-tmp3.padding = (200, 800, -10, 0) # left right bottom top
+tmp3.padding = (00, 800, 0, 0) # left right bottom top
 display(scene)
 ##
-record(scene, "oceananigans_makie.gif", 1:80, framerate=10) do n
+record(scene, "oceananigans_makie.mp4", 1:length(t), framerate=10) do n
     obs[] = n
     n == 1 && zoom!(scene.children[1], (0, 0, 0), -1.25, false)
     θ = -0.005 * 2π

@@ -189,3 +189,4 @@ function avgy(Φ, n)
     end
     return Φ2
 end
+avgxy(Φ, n) = avgx(avgy(Φ, n),n )

@@ -4,7 +4,7 @@ if length(checkpoints) > 0
     checkpointed = true
     checkpoint_filepath = joinpath(pwd(), checkpoints[end])
     @info "Restoring from checkpoint: $checkpoint_filepath"
-    model = restore_from_checkpoint(checkpoint_filepath, boundary_conditions = bcs, forcing = forcings, advection = advection_scheme)
+    model = restore_from_checkpoint(checkpoint_filepath, boundary_conditions = bcs, forcing = forcings, advection = advection_scheme, closure = closure)
 else
     checkpointed = false
 	model = IncompressibleModel(

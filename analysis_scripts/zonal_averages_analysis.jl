@@ -3,7 +3,7 @@ using LaTeXStrings
 include(pwd() * "/analysis_scripts/" * "post_analysis.jl")
 
 
-filename = "/Weno_20_zonal_averages.jld2"
+filename = "/Weno_CPU_Hack_20_zonal_averages.jld2"
 file = jldopen( pwd() * filename)
 z = file["grid"]["zC"][2:end-1]
 y = file["grid"]["yC"][2:end-1]
@@ -28,9 +28,10 @@ function plot_field(a; name = " ")
     xlabel = "Meridional [m]", ylabel = "Depth [m]"
     , clims = clims, linewidth = 0)
     display(p1)
+    return p1
 end
 ##
-b = mean(data_dictionary["b"][2:end], dims = 1)[1]
+b = mean(data_dictionary["b"][50:end], dims = 1)[1]
 plot_field(b, name = "b")
 ##
 tmp = norm(data_dictionary["u"][end] - data_dictionary["u"][end-1])
@@ -38,12 +39,14 @@ tmp /= norm(data_dictionary["u"][end])
 
 vb = mean(data_dictionary["vb"][end-20:end])
 vb = (vb[2:end, :] + vb[1:end-1, :]) ./ 2
+ub = mean(data_dictionary["ub"][end-20:end])
 b = mean(data_dictionary["b"][end-20:end])
 # plot_field(b, name = "b")
 u = mean(data_dictionary["u"][end-20:end])
 v = mean(data_dictionary["v"][end-20:end])
 v = (v[2:end, :] + v[1:end-1, :]) ./ 2
 vpbp = vb - v .* b
+upbp = ub - u .* b
 f  = -1e-4
 β  = 1e-11
 𝐟 = reshape(f .+ β * y, (192,1))
@@ -67,11 +70,9 @@ p1 = contourf(py, pz, a',
     xlabel = "Meridional [m]", ylabel = "Depth [m]"
     , clims = clims, linewidth = 0)
 
-
-
 ##
 b = mean(data_dictionary["b"][2:end])
-plot_field(b, name = "b")
+tmp1 = plot_field(b, name = "b")
 
 ##
 
