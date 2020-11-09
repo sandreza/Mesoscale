@@ -42,10 +42,12 @@ hack_v = mean(data_dictionary["v"][50:end], dims = 1)[1]
 hack_v = (hack_v[2:end,:] + hack_v[1:end-1,:]) ./ 2
 close(file)
 
-function plot_field(a, y, yF, z, zF; name = " ")
+function plot_field(a, y, yF, z, zF; name = " ", clims = nothing)
     py = get_y(a, y, yF) # global scope
     pz = get_z(a, z, zF) # global scope
-    clims = (minimum(a), maximum(a))
+    if clims == nothing
+        clims = (minimum(a), maximum(a))
+    end
     further_label = "Zonal and Temporal Average of "
     p1 = contourf(py, pz, a', 
     color = :thermometer, title = " " * name,
@@ -82,3 +84,12 @@ norm(coarse_grained_b - coarse_b) / norm(coarse_grained_b)
 norm(coarse_grained_b - hack_b) / norm(coarse_grained_b)
 
 residual_plot = plot_field(coarse_b-coarse_grained_b , coarse_y, coarse_yF, coarse_z, coarse_zF, name = "Slack Buoyancy")
+
+## Zonal Velocity
+coarse_plot = plot_field(coarse_v, coarse_y, coarse_yF, coarse_z, coarse_zF, name = "Coarse Meridional Velocity")
+fine_plot = plot_field(fine_v, fine_y, fine_yF, fine_z, fine_zF, name = "Meridional Velocity")
+coarse_grained_v = avgy(fine_v, 12)
+clims = (minimum(coarse_v), maximum(coarse_v))
+coarse_grained_plot = plot_field(coarse_grained_v - coarse_v, coarse_y, coarse_yF, 
+                                 coarse_z, coarse_zF,
+                                 name = "Difference in Meridional Velocity")

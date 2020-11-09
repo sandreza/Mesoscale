@@ -190,3 +190,10 @@ function avgy(Φ, n)
     return Φ2
 end
 avgxy(Φ, n) = avgx(avgy(Φ, n),n )
+##
+function get_y(a, y, yF)
+    length(a[:,1]) == length(y) ? y : yF
+end
+function get_z(a, z, zF)
+    length(a[1,:]) == length(z) ? z : zF
+end

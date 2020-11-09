@@ -12,12 +12,6 @@ zF = file["grid"]["zF"][2:end-1]
 data_dictionary = get_data(file)
 close(file)
 ##
-function get_y(a, y, yF)
-    length(a[:,1]) == length(y) ? y : yF
-end
-function get_z(a, z, zF)
-    length(a[1,:]) == length(z) ? z : zF
-end
 
 function plot_field(a; name = " ")
     py = get_y(a, y, yF) # global scope
