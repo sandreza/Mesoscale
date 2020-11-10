@@ -17,6 +17,8 @@ else
 	                tracers = (:b,),
         boundary_conditions = bcs,
                     forcing = forcings,
+                   advection = advection_scheme,
+                   timestepper = timestepping_scheme,
 	)
 end
 

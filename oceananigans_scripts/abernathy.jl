@@ -9,7 +9,7 @@ using Oceananigans.AbstractOperations
 using Oceananigans.Advection
 using CUDA
 CUDA.allowscalar(true)
-arch = GPU()
+arch = CPU()
 FT   = Float64
 
 write_slices = false
@@ -21,7 +21,7 @@ zonal_output_interval = 365day
 time_avg_window =  zonal_output_interval / 1.0 # needs to be a float
 checkpoint_interval = 365 * 1 *  day
 
-end_time = 200 * 365day
+end_time = 0.1day # 200 * 365day
 const scale = 20;
 filename_1 = "Abernathy_" * string(scale)
 
@@ -33,9 +33,9 @@ const Lz = 2985.0                 # 3km
 Δx = Δy = scale * 250meter # 5km
 Δz = 100meter
 
-const Nx = round(Int, Lx/ Δx / 16) * 16
-const Ny = round(Int, Ly/ Δy / 16) * 16
-const Nz = round(Int, Lz/ Δz / 16) * 16
+const Nx = round(Int, Lx/ Δx / 16) # * 16
+const Ny = round(Int, Ly/ Δy / 16) # * 16
+const Nz = round(Int, Lz/ Δz / 16) # * 16
 
 topology = (Periodic, Bounded, Bounded)
 grid = RegularCartesianGrid(topology=topology, size=(Nx, Ny, Nz), x=(0, Lx), y=(0, Ly), z=(-Lz, 0))
@@ -97,8 +97,8 @@ function Fb_function(i, j, k, grid, clock, state, p)
         - relaxation_profile_north(k, grid, p)) * relu( (grid.yC[j]-p.Lsponge) / (p.Ly - p.Lsponge))
 end
 
-Fb = ParameterizedForcing(Fb_function, bc_params)
-forcings = ModelForcing(b = Fb)
+Fb = Forcing(Fb_function, parameters = bc_params)
+forcings = (b = Fb)
 
 # Boundary Conditions
 # Buoyancy
