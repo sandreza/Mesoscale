@@ -1,3 +1,5 @@
+# What's left: JLD2 output writer, checkpointing, and making sure restart is working
+
 using Printf, Statistics
 using Oceananigans
 using Oceananigans.BoundaryConditions
@@ -12,7 +14,7 @@ CUDA.allowscalar(true)
 arch = CPU()
 FT   = Float64
 
-write_slices = false
+write_slices = true
 write_zonal  = true
 geostrophic_balance = false
 advection_scheme = WENO5()
@@ -22,7 +24,7 @@ zonal_output_interval = 365day
 time_avg_window =  zonal_output_interval / 1.0 # needs to be a float
 checkpoint_interval = 365 * 1 *  day
 
-end_time = 0.1day # 200 * 365day
+end_time = 2*365day # 200 * 365day
 const scale = 20;
 filename_1 = "NewTrial_" * string(scale)
 
@@ -57,7 +59,7 @@ const ΔB = 8 * α * g
 eos = LinearEquationOfState(FT, α=α, β=0)
 buoyancy = BuoyancyTracer()
 
-κh = 0.0
+κh = 0.5e-5
 νh = 12.0 
 κv = 0.5e-5 
 νv = 3e-4 
@@ -97,7 +99,6 @@ function Fb_function(i, j, k, grid, clock, state, p)
     return @inbounds - (1/p.λᵗ)  * (state.b[i,j,k] 
         - relaxation_profile_north(k, grid, p)) * relu( (grid.yC[j]-p.Lsponge) / (p.Ly - p.Lsponge))
 end
-Fb_function(i, j, k, grid, clock, state, p) = state.b[i,j,k] 
 Fb = Forcing(Fb_function, parameters = bc_params, discrete_form = true)
 forcings = (b = Fb, )
 
@@ -137,7 +138,7 @@ model = IncompressibleModel(
 set!(model, b=B₀)
 
 ## Progress printer
-Ni = 100
+Ni = 1000
 
 function print_progress(simulation)
     model = simulation.model
@@ -158,6 +159,7 @@ function print_progress(simulation)
 end
 
 ## Diagnostics
+if write_slices
 fields = Dict(
     "u" => model.velocities.u,
     "v" => model.velocities.v,
@@ -189,9 +191,10 @@ function debug_f(debug)
     end
     return nothing
 end
-
+end
 
 ## Zonal and Time Averages
+if write_zonal
 u, v, w = model.velocities
 b = model.tracers.b
 
@@ -217,25 +220,29 @@ zonal_fields = Dict(
 )
 
 zonal_statistics = JLD2OutputWriter(model, zonal_fields,
-                     time_averaging_window = time_avg_window,
-                             time_interval = zonal_output_interval,
-                                    prefix = filename_1 * "_zonal_averages",
-                                     force = true)
-
+                                    schedule = AveragedTimeInterval(time_avg_window, window=zonal_output_interval, stride=5),
+                                    prefix = filename_1 * "_zonal_averages", force = true)
+end
 ## Checkpointer
-checkpointer = Checkpointer(model, prefix = filename_1 * "_checkpoint", time_interval = checkpoint_interval, force = true)
+checkpointer = Checkpointer(model, prefix = filename_1 * "_checkpoint", 
+                            schedule = TimeInterval(checkpoint_interval),  
+                            force = true)
 
 ## Create the Simulation
-Δt = 300.0
-Δt_wizard = TimeStepWizard(cfl = 1.0, Δt = Δt, max_change = 1.05, max_Δt = 300.0)
+Δt = 3000.0
+Δt_wizard = TimeStepWizard(cfl = 1.0, Δt = Δt, max_change = 1.05, max_Δt = 3000.0)
 cfl = AdvectiveCFL(Δt_wizard)
 simulation = Simulation(model, Δt=Δt_wizard, stop_time=end_time, iteration_interval=Ni, progress=print_progress)
 ## Output Writing
-simulation.output_writers[:surface] = surface_output_writer
-simulation.output_writers[:middepth] = middepth_output_writer
-simulation.output_writers[:zonal] = zonal_output_writer
-simulation.output_writers[:meridional] = meridional_output_writer
-simulation.output_writers[:statistics] = zonal_statistics
+if write_slices
+    simulation.output_writers[:surface] = surface_output_writer
+    simulation.output_writers[:middepth] = middepth_output_writer
+    simulation.output_writers[:zonal] = zonal_output_writer
+    simulation.output_writers[:meridional] = meridional_output_writer
+end
+if write_zonal
+    simulation.output_writers[:statistics] = zonal_statistics
+end
 simulation.output_writers[:checkpoint] = checkpointer
 ## Run the Model
 run!(simulation)
