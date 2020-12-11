@@ -23,13 +23,13 @@ timeindexlength = size(ϕ)[end]
 
 
 scene, layout = layoutscene(resolution = (1920, 1080),  backgroundcolor=:white)
-sl1 = layout[2, 2] = LSlider(scene, range = 1:timeindexlength, startvalue = 1)
+sl1 = layout[1, 2] = LSlider(scene, range = 1:timeindexlength, startvalue = 1)
 zind = 20
 obs = sl1.value # make index a "node" to allow for movie making
 
 title = "Buoyancy [m/s²] at t="  #need to use sl1.value to access nodes
 tmp = @lift $title * string($(sl1.value))
-sl2 = layout[2, 1] = LText(scene, tmp) 
+sl2 = layout[1, 1] = LText(scene, tmp) 
 
 field = @lift Array(ϕ[:,:,zind:end,$obs])
 Titmp = ϕ[:,:,zind:end,1] 
@@ -43,11 +43,11 @@ clims = ( minimum(b[:,:,zind:end,1]) * 1.0, maximum(b[:,:,zind:end,1]))
 cmap_rgba = RGBAf0.(cmap_rgb, A)
 
 x, y, z = size(Titmp)
-lscene = layout[1, 1:2] = LScene(scene)   
+lscene = layout[2, :] = LScene(scene)   
 volumeobj = volume!(lscene, 0..x, 0..y, 0..z, field, colorrange=clims, colormap=cmap_rgba,
                      algorithm=:absorption, absorption=10.0f0,
                      camera = cam3d!
-        )
+)
 
 display(scene)
 ##
