@@ -10,6 +10,10 @@ u = file["velocities"]["u"]["data"][2:end-1, 2:end-1, 2:end-1]
 v = file["velocities"]["v"]["data"][2:end-1, 2:end-1, 2:end-1]
 w = file["velocities"]["w"]["data"][2:end-1, 2:end-1, 2:end-1]
 close(file)
+nx, ny, nz = size(u)
+v = (v[:,1:end-1,:] + v[:, 2:end, :]) * 0.5
+w = (w[:, :, 1:end-1] + w[:, :, 2:end]) * 0.5
+states = [u, v, w, b]
 ##
 Φ = b
 x, y, z = size(Φ)
@@ -55,13 +59,17 @@ avgxy(Φ, n) = avgx(avgy(Φ, n),n )
 # need prime factorization of points in the horizontal direction
 coarsenings = sort([2^i * 3^j for i in 0:6 for j in 0:1], rev = true) 
 ##
+stateindex = [1, 2, 3, 4]
+statenode = Node(stateindex[4])
+statenames = ("u", "v", "w", "b")
+state = @lift(states[$statenode])
 scene, layout = layoutscene()
 lscene = layout[1:4, 2:4] = LScene(scene)
 
 coarsening = Node(coarsenings[1])
-Φ = @lift(avgxy(b, $coarsening))
-x, y, z = size(b)
-clims = (minimum(b), maximum(b))
+Φ = @lift(avgxy(states[$statenode], $coarsening))
+x, y, z = size(b) #@lift(size(states[$statenode])) #size(state)
+clims = @lift((minimum(states[$statenode]), maximum(states[$statenode]))) # (minimum(state), maximum(state))
 cmap_rgb = to_colormap(:thermometer)
 
 supertitle = layout[1,2] = LText(scene, " "^10 * " Field and Coarse Graining " * " "^10, textsize = 50, color = :black)
@@ -70,20 +78,28 @@ volume!(lscene, 0..x, 0..y, 0..z, Φ,
         camera = cam3d!, 
         colormap = cmap_rgb, 
         colorrange = clims)
-volume!(lscene, x..2x, 0..y, 0..z, b, 
+
+volume!(lscene, x..2x, 0..y, 0..z, state, 
         camera = cam3d!, 
         colormap = cmap_rgb, 
         colorrange = clims)
 
 menu = LMenu(scene, options = zip(coarsenings, coarsenings))
+statemenu = LMenu(scene, options = zip(statenames, stateindex))
 
 on(menu.selection) do s
     coarsening[] = s
 end
 
+on(statemenu.selection) do s
+    statenode[] = s
+end
+
  layout[1, 1] = vbox!(
         LText(scene, "Coarseness", width = nothing),
         menu,
+        LText(scene, "State", width = nothing),
+        statemenu
  )
 
 display(scene)
