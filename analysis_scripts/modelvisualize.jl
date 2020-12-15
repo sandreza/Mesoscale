@@ -90,19 +90,17 @@ using AbstractPlotting.MakieLayout
 
 statenames = ("u", "v", "w", "b")
 function visualize(model::Oceananigans.AbstractModel)
-    # fix me
-    u = Array(interior(model.velocities.u))
-    v = Array(interior(model.velocities.v))
-    w = Array(interior(model.velocities.w))
-    b = Array(interior(model.tracers.b))
-    # fix above
-    states = [u, v, w, b]
-    statenames = ("u", "v", "w", "b")
+    vstates = [Array(interior(model.velocities[velocity])) for velocity in keys(model.velocities)]
+    vstatenames = [string(velocity) for velocity in keys(model.velocities)]
+    tstates = [Array(interior(model.tracers[tracer])) for tracer in keys(model.tracers)]
+    tstatenames = [string(tracer) for tracer in keys(model.tracers)]
+    states = vcat(vstates, tstates)
+    statenames = vcat(vstatenames, tstatenames)
     visualize(states, statenames = statenames)
     return nothing
 end
 
-function visualize(states; statenames = string.(1:length(states)))
+function visualize(states::AbstractArray; statenames = string.(1:length(states)))
     stateindex = collect(1:length(states))
     statenode = Node(stateindex[4])
     colorchoices = [:balance, :thermal, :dense, :deep, :curl, :thermometer]
