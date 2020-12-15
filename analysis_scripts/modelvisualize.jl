@@ -108,7 +108,7 @@ function visualize(states::AbstractArray; statenames = string.(1:length(states))
     colorchoices = [:balance, :thermal, :dense, :deep, :curl, :thermometer]
     colornode = Node(colorchoices[1])
 
-    x, y, z = size(states[1]) # needs to be done this way
+    x, y, z = size(states[1]) # basically only determines the aspect ratio
 
     # Lift Nodes
     state = @lift(states[$statenode])
