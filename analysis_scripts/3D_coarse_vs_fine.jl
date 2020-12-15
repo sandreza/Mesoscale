@@ -1,6 +1,6 @@
 using NetCDF, Plots, GLMakie, AbstractPlotting
 using Printf, Statistics
-using ImageTransformations, Colors
+using ImageTransformations, Colors, JLD2
 using AbstractPlotting.MakieLayout
 
 filename = pwd() * "/Weno_20_checkpoint_iteration21030963.jld2"
@@ -59,12 +59,14 @@ avgxy(Φ, n) = avgx(avgy(Φ, n),n )
 # need prime factorization of points in the horizontal direction
 coarsenings = sort([2^i * 3^j for i in 0:6 for j in 0:1], rev = true) 
 ##
+
 stateindex = [1, 2, 3, 4]
 statenode = Node(stateindex[4])
 statenames = ("u", "v", "w", "b")
 state = @lift(states[$statenode])
 scene, layout = layoutscene()
 lscene = layout[1:4, 2:4] = LScene(scene)
+# lscene = layout[3:4, 2:4] = LScene(scene)
 
 coarsening = Node(coarsenings[1])
 Φ = @lift(avgxy(states[$statenode], $coarsening))
@@ -95,11 +97,11 @@ on(statemenu.selection) do s
     statenode[] = s
 end
 
- layout[1, 1] = vbox!(
-        LText(scene, "Coarseness", width = nothing),
-        menu,
-        LText(scene, "State", width = nothing),
-        statemenu
- )
+layout[1, 1] = vgrid!(
+    LText(scene, "Coarseness", width = nothing),
+    menu,
+    LText(scene, "State", width = nothing),
+    statemenu
+)
 
 display(scene)
