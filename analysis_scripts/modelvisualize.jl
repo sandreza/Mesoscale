@@ -101,39 +101,38 @@ function visualize(model::Oceananigans.AbstractModel)
 end
 
 function visualize(states::AbstractArray; statenames = string.(1:length(states)))
+    # Create choices and nodes
     stateindex = collect(1:length(states))
     statenode = Node(stateindex[1])
+
     colorchoices = [:balance, :thermal, :dense, :deep, :curl, :thermometer]
     colornode = Node(colorchoices[1])
 
+    x, y, z = size(states[1]) # needs to be done this way
+
+    # Lift Nodes
     state = @lift(states[$statenode])
-    scene, layout = layoutscene()
-    lscene = layout[1:4, 2:4] = LScene(scene)
-
-    @lift begin
-        x = size(states[$statenode])[1] 
-        y = size(states[$statenode])[2] 
-        z = size(states[$statenode])[3] 
-    end
-
     clims = @lift(extrema(states[$statenode])) 
-
     cmap_rgb = @lift(to_colormap($colornode))
     titlename = @lift(" "^10 * " Field " * statenames[$statenode] * " "^10) # use padding and appropriate centering
-    supertitle = layout[1,2] = LText(scene, titlename , textsize = 50, color = :black)
 
+    # Create scene
+    scene, layout = layoutscene()
+    # Volume Plot (needs to come first)
+    lscene = layout[1:4, 2:4] = LScene(scene) 
     volume!(lscene, 0..x, 0..y, 0..z, state, 
             camera = cam3d!, 
             colormap = cmap_rgb, 
             colorrange = clims)
-
+    # Title
+    supertitle = layout[1,2] = LText(scene, titlename , textsize = 50, color = :black)
+    # Menus
     statemenu = LMenu(scene, options = zip(statenames, stateindex))
-    colormenu = LMenu(scene, options = zip(colorchoices, colorchoices))
-
     on(statemenu.selection) do s
         statenode[] = s
     end
 
+    colormenu = LMenu(scene, options = zip(colorchoices, colorchoices))
     on(colormenu.selection) do s
         colornode[] = s
     end
