@@ -102,7 +102,7 @@ end
 
 function visualize(states::AbstractArray; statenames = string.(1:length(states)))
     stateindex = collect(1:length(states))
-    statenode = Node(stateindex[4])
+    statenode = Node(stateindex[1])
     colorchoices = [:balance, :thermal, :dense, :deep, :curl, :thermometer]
     colornode = Node(colorchoices[1])
 
