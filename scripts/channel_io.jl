@@ -29,19 +29,19 @@ fields = Dict(
 )
 
 surface_output_writer =
-    NetCDFOutputWriter(model, fields, filepath = filename_1 * "_surface.nc",
+    NetCDFOutputWriter(model, fields, filepath = filename * "_surface.nc",
 			           schedule=TimeInterval(slice_output_interval), field_slicer = FieldSlicer(k = Nz))
 
 middepth_output_writer =
-    NetCDFOutputWriter(model, fields, filepath = filename_1 * "_middepth.nc",
+    NetCDFOutputWriter(model, fields, filepath = filename * "_middepth.nc",
                        schedule=TimeInterval(slice_output_interval), field_slicer = FieldSlicer(k = Int(floor(Nz/2))))
 
 zonal_output_writer =
-    NetCDFOutputWriter(model, fields, filepath = filename_1 * "_zonal.nc",
+    NetCDFOutputWriter(model, fields, filepath = filename * "_zonal.nc",
                        schedule=TimeInterval(slice_output_interval), field_slicer = FieldSlicer(j = Int(floor(Ny/2))))
 
 meridional_output_writer =
-    NetCDFOutputWriter(model, fields, filepath = filename_1 * "_meridional.nc",
+    NetCDFOutputWriter(model, fields, filepath = filename * "_meridional.nc",
                        schedule=TimeInterval(slice_output_interval), field_slicer = FieldSlicer(i = Int(floor(Nx/2))))
 function debug_f(debug)
     if debug
@@ -82,9 +82,9 @@ zonal_fields = Dict(
 
 zonal_statistics = JLD2OutputWriter(model, zonal_fields,
                                     schedule = AveragedTimeInterval(time_avg_window, window=zonal_output_interval, stride=5),
-                                    prefix = filename_1 * "_zonal_averages", force = true)
+                                    prefix = filename * "_zonal_averages", force = true)
 end
 ## Checkpointer
-checkpointer = Checkpointer(model, prefix = filename_1 * "_checkpoint", 
+checkpointer = Checkpointer(model, prefix = filename * "_checkpoint", 
                             schedule = TimeInterval(checkpoint_interval),  
                             force = true)

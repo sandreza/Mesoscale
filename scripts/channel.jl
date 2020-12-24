@@ -16,7 +16,6 @@ zonal_output_interval = 365day
 time_avg_window =  zonal_output_interval / 1.0 # needs to be a float
 checkpoint_interval = 365 * 1 *  day
 
-end_time = 30day # 200 * 365day
 
 descriptor = " "
 filename = "Channel_" * descriptor
@@ -29,6 +28,7 @@ const Lz = 3.0kilometer
 # Discretization
 Δt = 3000.0 # [s]
 maxΔt = Δt  # [s]
+end_time = 1day # 200 * 365day
 advection   = WENO5()
 timestepper = :RungeKutta3
 # Rough resolution
@@ -144,7 +144,7 @@ else
 end
 
 # Input Output Details
-include(pwd() * "/channel_io.jl")
+include(pwd() * "/scripts/channel_io.jl")
 
 # Create Simulation
 Δt_wizard = TimeStepWizard(cfl = 1.0, Δt = Δt, max_change = 1.05, max_Δt = maxΔt)
