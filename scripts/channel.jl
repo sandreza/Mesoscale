@@ -26,8 +26,8 @@ const Ly = 1000.0kilometer
 const Lz = 3.0kilometer
 
 # Discretization
-Δt = 3000.0 # [s]
-maxΔt = Δt  # [s]
+Δt = 300.0 # [s]
+maxΔt = 1000.0  # [s]
 end_time = 200 * 365day
 advection   = WENO5()
 timestepper = :RungeKutta3
@@ -76,7 +76,7 @@ parameters = (
     h = h,                     # [m]    relexaction profile scale
     ΔB = ΔB,                   # [m/s²] buoyancy jump
     Lz = Lz,                   # [m]
-    Lsponge = 1980kilometer,   # [m]
+    Lsponge = 1980kilometer/2, # [m]
     λᵗ = 7.0day,               # [s]
     Qᵇ = 10/(ρ * cᵖ) * α * g,  # [m² / s³]
     Qᵇ_cutoff = Ly * 5/6.      # [m]
