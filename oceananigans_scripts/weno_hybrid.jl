@@ -33,8 +33,8 @@ const Lz = 3kilometer          # 3km
 Δx = Δy = scale * 250meter # 5km
 Δz = 100meter
 
-const Nx = round(Int, Lx/ Δx / 16) * 16
-const Ny = round(Int, Ly/ Δy / 16) * 16
+const Nx = round(Int, Lx/ Δx / 16) # * 16
+const Ny = round(Int, Ly/ Δy / 16) # * 16
 const Nz = round(Int, Lz/ Δz / 16) * 16
 
 topology = (Periodic, Bounded, Bounded)

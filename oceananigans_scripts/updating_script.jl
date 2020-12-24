@@ -1,4 +1,6 @@
-# What's left: JLD2 output writer, checkpointing, and making sure restart is working
+# What's left: JLD2 output writer,
+# checkpointing, and making sure 
+# restart is working
 
 using Printf, Statistics
 using Oceananigans
@@ -24,7 +26,7 @@ zonal_output_interval = 365day
 time_avg_window =  zonal_output_interval / 1.0 # needs to be a float
 checkpoint_interval = 365 * 1 *  day
 
-end_time = 2*365day # 200 * 365day
+end_time = 30day # 200 * 365day
 const scale = 20;
 filename_1 = "NewTrial_" * string(scale)
 
