@@ -3,21 +3,21 @@ include(pwd() * "/scripts/dependencies.jl")
 
 # Architecture
 CUDA.allowscalar(true)
-arch = CPU()
+arch = GPU()
 FT   = Float64
 
 # File IO 
 ic_load = false
-write_slices = true
-write_zonal  = true
+write_slices = false
+write_zonal  = false
 slice_output_interval = 48hour
 zonal_output_interval = 365day
 
 time_avg_window =  zonal_output_interval / 1.0 # needs to be a float
-checkpoint_interval = 365 * 1 *  day
+checkpoint_interval = 365 * 5 *  day
 
-
-descriptor = " "
+resolution = 16
+descriptor = string(resolution)
 filename = "Channel_" * descriptor
 
 # Domain
@@ -28,15 +28,15 @@ const Lz = 3.0kilometer
 # Discretization
 Δt = 3000.0 # [s]
 maxΔt = Δt  # [s]
-end_time = 1day # 200 * 365day
+end_time = 200 * 365day
 advection   = WENO5()
 timestepper = :RungeKutta3
-# Rough resolution
+# Rough target resolution
 Δx = Δy = 5kilometer # 5km
 Δz = 100meter
 # Multiple of 16 gridpoints
-const Nx = round(Int, Lx / Δx / 16) # * 16
-const Ny = round(Int, Ly / Δy / 16) # * 16
+const Nx = round(Int, Lx / Δx / 16) * resolution
+const Ny = round(Int, Ly / Δy / 16) * resolution
 const Nz = round(Int, Lz / Δz / 16) * 16
 # Create Grid
 topology = (Periodic, Bounded, Bounded)
@@ -137,6 +137,11 @@ model = IncompressibleModel(
 # Initial Conditions
 if ic_load
     println("loading from")
+    B₀ = randn(size(model.grid))
+    U₀ = randn(size(model.grid) .+ (0, 0, 0))
+    V₀ = randn(size(model.grid) .+ (0, 1, 0))
+    W₀ = randn(size(model.grid) .+ (0, 0, 1))
+    set!(model, b=B₀, u = U₀, v = V₀, w = W₀)
 else
     ε(σ) = σ * randn()
     B₀(x, y, z) = ΔB * ( exp(z/h) - exp(-Lz/h) ) / (1 - exp(-Lz/h)) + ε(1e-8)
