@@ -15,7 +15,7 @@ function visualize(model::Oceananigans.AbstractModel)
     return nothing
 end
 
-function visualize(states::AbstractArray; statenames = string.(1:length(states)), quantiles = (0.1, 0.99))
+function visualize(states::AbstractArray; statenames = string.(1:length(states)), quantiles = (0.1, 0.99), aspect = false)
     # Create choices and nodes
     stateindex = collect(1:length(states))
     statenode = Node(stateindex[1])
@@ -23,7 +23,12 @@ function visualize(states::AbstractArray; statenames = string.(1:length(states))
     colorchoices = [:balance, :thermal, :dense, :deep, :curl, :thermometer]
     colornode = Node(colorchoices[1])
 
-    x, y, z = size(states[1]) # basically only determines the aspect ratio
+    # x,y,z are for determining the aspect ratio of the box
+    if (typeof(aspect) <: Tuple) & (length(aspect) == 3)
+        x, y, z = aspect
+    else
+        x, y, z = size(states[1])
+    end
 
     # Lift Nodes
     state = @lift(states[$statenode])

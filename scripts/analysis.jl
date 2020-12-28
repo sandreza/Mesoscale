@@ -2,6 +2,7 @@ using JLD2, LinearAlgebra, Oceananigans
 include(pwd() * "/scripts/vizinanigans.jl")
 include(pwd() * "/analysis_scripts/" * "post_analysis.jl") # Gradients etc. here
 filename = pwd() * "/Channel_16_checkpoint_iteration6317902.jld2"
+filename = pwd() * "/Channel_4_checkpoint_iteration6160221.jld2"
 file = jldopen( filename )
 grid = file["grid"]
 xS, yS, zS = size(grid)
@@ -26,13 +27,24 @@ close(file)
 ∇ = [∂x, ∂y, ∂z]
 ω = ∇ × [u, v, w]
 ∇b = [∂x(b), ∂y(b), ∂z(b)]
-coriolis =  -1e-4 .+ 1e-11 * reshape(y, (1, 192 ,1)) 
+coriolis =  -1e-4 .+ 1e-11 * reshape(y, (1, length(y) ,1)) 
 fpβ = coriolis[1:end-1] + coriolis[2:end] 
 ω∇b = ω⋅∇b
 pv = ω∇b + fpβ .* ∇b[3]
 alignment = ω∇b ./ ( sqrt.(ω⋅ω) .* sqrt.(∇b⋅∇b) )
-states = [u, abs.(u), v, w, b, ω[3], ω[1], ω[2], abs.(ω∇b), abs.(pv)]
-statenames=  ["u", "|u|", "v", "w", "b", "ω₃", "ω₁", "ω₂", "|ω⋅∇b|",  "|Ertel PV|"]
-visualize(states, statenames = statenames, quantiles = (0.10, 0.99))
+# Hydrostatic Hydrostatic hydrostatic_pressure
+Δz = z[2] - z[1]
+p = cumsum(-b .* Δz, dims = 3) # since evenly spaced
+p = p - mean(p)
+# check Thermal Wind
+∂xp = ∂x(p) 
+fv = v .* coriolis
+∂yp = ∂y(p) 
+fu = u .* coriolis
+deviationx = ∂xp .+ (fv[1:end-1,1:end-1,1:end-1] + fv[2:end,2:end,2:end]) * 0.5 # off by a gridcell (should avg)
+deviationy = ∂yp .- (fu[1:end-1,1:end-1,1:end-1] + fu[2:end,2:end,2:end]) * 0.5 
 
-##
+states = [u, abs.(u), v, w, b, -p, ω[3], ω[1], ω[2], abs.(ω∇b), abs.(pv), ∇b[3], -∂xp, fv, -∂yp, -fu, deviationx, deviationy]
+statenames=  ["u", "|u|", "v", "w", "b", "-p (hydrostatic)", "ω₃", "ω₁", "ω₂", "|ω⋅∇b|",  "|Ertel PV|", "∂z(b)", "-∂x(p)", "fv", "-∂y(p)", "-fu", "deviationx", "deviationy"]
+visualize(states, statenames = statenames, quantiles = (0.10, 0.99), aspect = (1,1, 32/192))
+
