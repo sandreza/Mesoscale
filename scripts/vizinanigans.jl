@@ -15,7 +15,7 @@ function visualize(model::Oceananigans.AbstractModel)
     return nothing
 end
 
-function visualize(states::AbstractArray; statenames = string.(1:length(states)), quantiles = (0.1, 0.99), aspect = false)
+function visualize(states::AbstractArray; statenames = string.(1:length(states)), quantiles = (0.1, 0.99), aspect = false, resolution = (1920, 1080))
     # Create choices and nodes
     stateindex = collect(1:length(states))
     statenode = Node(stateindex[1])
@@ -37,7 +37,7 @@ function visualize(states::AbstractArray; statenames = string.(1:length(states))
     titlename = @lift(" "^10 * " Field =" * statenames[$statenode] * " "^10) # use padding and appropriate centering
 
     # Create scene
-    scene, layout = layoutscene()
+    scene, layout = layoutscene(resolution = resolution)
     # Volume Plot (needs to come first)
     lscene = layout[1:4, 2:4] = LScene(scene) 
     volume!(lscene, 0..x, 0..y, 0..z, state, 
@@ -64,5 +64,5 @@ function visualize(states::AbstractArray; statenames = string.(1:length(states))
         colormenu,
     )
     display(scene)
-    return nothing
+    return scene
 end
