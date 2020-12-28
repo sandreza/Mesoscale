@@ -100,3 +100,12 @@ function hydrostatic_pressure(b,x,y,z)
     ∇p = [∂ˣp, ∂ʸp, ∂ᶻp]
     return ∇p
 end
+
+import LinearAlgebra: dot
+function dot(ω::Array{Array{Float64,3},1}, ∇b::Array{Array{Float64,3},1}) 
+    tmparray = copy(ω[1]) .* 0.0
+    for i in eachindex(ω)
+        tmparray += ω[i] .* ∇b[i]
+    end
+    return tmparray
+end

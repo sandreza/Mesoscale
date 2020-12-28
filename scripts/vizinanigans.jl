@@ -2,6 +2,7 @@ using Oceananigans
 using GLMakie, AbstractPlotting
 using ImageTransformations, Colors
 using AbstractPlotting.MakieLayout
+using Statistics
 
 function visualize(model::Oceananigans.AbstractModel)
     vstates = [Array(interior(model.velocities[velocity])) for velocity in keys(model.velocities)]
@@ -14,7 +15,7 @@ function visualize(model::Oceananigans.AbstractModel)
     return nothing
 end
 
-function visualize(states::AbstractArray; statenames = string.(1:length(states)))
+function visualize(states::AbstractArray; statenames = string.(1:length(states)), quantiles = (0.1, 0.99))
     # Create choices and nodes
     stateindex = collect(1:length(states))
     statenode = Node(stateindex[1])
@@ -26,9 +27,9 @@ function visualize(states::AbstractArray; statenames = string.(1:length(states))
 
     # Lift Nodes
     state = @lift(states[$statenode])
-    clims = @lift(extrema(states[$statenode])) 
+    clims = @lift((quantile(states[$statenode][:], quantiles[1]) , quantile(states[$statenode][:], quantiles[2]))) # lower bound not working
     cmap_rgb = @lift(to_colormap($colornode))
-    titlename = @lift(" "^10 * " Field " * statenames[$statenode] * " "^10) # use padding and appropriate centering
+    titlename = @lift(" "^10 * " Field =" * statenames[$statenode] * " "^10) # use padding and appropriate centering
 
     # Create scene
     scene, layout = layoutscene()
