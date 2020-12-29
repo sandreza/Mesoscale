@@ -15,6 +15,17 @@ function visualize(model::Oceananigans.AbstractModel)
     return nothing
 end
 
+"""
+visualize(states::AbstractArray; statenames = string.(1:length(states)), quantiles = (0.1, 0.99), aspect = false, resolution = (1920, 1080))
+
+# Description 
+Visualize 3D states 
+
+# Arguments
+- `states`: Array{Array{Float64,3},1}. An array of arrays containing different fields
+
+# Keyword Arguments
+"""
 function visualize(states::AbstractArray; statenames = string.(1:length(states)), quantiles = (0.1, 0.99), aspect = false, resolution = (1920, 1080))
     # Create choices and nodes
     stateindex = collect(1:length(states))
@@ -34,18 +45,18 @@ function visualize(states::AbstractArray; statenames = string.(1:length(states))
     state = @lift(states[$statenode])
     clims = @lift((quantile(states[$statenode][:], quantiles[1]) , quantile(states[$statenode][:], quantiles[2]))) # lower bound not working
     cmap_rgb = @lift(to_colormap($colornode))
-    titlename = @lift(" "^10 * " Field =" * statenames[$statenode] * " "^10) # use padding and appropriate centering
+    titlename = @lift(" Field =" * statenames[$statenode]) # use padding and appropriate centering
 
     # Create scene
     scene, layout = layoutscene(resolution = resolution)
     # Volume Plot (needs to come first)
-    lscene = layout[1:4, 2:4] = LScene(scene) 
+    lscene = layout[2:4, 2:4] = LScene(scene) 
     volume!(lscene, 0..x, 0..y, 0..z, state, 
             camera = cam3d!, 
             colormap = cmap_rgb, 
             colorrange = clims)
     # Title
-    supertitle = layout[1,2] = LText(scene, titlename , textsize = 50, color = :black)
+    supertitle = layout[1,2:4] = LText(scene, titlename , textsize = 50, color = :black)
     # Menus
     statemenu = LMenu(scene, options = zip(statenames, stateindex))
     on(statemenu.selection) do s
