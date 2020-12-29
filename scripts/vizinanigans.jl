@@ -136,15 +136,18 @@ histogram(array; bins = 100)
 # Description
 return arrays for plotting histogram
 """
-function histogram(array; bins = 100)
+function histogram(array; bins = 100, normalize = true)
     tmp = zeros(bins)
     down, up = extrema(array)
     bucket = collect(range(down, up, length = bins+1))
-    normalization = length(array)
+    normalization = normalize ? length(array) : 1
     for i in eachindex(array)
+        # normalize then multiply by bins
         val = (array[i] - down) / (up - down) * bins
         ind = ceil(Int, val)
+        # handle edge cases
         ind = maximum([ind, 1])
+        ind = minimum([ind, bins])
         tmp[ind] += 1/normalization
     end
     return (bucket[2:end] + bucket[1:end-1]) .* 0.5, tmp
