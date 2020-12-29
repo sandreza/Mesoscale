@@ -56,6 +56,9 @@ on(colormenu2.selection) do s
     colornode[] = s
 end
 
+slidermenu = LSlider(scene, range = [0.1, 0.2, 0.3, 1.0], startvalue = 1)
+slidernode = slidermenu.value
+
 layout[1, 1] = vgrid!(
     LText(scene, "State", width = nothing),
     statemenu,
@@ -65,7 +68,12 @@ layout[1, 1] = vgrid!(
     colormenu,
         LText(scene, "Color", width = nothing),
     colormenu,
+    LText(scene, @lift("Upper Clim = " * string($slidernode)), width = nothing),
+    slidermenu,
 )
+
+#sl1 = layout[2, 1] = LSlider(scene, range = 1:10, startvalue = 1)
+#obs = sl1.value # make index a "node" to allow for movie making
 
 layout[3, 6] = vgrid!(
     LText(scene, "State", width = nothing),
