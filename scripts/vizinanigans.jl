@@ -91,6 +91,8 @@ function visualize(states::AbstractArray; statenames = string.(1:length(states))
                         strokewidth = 1)
         @lift(AbstractPlotting.xlims!(llscene, extrema(states[$statenode])))
         @lift(AbstractPlotting.ylims!(llscene, extrema(histogram(states[$statenode], bins = 300)[2])))
+        vlines!(llscene, @lift(quantile(states[$statenode][:], $lowerclim_node)), color = :black, linewidth = width / 100)
+        vlines!(llscene, @lift(quantile(states[$statenode][:], $upperclim_node)), color = :black, linewidth = width / 100)
     end
 
     # Volume Plot (needs to come first)
