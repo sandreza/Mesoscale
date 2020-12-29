@@ -25,6 +25,13 @@ Visualize 3D states
 - `states`: Array{Array{Float64,3},1}. An array of arrays containing different fields
 
 # Keyword Arguments
+- `statenames`: Array{String,1}. An array of stringnames
+- `quantiles`: Tuple{Number, Number}. Tuple for determining upper and lower bounds dynamically from 
+- `aspect`: Tuple{Int64,Int64,Float64}. Determines aspect ratio of box for volumes
+- `resolution`: Resolution of preliminary makie window
+
+# Return
+- `scene`: Scene. A preliminary scene object for manipulation
 """
 function visualize(states::AbstractArray; statenames = string.(1:length(states)), quantiles = (0.1, 0.99), aspect = false, resolution = (1920, 1080))
     # Create choices and nodes
