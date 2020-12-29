@@ -4,6 +4,15 @@ using ImageTransformations, Colors
 using AbstractPlotting.MakieLayout
 using Statistics
 
+"""
+visualize(model::Oceananigans.AbstractModel)
+
+# Description
+Create visualize tracers and velocity fields from an Oceananigans model 
+
+# Return
+- `scene`: Scene. A makie scene object
+"""
 function visualize(model::Oceananigans.AbstractModel)
     vstates = [Array(interior(model.velocities[velocity])) for velocity in keys(model.velocities)]
     vstatenames = [string(velocity) for velocity in keys(model.velocities)]
@@ -11,8 +20,8 @@ function visualize(model::Oceananigans.AbstractModel)
     tstatenames = [string(tracer) for tracer in keys(model.tracers)]
     states = vcat(vstates, tstates)
     statenames = vcat(vstatenames, tstatenames)
-    visualize(states, statenames = statenames)
-    return nothing
+    scene = visualize(states, statenames = statenames)
+    return scene
 end
 
 """
