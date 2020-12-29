@@ -61,9 +61,9 @@ function visualize(states::AbstractArray; statenames = string.(1:length(states))
     end
 
     # Clim sliders
-    upperclim_slider = LSlider(scene, range = range(0, 1, length = 101), startvalue = 1.0)
+    upperclim_slider = LSlider(scene, range = range(0, 1, length = 101), startvalue = 0.99)
     upperclim_node = upperclim_slider.value
-    lowerclim_slider = LSlider(scene, range = range(0, 1, length = 101), startvalue = 0.0)
+    lowerclim_slider = LSlider(scene, range = range(0, 1, length = 101), startvalue = 0.01)
     lowerclim_node = lowerclim_slider.value
 
     # Lift Nodes
