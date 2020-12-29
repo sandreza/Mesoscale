@@ -41,10 +41,20 @@ Visualize 3D states
 # Return
 - `scene`: Scene. A preliminary scene object for manipulation
 """
-function visualize(states::AbstractArray; statenames = string.(1:length(states)), aspect = false, resolution = (1920, 1080))
+function visualize(states::AbstractArray; statenames = string.(1:length(states)), aspect = false, resolution = (1920, 1080), statistics = false)
     # Create scene
     scene, layout = layoutscene(resolution = resolution)
     lscene = layout[2:4, 2:4] = LScene(scene) 
+    width = round(Int, resolution[1] / 4) # make menu 1/4
+    if statistics
+        llscene = layout[4,1] = LAxis(scene, xlabel = "range", 
+                         xlabelcolor = :black, ylabel = "pdf", 
+                         ylabelcolor = :black, xlabelsize = 40, ylabelsize = 40,
+                         xticklabelsize = 25, yticklabelsize = 25,
+                         xtickcolor = :black, ytickcolor = :black,
+                         xticklabelcolor  = :black, yticklabelcolor = :black)
+        layout[3, 1] = LText(scene, "Statistics", width = width, textsize = 50)
+    end
 
     # Create choices and nodes
     stateindex = collect(1:length(states))
@@ -72,6 +82,17 @@ function visualize(states::AbstractArray; statenames = string.(1:length(states))
     cmap_rgb = @lift(to_colormap($colornode))
     titlename = @lift("Field =" * statenames[$statenode] ) # use padding and appropriate centering
 
+    # Statistics
+    if statistics
+        xs = @lift(histogram(states[$statenode], bins = 300)[1])
+        ys = @lift(histogram(states[$statenode], bins = 300)[2])
+        pdf = AbstractPlotting.barplot!(llscene, xs, ys, color = :red, 
+                        strokecolor = :red, 
+                        strokewidth = 1)
+        @lift(AbstractPlotting.xlims!(llscene, extrema(states[$statenode])))
+        @lift(AbstractPlotting.ylims!(llscene, extrema(histogram(states[$statenode], bins = 300)[2])))
+    end
+
     # Volume Plot (needs to come first)
     volume!(lscene, 0..x, 0..y, 0..z, state, 
             camera = cam3d!, 
@@ -79,6 +100,8 @@ function visualize(states::AbstractArray; statenames = string.(1:length(states))
             colorrange = clims)
     # Title
     supertitle = layout[1, 2:4] = LText(scene, titlename , textsize = 50, color = :black)
+    
+
     # Menus
     statemenu = LMenu(scene, options = zip(statenames, stateindex))
     on(statemenu.selection) do s
@@ -89,17 +112,40 @@ function visualize(states::AbstractArray; statenames = string.(1:length(states))
     on(colormenu.selection) do s
         colornode[] = s
     end
-
+    # depends on makie version, vbox for old, vgrid for new
     layout[2, 1] = vgrid!(
         LText(scene, "State", width = nothing),
         statemenu,
         LText(scene, "Color", width = nothing),
         colormenu,
-        LText(scene, @lift("lower clim = " * string($lowerclim_node)), width = nothing),
+        LText(scene, @lift("lower clim quantile = " * string($lowerclim_node)), width = nothing),
         lowerclim_slider,
-        LText(scene, @lift("upper clim = " * string($upperclim_node)), width = nothing),
+        LText(scene, @lift("upper clim quantile = " * string($upperclim_node)), width = nothing),
         upperclim_slider,
     )
+    layout[1,1] = LText(scene, "Menu", width = width, textsize = 50)
+
     display(scene)
     return scene
+end
+
+
+"""
+histogram(array; bins = 100)
+
+# Description
+return arrays for plotting histogram
+"""
+function histogram(array; bins = 100)
+    tmp = zeros(bins)
+    down, up = extrema(array)
+    bucket = collect(range(down, up, length = bins+1))
+    normalization = length(array)
+    for i in eachindex(array)
+        val = (array[i] - down) / (up - down) * bins
+        ind = ceil(Int, val)
+        ind = maximum([ind, 1])
+        tmp[ind] += 1/normalization
+    end
+    return (bucket[2:end] + bucket[1:end-1]) .* 0.5, tmp
 end
