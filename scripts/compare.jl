@@ -105,7 +105,7 @@ function visualize(states::AbstractArray, states2::AbstractArray; statenames = s
         colorrange = clims2)
     # Title
     supertitle = layout[1, 2:4] = LText(scene, titlename , textsize = 50, color = :black)
-    supertitle2 = layout[1, 5:6] = LText(scene, titlename2 , textsize = 50, color = :black)
+    supertitle2 = layout[1, 5:7] = LText(scene, titlename2 , textsize = 50, color = :black)
     
 
     # Menus 1
@@ -162,6 +162,6 @@ function visualize(states::AbstractArray, states2::AbstractArray; statenames = s
 end
 
 function grabtitle(filename)
-    resolutionnumber = split(filename, "_")[2]
-    return string(round(Int, 1000/16 * resolutionnumber)) * " km resolution"
+    resolutionnumber = parse(Int64, split(filename, "_")[2])
+    return string(round(Int, 1000 * 16 / 192 / resolutionnumber)) * " km resolution, "
 end
