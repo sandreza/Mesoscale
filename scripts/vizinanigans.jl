@@ -25,7 +25,7 @@ function visualize(model::Oceananigans.AbstractModel)
 end
 
 """
-visualize(states::AbstractArray; statenames = string.(1:length(states)), quantiles = (0.1, 0.99), aspect = false, resolution = (1920, 1080))
+visualize(states::AbstractArray; statenames = string.(1:length(states)), quantiles = (0.1, 0.99), aspect = false, resolution = (1920, 1080), statistics = false)
 
 # Description 
 Visualize 3D states 
@@ -37,6 +37,7 @@ Visualize 3D states
 - `statenames`: Array{String,1}. An array of stringnames
 - `aspect`: Tuple{Int64,Int64,Float64}. Determines aspect ratio of box for volumes
 - `resolution`: Resolution of preliminary makie window
+- `statistics`: boolean. toggle for displaying statistics 
 
 # Return
 - `scene`: Scene. A preliminary scene object for manipulation
@@ -79,9 +80,10 @@ function visualize(states::AbstractArray; statenames = string.(1:length(states))
 
     # Lift Nodes
     state = @lift(states[$statenode])
+    statename = @lift(statenames[$statenode])
     clims = @lift((quantile($state[:], $lowerclim_node) , quantile($state[:], $upperclim_node)))
     cmap_rgb = @lift(to_colormap($colornode))
-    titlename = @lift("Field = " * statenames[$statenode] ) # use padding and appropriate centering
+    titlename = @lift("Field = " * $statename) # use padding and appropriate centering
 
     # Statistics
     if statistics

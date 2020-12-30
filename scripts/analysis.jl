@@ -6,10 +6,12 @@ include(pwd() * "/analysis_scripts/" * "post_analysis.jl") # Gradients etc. here
 
 files = [pwd() * "/Channel_16_checkpoint_iteration6317902.jld2", 
          pwd() * "/Channel_4_checkpoint_iteration6160221.jld2",
-         pwd() * "/Channel_1_checkpoint_iteration404905.jld2"
+         pwd() * "/Channel_1_checkpoint_iteration404905.jld2",
+         pwd() * "/Channel_8_checkpoint_iteration3164301.jld2",
+         pwd() * "/Channel_32_checkpoint_iteration1272125.jld2"
 ]
 
-filename = files[1]
+filename = files[end]
 states, statenames = grabstates(filename)
 scene = visualize(states, statenames = statenames, aspect = (1,1, 32/192), statistics = true)
 display(scene)
