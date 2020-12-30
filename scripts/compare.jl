@@ -1,5 +1,5 @@
 
-function visualize(states::AbstractArray, states2::AbstractArray; statenames = string.(1:length(states)), statenames2 = string.(1:length(states2)), aspect = false, resolution = (2880, 1080), statistics = false)
+function visualize(states::AbstractArray, states2::AbstractArray; statenames = string.(1:length(states)), statenames2 = string.(1:length(states2)), aspect = false, resolution = (2880, 1080), statistics = false, title = "Field = ", title2 = "Field = ")
     # Create scene
     scene, layout = layoutscene(resolution = resolution)
 
@@ -61,13 +61,13 @@ function visualize(states::AbstractArray, states2::AbstractArray; statenames = s
     statename = @lift(statenames[$statenode])
     clims = @lift((quantile($state[:], $lowerclim_node) , quantile($state[:], $upperclim_node)))
     cmap_rgb = @lift(to_colormap($colornode))
-    titlename = @lift("Field = " * $statename) # use padding and appropriate centering
+    titlename = @lift(title * $statename) # use padding and appropriate centering
 
     state2 = @lift(states2[$statenode2])
     statename2 = @lift(statenames2[$statenode2])
     clims2 = @lift((quantile($state2[:], $lowerclim_node2) , quantile($state2[:], $upperclim_node2)))
     cmap_rgb2 = @lift(to_colormap($colornode2))
-    titlename2 = @lift("Field = " * $statename2) # use padding and appropriate centering
+    titlename2 = @lift(title2 * $statename2) # use padding and appropriate centering
 
     # Statistics
     if statistics
@@ -159,4 +159,9 @@ function visualize(states::AbstractArray, states2::AbstractArray; statenames = s
     layout[1,8] = LText(scene, "Menu", width = width, textsize = 50)
     display(scene)
     return scene
+end
+
+function grabtitle(filename)
+    resolutionnumber = split(filename, "_")[2]
+    return string(round(Int, 1000/16 * resolutionnumber)) * " km resolution"
 end

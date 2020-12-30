@@ -2,7 +2,7 @@ using Oceananigans
 using GLMakie, AbstractPlotting
 using ImageTransformations, Colors
 using AbstractPlotting.MakieLayout
-using Statistics
+using Statistics, Printf
 
 """
 visualize(model::Oceananigans.AbstractModel)

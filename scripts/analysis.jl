@@ -1,6 +1,7 @@
-using JLD2, LinearAlgebra, Oceananigans
+using JLD2, LinearAlgebra, Oceananigans, Printf
 include(pwd() * "/scripts/vizinanigans.jl")
 include(pwd() * "/scripts/states.jl")
+include(pwd() * "/scripts/compare.jl")
 
 include(pwd() * "/analysis_scripts/" * "post_analysis.jl") # Gradients etc. here
 
@@ -25,3 +26,12 @@ record(scene, pwd() * "/test.mp4"; framerate = fps) do io
         recordframe!(io)
     end
 end
+
+##
+filename = files[1]
+states, statenames = grabstates(filename)
+
+filename2 = files[4]
+states2, statenames2 = grabstates(filename2)
+
+scene = visualize(states, states2, statenames = statenames, statenames2 = statenames2, aspect = (1,1, 32/192), statistics = true)
