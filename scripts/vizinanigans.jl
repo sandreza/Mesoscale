@@ -45,16 +45,7 @@ function visualize(states::AbstractArray; statenames = string.(1:length(states))
     # Create scene
     scene, layout = layoutscene(resolution = resolution)
     lscene = layout[2:4, 2:4] = LScene(scene) 
-    width = round(Int, resolution[1] / 4) # make menu 1/4
-    if statistics
-        llscene = layout[4,1] = LAxis(scene, xlabel = "range", 
-                         xlabelcolor = :black, ylabel = "pdf", 
-                         ylabelcolor = :black, xlabelsize = 40, ylabelsize = 40,
-                         xticklabelsize = 25, yticklabelsize = 25,
-                         xtickcolor = :black, ytickcolor = :black,
-                         xticklabelcolor  = :black, yticklabelcolor = :black)
-        layout[3, 1] = LText(scene, "Statistics", width = width, textsize = 50)
-    end
+    width = round(Int, resolution[1] / 4) # make menu 1/4 of preliminary resolution
 
     # Create choices and nodes
     stateindex = collect(1:length(states))
@@ -62,6 +53,16 @@ function visualize(states::AbstractArray; statenames = string.(1:length(states))
 
     colorchoices = [:balance, :thermal, :dense, :deep, :curl, :thermometer]
     colornode = Node(colorchoices[1])
+
+    if statistics
+        llscene = layout[4,1] = LAxis(scene, xlabel = @lift(statenames[$statenode]), 
+                         xlabelcolor = :black, ylabel = "pdf", 
+                         ylabelcolor = :black, xlabelsize = 40, ylabelsize = 40,
+                         xticklabelsize = 25, yticklabelsize = 25,
+                         xtickcolor = :black, ytickcolor = :black,
+                         xticklabelcolor  = :black, yticklabelcolor = :black)
+        layout[3, 1] = LText(scene, "Statistics", width = width, textsize = 50)
+    end
 
     # x,y,z are for determining the aspect ratio of the box
     if (typeof(aspect) <: Tuple) & (length(aspect) == 3)
@@ -78,24 +79,25 @@ function visualize(states::AbstractArray; statenames = string.(1:length(states))
 
     # Lift Nodes
     state = @lift(states[$statenode])
-    clims = @lift((quantile(states[$statenode][:], $lowerclim_node) , quantile(states[$statenode][:], $upperclim_node))) # lower bound not working
+    clims = @lift((quantile($state[:], $lowerclim_node) , quantile($state[:], $upperclim_node)))
     cmap_rgb = @lift(to_colormap($colornode))
-    titlename = @lift("Field =" * statenames[$statenode] ) # use padding and appropriate centering
+    titlename = @lift("Field = " * statenames[$statenode] ) # use padding and appropriate centering
 
     # Statistics
     if statistics
-        xs = @lift(histogram(states[$statenode], bins = 300)[1])
-        ys = @lift(histogram(states[$statenode], bins = 300)[2])
+        histogram_node = @lift(histogram($state, bins = 300))
+        xs = @lift($histogram_node[1])
+        ys = @lift($histogram_node[2])
         pdf = AbstractPlotting.barplot!(llscene, xs, ys, color = :red, 
                         strokecolor = :red, 
                         strokewidth = 1)
-        @lift(AbstractPlotting.xlims!(llscene, extrema(states[$statenode])))
-        @lift(AbstractPlotting.ylims!(llscene, extrema(histogram(states[$statenode], bins = 300)[2])))
-        vlines!(llscene, @lift(quantile(states[$statenode][:], $lowerclim_node)), color = :black, linewidth = width / 100)
-        vlines!(llscene, @lift(quantile(states[$statenode][:], $upperclim_node)), color = :black, linewidth = width / 100)
+        @lift(AbstractPlotting.xlims!(llscene, extrema($state)))
+        @lift(AbstractPlotting.ylims!(llscene, extrema($histogram_node[2])))
+        vlines!(llscene, @lift($clims[1]), color = :black, linewidth = width / 100)
+        vlines!(llscene, @lift($clims[2]), color = :black, linewidth = width / 100)
     end
 
-    # Volume Plot (needs to come first)
+    # Volume Plot 
     volume!(lscene, 0..x, 0..y, 0..z, state, 
             camera = cam3d!, 
             colormap = cmap_rgb, 
@@ -114,15 +116,17 @@ function visualize(states::AbstractArray; statenames = string.(1:length(states))
     on(colormenu.selection) do s
         colornode[] = s
     end
+    lowerclim_string = @lift("lower clim quantile = " *  @sprintf("%0.2f", $lowerclim_node) * ", value = " * @sprintf("%0.1e", $clims[1]))
+    upperclim_string = @lift("upper clim quantile = " *  @sprintf("%0.2f", $upperclim_node) * ", value = " * @sprintf("%0.1e", $clims[2]))
     # depends on makie version, vbox for old, vgrid for new
     layout[2, 1] = vgrid!(
         LText(scene, "State", width = nothing),
         statemenu,
         LText(scene, "Color", width = nothing),
         colormenu,
-        LText(scene, @lift("lower clim quantile = " * string($lowerclim_node)), width = nothing),
+        LText(scene, lowerclim_string, width = nothing),
         lowerclim_slider,
-        LText(scene, @lift("upper clim quantile = " * string($upperclim_node)), width = nothing),
+        LText(scene, upperclim_string, width = nothing),
         upperclim_slider,
     )
     layout[1,1] = LText(scene, "Menu", width = width, textsize = 50)
@@ -138,7 +142,7 @@ histogram(array; bins = 100)
 # Description
 return arrays for plotting histogram
 """
-function histogram(array; bins = 100, normalize = true)
+function histogram(array; bins = minimum([100, length(array)]), normalize = true)
     tmp = zeros(bins)
     down, up = extrema(array)
     bucket = collect(range(down, up, length = bins+1))

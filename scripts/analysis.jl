@@ -14,26 +14,12 @@ states, statenames = grabstates(filename)
 scene = visualize(states, statenames = statenames, aspect = (1,1, 32/192), statistics = true)
 display(scene)
 ## save interaction
-fps = 10
+seconds = 20
+fps = 30
+frames = round(Int, fps * seconds )
 record(scene, pwd() * "/test.mp4"; framerate = fps) do io
-    for i = 1:200
+    for i = 1:frames
         sleep(1/fps)
         recordframe!(io)
     end
 end
-##
-scene, layout = layoutscene()
-xs, ys = histogram(states[2], bins = 300)
-lscene = layout[1,1] = LScene(scene)
-lscene2 = layout[2,2] = LScene(scene)
-bplot= AbstractPlotting.barplot!(lscene, xs, ys, color = :red, 
-                strokecolor = :red, 
-                strokewidth = 1,
-                )
-                bplot.width = 1
-                bplot.height = 1 
-AbstractPlotting.barplot!(lscene2, xs, ys, color = :red, 
-strokecolor = :red, 
-strokewidth = 1,
-xticks = 0:0.1:2)
-display(scene)
