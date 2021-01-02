@@ -1,4 +1,5 @@
 using JLD2, LinearAlgebra, Oceananigans, Printf
+record_interaction = false
 include(pwd() * "/scripts/vizinanigans.jl")
 include(pwd() * "/scripts/states.jl")
 include(pwd() * "/scripts/compare.jl")
@@ -6,6 +7,8 @@ include(pwd() * "/scripts/compare.jl")
 include(pwd() * "/analysis_scripts/" * "post_analysis.jl") # Gradients etc. here
 
 files = [pwd() * "/Channel_1_checkpoint_iteration404905.jld2",
+         pwd() * "/Channel_2_checkpoint_iteration728850.jld2",
+         pwd() * "/Channel_3_checkpoint_iteration1087211.jld2",
          pwd() * "/Channel_4_checkpoint_iteration6160221.jld2",
          pwd() * "/Channel_8_checkpoint_iteration3164301.jld2",
          pwd() * "/Channel_16_checkpoint_iteration6317902.jld2", 
@@ -13,27 +16,43 @@ files = [pwd() * "/Channel_1_checkpoint_iteration404905.jld2",
 ]
 
 filename = files[end-1]
-states, statenames = grabstates(filename)
-scene = visualize(states, statenames = statenames, aspect = (1,1, 32/192), statistics = true)
+states, statenames, units = grabstates(filename)
+visualize(states, statenames = statenames, aspect = (1,1, 32/192), statistics = true, units = units);
+scene = visualize(states, statenames = statenames, aspect = (1,1, 32/192), statistics = true, units = units);
 display(scene)
 ## save interaction
 seconds = 20
 fps = 30
 frames = round(Int, fps * seconds )
+if record_interaction
 record(scene, pwd() * "/test.mp4"; framerate = fps) do io
     for i = 1:frames
         sleep(1/fps)
         recordframe!(io)
     end
 end
-
+end
 ##
-filename = files[end-1]
+filename = files[4]
 states, statenames = grabstates(filename)
 title = grabtitle(filename)
 
-filename2 = files[end]
+filename2 = files[3]
 states2, statenames2 = grabstates(filename2)
 title2 = grabtitle(filename2)
 
 scene = visualize(states, states2, statenames = statenames, statenames2 = statenames2, aspect = (1,1, 32/192), statistics = true, title = title, title2 = title2)
+##
+seconds = 20
+fps = 30
+frames = round(Int, fps * seconds )
+if record_interaction
+record(scene, pwd() * "/test.mp4"; framerate = fps) do io
+    for i = 1:frames
+        sleep(1/fps)
+        recordframe!(io)
+    end
+end
+end
+
+

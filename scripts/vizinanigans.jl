@@ -25,7 +25,7 @@ function visualize(model::Oceananigans.AbstractModel)
 end
 
 """
-visualize(states::AbstractArray; statenames = string.(1:length(states)), quantiles = (0.1, 0.99), aspect = false, resolution = (1920, 1080), statistics = false)
+visualize(states::AbstractArray; statenames = string.(1:length(states)), quantiles = (0.1, 0.99), aspect = false, resolution = (1920, 1080), statistics = false, title = "Field = ")
 
 # Description 
 Visualize 3D states 
@@ -42,7 +42,7 @@ Visualize 3D states
 # Return
 - `scene`: Scene. A preliminary scene object for manipulation
 """
-function visualize(states::AbstractArray; statenames = string.(1:length(states)), aspect = false, resolution = (1920, 1080), statistics = false)
+function visualize(states::AbstractArray; statenames = string.(1:length(states)), units = ["" for i in eachindex(states)], aspect = false, resolution = (1920, 1080), statistics = false, title = "Field = ", bins = 300)
     # Create scene
     scene, layout = layoutscene(resolution = resolution)
     lscene = layout[2:4, 2:4] = LScene(scene) 
@@ -56,7 +56,7 @@ function visualize(states::AbstractArray; statenames = string.(1:length(states))
     colornode = Node(colorchoices[1])
 
     if statistics
-        llscene = layout[4,1] = LAxis(scene, xlabel = @lift(statenames[$statenode]), 
+        llscene = layout[4,1] = LAxis(scene, xlabel = @lift(statenames[$statenode] * units[$statenode]), 
                          xlabelcolor = :black, ylabel = "pdf", 
                          ylabelcolor = :black, xlabelsize = 40, ylabelsize = 40,
                          xticklabelsize = 25, yticklabelsize = 25,
@@ -83,11 +83,11 @@ function visualize(states::AbstractArray; statenames = string.(1:length(states))
     statename = @lift(statenames[$statenode])
     clims = @lift((quantile($state[:], $lowerclim_node) , quantile($state[:], $upperclim_node)))
     cmap_rgb = @lift(to_colormap($colornode))
-    titlename = @lift("Field = " * $statename) # use padding and appropriate centering
+    titlename = @lift(title * $statename) # use padding and appropriate centering
 
     # Statistics
     if statistics
-        histogram_node = @lift(histogram($state, bins = 300))
+        histogram_node = @lift(histogram($state, bins = bins))
         xs = @lift($histogram_node[1])
         ys = @lift($histogram_node[2])
         pdf = AbstractPlotting.barplot!(llscene, xs, ys, color = :red, 
@@ -104,6 +104,10 @@ function visualize(states::AbstractArray; statenames = string.(1:length(states))
             camera = cam3d!, 
             colormap = cmap_rgb, 
             colorrange = clims)
+    # Camera
+    cam = cameracontrols(scene.children[1])
+    eyeposition = Float32[2, 2, 1.3]
+    lookat = Float32[0.82, 0.82, 0.1]
     # Title
     supertitle = layout[1, 2:4] = LText(scene, titlename , textsize = 50, color = :black)
     
@@ -112,11 +116,13 @@ function visualize(states::AbstractArray; statenames = string.(1:length(states))
     statemenu = LMenu(scene, options = zip(statenames, stateindex))
     on(statemenu.selection) do s
         statenode[] = s
+        update_cam!(scene.children[1], eyeposition, lookat, Vec3f0(0, 0, 1))
     end
 
     colormenu = LMenu(scene, options = zip(colorchoices, colorchoices))
     on(colormenu.selection) do s
         colornode[] = s
+        update_cam!(scene.children[1], eyeposition, lookat, Vec3f0(0, 0, 1))
     end
     lowerclim_string = @lift("lower clim quantile = " *  @sprintf("%0.2f", $lowerclim_node) * ", value = " * @sprintf("%0.1e", $clims[1]))
     upperclim_string = @lift("upper clim quantile = " *  @sprintf("%0.2f", $upperclim_node) * ", value = " * @sprintf("%0.1e", $clims[2]))
@@ -133,7 +139,31 @@ function visualize(states::AbstractArray; statenames = string.(1:length(states))
     )
     layout[1,1] = LText(scene, "Menu", width = width, textsize = 50)
 
+    # Modify Axis
+    axis = scene.children[1][Axis] 
+    axis[:names][:axisnames] = ("↓ Zonal [m] ", "Meriodonal [m]↓ ", "Depth [m]↓ ")
+    axis[:names][:align] = ((:left, :center), (:right, :center), (:right, :center))
+    # need to adjust size of ticks first and then size of axis names
+    axis[:names][:textsize] = (50.0, 50.0, 50.0)
+    axis[:ticks][:textsize] = (00.0, 00.0, 00.0)
+    # axis[:ticks][:ranges_labels].val # current axis labels
+    xticks = collect(range(-0, aspect[1], length = 2))
+    yticks = collect(range(-0, aspect[2], length = 6))
+    zticks = [aspect[3]]
+    ticks = (xticks, yticks, zticks)
+    axis[:ticks][:ranges] = ticks
+    xtickslabels = [@sprintf("%0.1f", (xtick)) for xtick in xticks]
+    xtickslabels[end] = "1e6"
+    ytickslabels = ["", "south","", "", "north", ""]
+    ztickslabels = ["surface"]
+    labels = (xtickslabels, ytickslabels, ztickslabels)
+    axis[:ticks][:labels] = labels
+
+    update_cam!(scene.children[1], eyeposition, lookat, Vec3f0(0, 0, 1))
     display(scene)
+    # Change the default camera position after the fact
+    # note that these change dynamically as the plot is manipulated
+    update_cam!(scene.children[1], eyeposition, lookat, Vec3f0(0, 0, 1))
     return scene
 end
 
