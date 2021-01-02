@@ -17,7 +17,6 @@ files = [pwd() * "/Channel_1_checkpoint_iteration404905.jld2",
 
 filename = files[end-1]
 states, statenames, units = grabstates(filename)
-visualize(states, statenames = statenames, aspect = (1,1, 32/192), statistics = true, units = units);
 scene = visualize(states, statenames = statenames, aspect = (1,1, 32/192), statistics = true, units = units);
 display(scene)
 ## save interaction
@@ -34,14 +33,14 @@ end
 end
 ##
 filename = files[4]
-states, statenames = grabstates(filename)
+states, statenames, units1 = grabstates(filename)
 title = grabtitle(filename)
 
 filename2 = files[3]
-states2, statenames2 = grabstates(filename2)
+states2, statenames2, units2 = grabstates(filename2)
 title2 = grabtitle(filename2)
 
-scene = visualize(states, states2, statenames = statenames, statenames2 = statenames2, aspect = (1,1, 32/192), statistics = true, title = title, title2 = title2)
+scene = visualize(states, states2, statenames = statenames, statenames2 = statenames2, aspect = (1,1, 32/192), statistics = true, title = title, title2 = title2, units1 = units1, units2 = units2)
 ##
 seconds = 20
 fps = 30

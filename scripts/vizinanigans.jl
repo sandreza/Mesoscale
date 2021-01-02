@@ -149,13 +149,13 @@ function visualize(states::AbstractArray; statenames = string.(1:length(states))
     # axis[:ticks][:ranges_labels].val # current axis labels
     xticks = collect(range(-0, aspect[1], length = 2))
     yticks = collect(range(-0, aspect[2], length = 6))
-    zticks = [aspect[3]]
+    zticks = collect(range(-0, aspect[3], length = 2))
     ticks = (xticks, yticks, zticks)
     axis[:ticks][:ranges] = ticks
     xtickslabels = [@sprintf("%0.1f", (xtick)) for xtick in xticks]
     xtickslabels[end] = "1e6"
     ytickslabels = ["", "south","", "", "north", ""]
-    ztickslabels = ["surface"]
+    ztickslabels = [@sprintf("%0.1f", (xtick)) for xtick in xticks]
     labels = (xtickslabels, ytickslabels, ztickslabels)
     axis[:ticks][:labels] = labels
 

@@ -1,5 +1,5 @@
 
-function visualize(states::AbstractArray, states2::AbstractArray; statenames = string.(1:length(states)), statenames2 = string.(1:length(states2)), aspect = false, resolution = (2880, 1080), statistics = false, title = "Field = ", title2 = "Field = ")
+function visualize(states::AbstractArray, states2::AbstractArray; statenames = string.(1:length(states)), statenames2 = string.(1:length(states2)), aspect = false, resolution = (2880, 1080), statistics = false, title = "Field = ", title2 = "Field = ", units1 = ["" for i in eachindex(states)], units2 = ["" for i in eachindex(states)])
     # Create scene
     scene, layout = layoutscene(resolution = resolution)
 
@@ -21,7 +21,7 @@ function visualize(states::AbstractArray, states2::AbstractArray; statenames = s
     colornode2 = Node(colorchoices2[1])
 
     if statistics
-        llscene = layout[4,1] = LAxis(scene, xlabel = @lift(statenames[$statenode]), 
+        llscene = layout[4,1] = LAxis(scene, xlabel = @lift(statenames[$statenode] * units1[$statenode]), 
                          xlabelcolor = :black, ylabel = "pdf", 
                          ylabelcolor = :black, xlabelsize = 40, ylabelsize = 40,
                          xticklabelsize = 25, yticklabelsize = 25,
@@ -29,7 +29,7 @@ function visualize(states::AbstractArray, states2::AbstractArray; statenames = s
                          xticklabelcolor  = :black, yticklabelcolor = :black)
         layout[3, 1] = LText(scene, "Statistics", width = width, textsize = 50)
 
-        llscene2 = layout[4,8] = LAxis(scene, xlabel = @lift(statenames2[$statenode2]), 
+        llscene2 = layout[4,8] = LAxis(scene, xlabel = @lift(statenames2[$statenode2] * units2[$statenode2]), 
                          xlabelcolor = :black, ylabel = "pdf", 
                          ylabelcolor = :black, xlabelsize = 40, ylabelsize = 40,
                          xticklabelsize = 25, yticklabelsize = 25,
@@ -157,6 +157,48 @@ function visualize(states::AbstractArray, states2::AbstractArray; statenames = s
         upperclim_slider2,
     )
     layout[1,8] = LText(scene, "Menu", width = width, textsize = 50)
+
+    ## Axis
+        # Modify Axis
+    axis = scene.children[1][Axis] 
+    axis[:names][:axisnames] = ("↓ Zonal [m] ", "Meriodonal [m]↓ ", "Depth [m]↓ ")
+    axis[:names][:align] = ((:left, :center), (:right, :center), (:right, :center))
+    # need to adjust size of ticks first and then size of axis names
+    axis[:names][:textsize] = (50.0, 50.0, 50.0)
+    axis[:ticks][:textsize] = (00.0, 00.0, 00.0)
+    # axis[:ticks][:ranges_labels].val # current axis labels
+    xticks = collect(range(-0, aspect[1], length = 2))
+    yticks = collect(range(-0, aspect[2], length = 6))
+    zticks = collect(range(-0, aspect[3], length = 2))
+    ticks = (xticks, yticks, zticks)
+    axis[:ticks][:ranges] = ticks
+    xtickslabels = [@sprintf("%0.1f", (xtick)) for xtick in xticks]
+    xtickslabels[end] = "1e6"
+    ytickslabels = ["", "south","", "", "north", ""]
+    ztickslabels = [@sprintf("%0.1f", (xtick)) for xtick in xticks]
+    labels = (xtickslabels, ytickslabels, ztickslabels)
+    axis[:ticks][:labels] = labels
+
+        # Modify Axis
+    axis = scene.children[2][Axis] 
+    axis[:names][:axisnames] = ("↓ Zonal [m] ", "Meriodonal [m]↓ ", "Depth [m]↓ ")
+    axis[:names][:align] = ((:left, :center), (:right, :center), (:right, :center))
+    # need to adjust size of ticks first and then size of axis names
+    axis[:names][:textsize] = (50.0, 50.0, 50.0)
+    axis[:ticks][:textsize] = (00.0, 00.0, 00.0)
+    # axis[:ticks][:ranges_labels].val # current axis labels
+    xticks = collect(range(-0, aspect[1], length = 2))
+    yticks = collect(range(-0, aspect[2], length = 6))
+    zticks = collect(range(-0, aspect[3], length = 2))
+    ticks = (xticks, yticks, zticks)
+    axis[:ticks][:ranges] = ticks
+    xtickslabels = [@sprintf("%0.1f", (xtick)) for xtick in xticks]
+    xtickslabels[end] = "1e6"
+    ytickslabels = ["", "south","", "", "north", ""]
+    ztickslabels = [@sprintf("%0.1f", (xtick)) for xtick in xticks]
+    labels = (xtickslabels, ytickslabels, ztickslabels)
+    axis[:ticks][:labels] = labels
+
     display(scene)
     return scene
 end
