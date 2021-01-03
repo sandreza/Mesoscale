@@ -204,6 +204,6 @@ function visualize(states::AbstractArray, states2::AbstractArray; statenames = s
 end
 
 function grabtitle(filename)
-    resolutionnumber = parse(Int64, split(filename, "_")[2])
+    resolutionnumber = parse(Int64, split(filename, "_")[end-2])
     return string(round(Int, 1000 * 16 / 192 / resolutionnumber)) * " km resolution, "
 end

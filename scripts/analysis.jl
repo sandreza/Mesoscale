@@ -14,7 +14,10 @@ files = [pwd() * "/Channel_1_checkpoint_iteration404905.jld2",
          pwd() * "/Channel_16_checkpoint_iteration6317902.jld2", 
          pwd() * "/Channel_32_checkpoint_iteration1272125.jld2"
 ]
-
+weak_files = [
+         pwd() * "/Weak_Channel_3_checkpoint_iteration1087211.jld2"
+]
+# http://juliaplots.org/MakieReferenceImages/gallery/index.html
 filename = files[end-1]
 states, statenames, units = grabstates(filename)
 scene = visualize(states, statenames = statenames, aspect = (1,1, 32/192), statistics = true, units = units);
@@ -32,9 +35,9 @@ record(scene, pwd() * "/test.mp4"; framerate = fps) do io
 end
 end
 ##
-filename = files[4]
+filename = weak_files[1]
 states, statenames, units1 = grabstates(filename)
-title = grabtitle(filename)
+title = "Weak " * grabtitle(filename)
 
 filename2 = files[3]
 states2, statenames2, units2 = grabstates(filename2)
