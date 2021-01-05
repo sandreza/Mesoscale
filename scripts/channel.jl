@@ -7,7 +7,7 @@ arch = CPU()
 FT   = Float64
 
 # File IO 
-ic_load = false
+ic_load = true
 if ic_load
     filepath = pwd() * "/Channel_1_checkpoint_iteration404905.jld2"
 end
@@ -16,8 +16,8 @@ write_zonal  = true
 slice_output_interval = 48hour
 zonal_output_interval = 365day
 
-time_avg_window =  zonal_output_interval / 1.0 # needs to be a float
-checkpoint_interval = 365 * 5 *  day
+time_avg_window =  zonal_output_interval / 2  # needs to be a float
+checkpoint_interval = 365 * 1 *  day
 
 resolution = 1
 descriptor = string(resolution)
@@ -32,7 +32,7 @@ const Lz = 3.0kilometer
 maxΔt = 1100.0 * 16 / resolution  # [s]
 Δt =  ic_load ? maxΔt : Δt = 300.0 * 16 / resolution # [s]
 
-end_time = 6 * 365day 
+end_time = 2 * 365day 
 advection   = WENO5()
 timestepper = :RungeKutta3
 # Rough target resolution
@@ -172,4 +172,4 @@ simulation.output_writers[:checkpoint] = checkpointer
 
 ## Run
 run!(simulation)
-##
+

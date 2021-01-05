@@ -65,10 +65,10 @@ w_scratch = ZFaceField(model.architecture, model.grid)
 b_scratch =  CellField(model.architecture, model.grid)
 
 zonal_fields = Dict(
-    :u => AveragedField( u, dims=(1,)),
-    :v => AveragedField( v, dims=(1,)),
-    :w => AveragedField( w, dims=(1,)),
-    :b => AveragedField( b, dims=(1,)),
+    :u => AveragedField( u, dims= 1),
+    :v => AveragedField( v, dims= 1),
+    :w => AveragedField( w, dims= 1),
+    :b => AveragedField( b, dims= 1),
     :uu => AveragedField(u * u, dims= 1),
     :vv => AveragedField(v * v, dims= 1),
     :ww => AveragedField(w * w, dims= 1),
@@ -79,9 +79,11 @@ zonal_fields = Dict(
     :vb => AveragedField(v * b, dims= 1),
     :wb => AveragedField(w * b, dims= 1),
 )
-
+# 
+# AveragedTimeInterval(time_avg_window, window=zonal_output_interval, stride=1)
+zonalschedule = AveragedTimeInterval(zonal_output_interval, window=time_avg_window, stride=5) # TimeInterval(checkpoint_interval)
 zonal_statistics = JLD2OutputWriter(model, zonal_fields,
-                                    schedule = AveragedTimeInterval(time_avg_window, window=zonal_output_interval, stride=5),
+                                    schedule = zonalschedule,
                                     prefix = filename * "_zonal_averages", force = true)
 end
 ## Checkpointer
