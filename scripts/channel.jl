@@ -3,20 +3,23 @@ include(pwd() * "/scripts/dependencies.jl")
 
 # Architecture
 CUDA.allowscalar(true)
-arch = GPU()
+arch = CPU()
 FT   = Float64
 
 # File IO 
 ic_load = false
+if ic_load
+    filepath = pwd() * "/Channel_1_checkpoint_iteration404905.jld2"
+end
 write_slices = false
-write_zonal  = false
+write_zonal  = true
 slice_output_interval = 48hour
 zonal_output_interval = 365day
 
 time_avg_window =  zonal_output_interval / 1.0 # needs to be a float
 checkpoint_interval = 365 * 5 *  day
 
-resolution = 16
+resolution = 1
 descriptor = string(resolution)
 filename = "Channel_" * descriptor
 
@@ -26,9 +29,10 @@ const Ly = 1000.0kilometer
 const Lz = 3.0kilometer
 
 # Discretization
-Δt = 300.0 # [s]
-maxΔt = 1000.0  # [s]
-end_time = 200 * 365day
+maxΔt = 1100.0 * 16 / resolution  # [s]
+Δt =  ic_load ? maxΔt : Δt = 300.0 * 16 / resolution # [s]
+
+end_time = 6 * 365day 
 advection   = WENO5()
 timestepper = :RungeKutta3
 # Rough target resolution
@@ -136,12 +140,8 @@ model = IncompressibleModel(
 
 # Initial Conditions
 if ic_load
-    println("loading from")
-    B₀ = randn(size(model.grid))
-    U₀ = randn(size(model.grid) .+ (0, 0, 0))
-    V₀ = randn(size(model.grid) .+ (0, 1, 0))
-    W₀ = randn(size(model.grid) .+ (0, 0, 1))
-    set!(model, b=B₀, u = U₀, v = V₀, w = W₀)
+    println("loading from " * filepath)
+    ic!(model, filepath, ArrayType = archarray(arch))
 else
     ε(σ) = σ * randn()
     B₀(x, y, z) = ΔB * ( exp(z/h) - exp(-Lz/h) ) / (1 - exp(-Lz/h)) + ε(1e-8)
@@ -170,5 +170,6 @@ if write_zonal
 end
 simulation.output_writers[:checkpoint] = checkpointer
 
-# Run
+## Run
 run!(simulation)
+##
