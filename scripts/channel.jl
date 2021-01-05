@@ -8,9 +8,7 @@ FT   = Float64
 
 # File IO 
 ic_load = true
-if ic_load
-    filepath = pwd() * "/Channel_1_checkpoint_iteration404905.jld2"
-end
+
 write_slices = false
 write_zonal  = true
 slice_output_interval = 48hour
@@ -23,7 +21,10 @@ resolution = 1
 descriptor = string(resolution)
 filename = "Channel_" * descriptor
 
-# Domain
+if ic_load
+    filepath = pwd() * "/" * getlatest(filename)
+end
+## Domain
 const Lx = 1000.0kilometer 
 const Ly = 1000.0kilometer
 const Lz = 3.0kilometer
