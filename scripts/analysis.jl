@@ -19,6 +19,7 @@ weak_files = [
         pwd() * "/Weak_Channel_1_checkpoint_iteration370489.jld2",
         pwd() * "/Weak_Channel_3_checkpoint_iteration1087211.jld2"
 ]
+##
 # http://juliaplots.org/MakieReferenceImages/gallery/index.html
 filename = files[end-1]
 states, statenames, units = grabstates(filename)

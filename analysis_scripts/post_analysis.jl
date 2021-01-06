@@ -109,3 +109,18 @@ function dot(ω::Array{Array{Float64,3},1}, ∇b::Array{Array{Float64,3},1})
     end
     return tmparray
 end
+
+## 2D stuff
+function average1(b)
+    return (b[1:end-1,:] + b[2:end, :]) * 0.5
+end
+function average2(b)
+    return (b[:,1:end-1] + b[:, 2:end]) * 0.5
+end
+
+function Δ1(f)
+    return f[2:end,:] - f[1:end-1,:]
+end
+function Δ2(f)
+    return f[:,2:end] - f[:,1:end-1]
+end
