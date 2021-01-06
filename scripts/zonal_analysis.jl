@@ -15,10 +15,13 @@ files = [
 file = files[2]
 states, statenames, units, domain = grabzonalstates(file)
 li = 16 # bottom
-mval = 0
+mval = 2
 ui = length(domain[2])-mval # top  
 newstates = [state[:, li:end-mval] for state in states]
 xlims = (domain[1][1], domain[1][end])
 ylims = (domain[2][li], domain[2][ui])
 scene = visualize(newstates, statenames = statenames, xlims = xlims, ylims = ylims, units = units)
+
+##
+
 

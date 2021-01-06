@@ -32,12 +32,12 @@ function grabzonalstates(file)
     # bz
     push!(states, bz)
     push!(statenames, "∂ᶻb")
-    push!(units, "[m/s²]")
+    push!(units, "[1/s²]")
 
     # by
     push!(states, by)
     push!(statenames, "∂ʸb")
-    push!(units, "[m/s²]")
+    push!(units, "[1/s²]")
 
     # v'b'
     push!(states, vpbp)
