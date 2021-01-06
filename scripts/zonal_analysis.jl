@@ -11,7 +11,7 @@ files = [
     pwd() * "/Channel_1_zonal_averages.jld2",
     pwd() * "/Channel_16_zonal_averages.jld2",
 ]
-
+##
 file = files[2]
 states, statenames, units, domain = grabzonalstates(file)
 li = 16 # bottom

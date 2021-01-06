@@ -38,11 +38,11 @@ record(scene, pwd() * "/test.mp4"; framerate = fps) do io
 end
 end
 ##
-filename = files[end-1]
+filename = files[1]
 states, statenames, units1 = grabstates(filename)
 title = "" * grabtitle(filename)
 
-filename2 = files[end-2]
+filename2 = files[end]
 states2, statenames2, units2 = grabstates(filename2)
 title2 = grabtitle(filename2)
 
