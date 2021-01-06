@@ -1,7 +1,6 @@
 using JLD2, LinearAlgebra, Oceananigans, Printf
 record_interaction = false
 include(pwd() * "/scripts/vizinanigans.jl")
-include(pwd() * "/scripts/vizinanigans_2D.jl")
 include(pwd() * "/scripts/states.jl")
 include(pwd() * "/scripts/compare.jl")
 include(pwd() * "/scripts/zonalstates.jl")
@@ -14,7 +13,12 @@ files = [
 ]
 
 file = files[2]
-states, statenames, units = grabzonalstates(file)
-scene = visualize2D(states, statenames = statenames, xlims = (0, 1e6), ylims = (-3000, 0), units = units)
-
+states, statenames, units, domain = grabzonalstates(file)
+li = 16 # bottom
+mval = 0
+ui = length(domain[2])-mval # top  
+newstates = [state[:, li:end-mval] for state in states]
+xlims = (domain[1][1], domain[1][end])
+ylims = (domain[2][li], domain[2][ui])
+scene = visualize(newstates, statenames = statenames, xlims = xlims, ylims = ylims, units = units)
 
