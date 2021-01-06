@@ -1,0 +1,45 @@
+
+function grabzonalstates(file)
+    ghost = 3 # since using WENO
+    zonalstatistics = jldopen(file)
+    tkeys = keys(zonalstatistics["timeseries"]["t"])
+    t = [zonalstatistics["timeseries"]["t"][tkey] for tkey in tkeys]
+    yC = zonalstatistics["grid"]["yC"][ghost+1:end-ghost]
+    zC = zonalstatistics["grid"]["zC"][ghost+1:end-ghost]
+    yF = zonalstatistics["grid"]["yC"][ghost+1:end-ghost]
+    zF = zonalstatistics["grid"]["zC"][ghost+1:end-ghost]
+    fields = [:u, :v, :w, :b, :vb, :vv, :wb, :ww]
+    for field in fields
+        label = string(field)
+        @eval $field = sum([zonalstatistics["timeseries"][$label][tkey][1,:,:] for tkey in tkeys])
+    end
+    close(zonalstatistics)
+
+    vpbp =  average1(vb) - average1(v) .* b
+    uz = Δ2(u) ./ reshape((zC[2:end] - zC[1:end-1]), (1, length(zC)-1))
+    bz = Δ2(b) ./ reshape((zC[2:end] - zC[1:end-1]), (1, length(zC)-1))
+    by = Δ1(b) ./ reshape((yC[2:end] - yC[1:end-1]), (length(yC)-1, 1))
+    coriolis = -1e-4 .+ 1e-11 * reshape(yC, (length(yC), 1))
+    κ =  -average1(vpbp) ./ by
+    ν = coriolis .^2 .* average2(vpbp) ./ bz ./ uz
+    
+    #bz = sum(bz, dims = 1) ./ size(bz)[1]
+    zCA = (zC[2:end] + zC[1:end-1])/2
+
+    states = [eval(field) for field in fields]
+    statenames = [string(field) for field in fields]
+    units = ["[m/s]", "[m/s]", "[m/s]", "[m/s²]", "[m²/s³]", "[m²/s²]", "[m²/s³]", "[m²/s²]"]
+    # v'b'
+    push!(states, vpbp)
+    push!(statenames, "v'b'")
+    push!(units, "[m²/s³]")
+    # κ
+    push!(states, κ)
+    push!(statenames, "κ ≈  v'b' / ∂ʸb")
+    push!(units, "[m²/s]")
+    # ν
+    push!(states, ν)
+    push!(statenames, "ν ≈  f v'b' / ∂ᶻb / ∂ᶻu")
+    push!(units, "[m²/s]")
+    return states, statenames, units
+end
