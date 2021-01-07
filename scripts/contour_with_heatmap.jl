@@ -19,6 +19,5 @@ clims = extrema(b)
 heatmap1 = heatmap!(lscene, xlims, ylims, state, interpolate = true, colormap = cmap_rgb, colorrange = clims)
 
 
-scene = heatmap(v)
-contour!(scene, b, levels = 20, colormap = :greys)
-c = contour(b, markersize = 1.0)
+scene = heatmap(u, interpolate = true)
+contour!(scene, b, levels = 20, linewidth = 4, color = :black, alpha = 0.5)
