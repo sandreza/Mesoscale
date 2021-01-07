@@ -21,7 +21,7 @@ weak_files = [
 ]
 ##
 # http://juliaplots.org/MakieReferenceImages/gallery/index.html
-filename = files[end-1]
+filename = files[end-2]
 states, statenames, units = grabstates(filename)
 scene = visualize(states, statenames = statenames, aspect = (1,1, 32/192), statistics = true, units = units);
 display(scene)
