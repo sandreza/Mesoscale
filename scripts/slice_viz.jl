@@ -24,6 +24,7 @@ colornode = Node(colorchoices[1])
 
 state = @lift(states[$statenode])
 statename = @lift(statenames[$statenode])
+unit = @lift(units[$statenode])
 nx = @lift(size($state)[1])
 ny = @lift(size($state)[2])
 nz = @lift(size($state)[3])
@@ -110,10 +111,21 @@ sliced_states = @lift([$sliced_state1, $sliced_state2, $sliced_state3])
 sliced_state = @lift($sliced_states[$directionnode]) 
 
 oclims = @lift((quantile($sliced_state[:], $slicelowerclim_node) , quantile($sliced_state[:], $sliceupperclim_node)))
-cmap_rgb = @lift($oclims[1] < $oclims[2] ? to_colormap($colornode) : reverse(to_colormap($colornode)))
+slicecolormapnode = @lift($oclims[1] < $oclims[2] ? to_colormap($colornode) : reverse(to_colormap($colornode)))
 sliceclims = @lift($oclims[1] != $oclims[2] ? (minimum($oclims), maximum($oclims)) : (minimum($oclims)-1, maximum($oclims)+1))
 
-heatmap!(slicescene, slicexaxis, sliceyaxis, sliced_state, interpolate = true, colormap = @lift(to_colormap($colornode)), colorrange = sliceclims)
+heatmap1 = heatmap!(slicescene, slicexaxis, sliceyaxis, sliced_state, interpolate = true, colormap = slicecolormapnode, colorrange = sliceclims)
+
+# Colorbar
+newlabel = @lift($statename * " " * $unit)
+cbar = LColorbar(scene, heatmap1, label = newlabel)
+cbar.width = Relative(1/3)
+# cbar.height = Relative(5/6)
+# cbar.halign = :center
+# cbar.flipaxisposition = true
+# cbar.labelpadding = -350
+cbar.labelsize = 50
+
 @lift(AbstractPlotting.xlims!(slicescene, extrema($slicexaxis))) 
 @lift(AbstractPlotting.ylims!(slicescene, extrema($sliceyaxis)))
 
@@ -164,12 +176,13 @@ vlines!(hslicescene, @lift($sliceclims[1]), color = :black, linewidth = menuwidt
 vlines!(hslicescene, @lift($sliceclims[2]), color = :black, linewidth = menuwidth / 100)
 
 
+
 interpolationmenu = LMenu(scene, options = zip(["contour", "heatmap"], [true, false]))
 
 on(interpolationmenu.selection) do s
     interpolationnode[] = s
     # hack
-    heatmap!(slicescene, slicexaxis, sliceyaxis, sliced_state, interpolate = s, colormap = @lift(to_colormap($colornode)), colorrange = sliceclims)
+    heatmap!(slicescene, slicexaxis, sliceyaxis, sliced_state, interpolate = s, colormap = slicecolormapnode, colorrange = sliceclims)
 end
 
 directionmenu = LMenu(scene, options = zip(directionnames, directionindex))
@@ -208,7 +221,8 @@ layout[2,7] = vgrid!(
     LText(scene, slicelowerclim_string, width = nothing),
     slicelowerclim_slider,
     LText(scene, sliceupperclim_string, width = nothing), 
-    sliceupperclim_slider
+    sliceupperclim_slider,
+    cbar,
 )
 
 display(scene)
