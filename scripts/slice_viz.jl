@@ -1,7 +1,5 @@
-aspect = (1, 1, 32/192)
-resolution = (2678, 1030)
-bins = 300
 
+function volumeslice(states::AbstractArray; statenames = string.(1:length(states)), units = ["" for i in eachindex(states)], aspect = (1, 1, 32/192), resolution = (2678, 1030), statistics = false, title = "Volume plot of ", bins = 300)
 scene, layout = layoutscene(resolution = resolution)
 volumescene = layout[2:4, 2:4] = LScene(scene)
 menuwidth = round(Int, 350)
@@ -17,7 +15,7 @@ directionnode = Node(directionindex[1])
 stateindex = collect(1:length(states))
 statenode = Node(stateindex[1])
 
-layout[1, 2:4] = LText(scene, @lift("Volume plot of " * statenames[$statenode]), textsize = 50)
+layout[1, 2:4] = LText(scene, @lift(title * statenames[$statenode]), textsize = 50)
 
 colorchoices = [:balance, :thermal, :dense, :deep, :curl, :thermometer]
 colornode = Node(colorchoices[1])
@@ -121,9 +119,9 @@ newlabel = @lift($statename * " " * $unit)
 cbar = LColorbar(scene, heatmap1, label = newlabel)
 cbar.width = Relative(1/3)
 # cbar.height = Relative(5/6)
-# cbar.halign = :center
+cbar.halign = :left
 # cbar.flipaxisposition = true
-# cbar.labelpadding = -350
+# cbar.labelpadding = -250
 cbar.labelsize = 50
 
 @lift(AbstractPlotting.xlims!(slicescene, extrema($slicexaxis))) 
@@ -226,3 +224,5 @@ layout[2,7] = vgrid!(
 )
 
 display(scene)
+return scene
+end
