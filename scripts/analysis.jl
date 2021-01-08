@@ -27,10 +27,10 @@ scene = volumeslice(states, statenames = statenames, aspect = (1,1, 32/192), sta
 display(scene)
 ## save interaction
 seconds = 20
-fps = 30
+fps = 10
 frames = round(Int, fps * seconds )
 if record_interaction
-record(scene, pwd() * "/test.mp4"; framerate = fps) do io
+record(scene, pwd() * "/slice.mp4"; framerate = fps) do io
     for i = 1:frames
         sleep(1/fps)
         recordframe!(io)
