@@ -178,6 +178,7 @@ return arrays for plotting histogram
 function histogram(array; bins = minimum([100, length(array)]), normalize = true)
     tmp = zeros(bins)
     down, up = extrema(array)
+    down, up = down == up ? (down-1, up+1) : (down, up) # edge case
     bucket = collect(range(down, up, length = bins+1))
     normalization = normalize ? length(array) : 1
     for i in eachindex(array)
@@ -263,7 +264,7 @@ function visualize(states::Array{Array{S, 2},1}; statenames = string.(1:length(s
     @lift(AbstractPlotting.ylims!(llscene, extrema($histogram_node[2])))
     vlines!(llscene, @lift($clims[1]), color = :black, linewidth = width / 100)
     vlines!(llscene, @lift($clims[2]), color = :black, linewidth = width / 100)
-    
+
     # Menus
     statemenu = LMenu(scene, options = zip(statenames, stateindex))
     on(statemenu.selection) do s

@@ -44,7 +44,7 @@ lowerclim_node = lowerclim_slider.value
 
 clims = @lift((quantile($state[:], $lowerclim_node) , quantile($state[:], $upperclim_node)))
 
-volume!(volumescene, 0..aspect[1], 0..aspect[2], 0..aspect[3], state, overdraw = false, colorrange = clims, colormap = to_colormap(:balance))
+volume!(volumescene, 0..aspect[1], 0..aspect[2], 0..aspect[3], state, overdraw = false, colorrange = clims, colormap = @lift(to_colormap($colornode)))
 
 
 v = volume!(volumescene, 0..aspect[1], 0..aspect[2], 0..aspect[3],
@@ -71,7 +71,13 @@ sliceclims = @lift($oclims[1] != $oclims[2] ? (minimum($oclims), maximum($oclims
 
 slicexaxislabel = @lift(["y", "x", "x"][$directionnode])
 sliceyaxislabel = @lift(["z", "z", "y"][$directionnode])
-slicescene = layout[3:4, 5:6] = LAxis(scene, xlabel = slicexaxislabel, ylabel = sliceyaxislabel)
+
+slicexaxis = @lift([[1,$ny], [1, $nx], [1,$nx]][$directionnode])
+sliceyaxis = @lift([[1,$nz], [1, $nz], [1,$ny]][$directionnode])
+slicexaxis = [0,1]
+sliceyaxis = [0,1]
+
+slicescene = layout[2:3, 5:6] = LAxis(scene, xlabel = slicexaxislabel, ylabel = sliceyaxislabel)
 
 sliced_state1 = @lift( $state[round(Int, 1 + $slice_node * ($nx-1)), 1:$ny, 1:$nz])
 sliced_state2 = @lift( $state[1:$nx, round(Int, 1 + $slice_node * ($ny-1)), 1:$nz])
@@ -79,27 +85,32 @@ sliced_state3 = @lift( $state[1:$nx, 1:$ny, round(Int, 1 + $slice_node * ($nz-1)
 sliced_states = @lift([$sliced_state1, $sliced_state2, $sliced_state3])
 sliced_state = @lift($sliced_states[$directionnode]) 
 
-heatmap!(slicescene, @lift([1,$ny]), @lift([1,$nz]), sliced_state, interpolate = true, colormap = to_colormap(:balance), colorrange = sliceclims)
+heatmap!(slicescene, slicexaxis, sliceyaxis, sliced_state, interpolate = true, colormap = @lift(to_colormap($colornode)), colorrange = sliceclims)
 
 sliceindex = @lift([round(Int, 1 + $slice_node * ($nx-1)), round(Int, 1 + $slice_node * ($ny-1)), round(Int, 1 + $slice_node * ($nz-1))][$directionnode])
 slicestring = @lift(directionnames[$directionnode] * " at index " * @sprintf("%0.2f", $sliceindex)) 
 layout[1, 5:6] = LText(scene, slicestring)
 
-hslicescene = layout[2,5:6] = LAxis(scene, xlabel = @lift(statenames[$statenode] * " " * units[$statenode]), 
+
+hslicescene = layout[4,5:6] = LAxis(scene, xlabel = @lift(statenames[$statenode] * " " * units[$statenode]), 
                     xlabelcolor = :black, ylabel = "pdf", 
                     ylabelcolor = :black, xlabelsize = 40, ylabelsize = 40,
                     xticklabelsize = 25, yticklabelsize = 25,
                     xtickcolor = :black, ytickcolor = :black,
                     xticklabelcolor  = :black, yticklabelcolor = :black)
+
+
 # Slice Statistics
+
 slicehistogram_node = @lift(histogram($sliced_state, bins = bins))
 xs = @lift($slicehistogram_node[1])
 ys = @lift($slicehistogram_node[2])
 pdf = AbstractPlotting.barplot!(hslicescene, xs, ys, color = :red, 
                 strokecolor = :red, 
                 strokewidth = 1)
-@lift(AbstractPlotting.xlims!(hslicescene, extrema($sliced_state)))
-@lift(AbstractPlotting.ylims!(hslicescene, extrema($slicehistogram_node[2])))
+
+@lift(AbstractPlotting.xlims!(hslicescene, extrema($xs))) 
+@lift(AbstractPlotting.ylims!(hslicescene, extrema($ys)))
 vlines!(hslicescene, @lift($sliceclims[1]), color = :black, linewidth = menuwidth / 100)
 vlines!(hslicescene, @lift($sliceclims[2]), color = :black, linewidth = menuwidth / 100)
 
@@ -109,7 +120,7 @@ interpolationmenu = LMenu(scene, options = zip(["contour", "heatmap"], [true, fa
 on(interpolationmenu.selection) do s
     interpolationnode[] = s
     # hack
-    heatmap!(slicescene, @lift([1,$ny]), @lift([1,$nz]), sliced_state, interpolate = s, colormap = to_colormap(:balance))
+    heatmap!(slicescene, slicexaxis, sliceyaxis, sliced_state, interpolate = s, colormap = @lift(to_colormap($colornode)), colorrange = sliceclims)
 end
 
 directionmenu = LMenu(scene, options = zip(directionnames, directionindex))
