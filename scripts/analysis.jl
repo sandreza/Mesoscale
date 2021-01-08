@@ -38,13 +38,13 @@ record(scene, pwd() * "/test.mp4"; framerate = fps) do io
 end
 end
 ##
-filename = files[4]
+filename = files[end-1]
 states, statenames, units1 = grabstates(filename)
 title = "" * grabtitle(filename)
 
-filename2 = weak_files[2]
+filename2 = files[end-1]
 states2, statenames2, units2 = grabstates(filename2)
-title2 = "Weak "  * grabtitle(filename2)
+title2 = " "  * grabtitle(filename2)
 
 scene = visualize(states, states2, statenames = statenames, statenames2 = statenames2, aspect = (1,1, 32/192), statistics = true, title = title, title2 = title2, units1 = units1, units2 = units2)
 ##

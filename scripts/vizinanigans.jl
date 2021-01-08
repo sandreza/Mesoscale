@@ -141,7 +141,8 @@ function visualize(states::AbstractArray; statenames = string.(1:length(states))
 
     # Modify Axis
     axis = scene.children[1][Axis] 
-    axis[:names][:axisnames] = ("↓ Zonal [m] ", "Meriodonal [m]↓ ", "Depth [m]↓ ")
+    # axis[:names][:axisnames] = ("↓ Zonal [m] ", "Meriodonal [m]↓ ", "Depth [m]↓ ")
+    axis[:names][:axisnames] = ("↓", "↓ ", "↓ ")
     axis[:names][:align] = ((:left, :center), (:right, :center), (:right, :center))
     # need to adjust size of ticks first and then size of axis names
     axis[:names][:textsize] = (50.0, 50.0, 50.0)
@@ -204,8 +205,6 @@ function visualize(states::Array{Array{S, 2},1}; statenames = string.(1:length(s
                          titlesize = 50) 
     width = round(Int, resolution[1] / 4) # make menu 1/4 of preliminary resolution
 
-
-
     # Create choices and nodes
     stateindex = collect(1:length(states))
     statenode = Node(stateindex[1])
@@ -264,6 +263,7 @@ function visualize(states::Array{Array{S, 2},1}; statenames = string.(1:length(s
     @lift(AbstractPlotting.ylims!(llscene, extrema($histogram_node[2])))
     vlines!(llscene, @lift($clims[1]), color = :black, linewidth = width / 100)
     vlines!(llscene, @lift($clims[2]), color = :black, linewidth = width / 100)
+    
     # Menus
     statemenu = LMenu(scene, options = zip(statenames, stateindex))
     on(statemenu.selection) do s
