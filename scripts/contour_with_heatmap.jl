@@ -1,5 +1,5 @@
 scene, layout  = layoutscene()
-lscene = layout[2:4, 2:4] = LAxis(scene, xlabel = "South to North [m]", 
+lscene = layout[1, 1] = LAxis(scene, xlabel = "South to North [m]", 
         xlabelcolor = :black, ylabel = "Depth [m]", 
         ylabelcolor = :black, xlabelsize = 40, ylabelsize = 40,
         xticklabelsize = 25, yticklabelsize = 25,
@@ -11,13 +11,30 @@ u = states[1]
 b = states[4]
 statenames[4]
 
-xlims = (0,1)
-ylims = (0,1)
-state = b
-cmap_rgb = to_colormap(:balance)
+xlims = (0, 1e6)
+ylims = (-3000, 0)
+xlims = Array(range(xlims[1], xlims[2], length = 4)) 
+ylims = Array(range(ylims[1], ylims[2], length = 4)) 
+
+state = b .* 1.0
+cmap_rgb = to_colormap(:balance);
 clims = extrema(b)
 heatmap1 = heatmap!(lscene, xlims, ylims, state, interpolate = true, colormap = cmap_rgb, colorrange = clims)
+contour!(lscene, xlims, ylims, b, levels = 20, linewidth = 4, color = :black, alpha = 0.5)
+display(scene)
+##
+ii = 11
+state = states[ii]
+b = states[4]
+scene = Scene()
+cmap_rgb = to_colormap(:viridis);
+clims = (quantile(state[:], 0.05) , quantile(state[:], 0.95))
+scene = heatmap(state, interpolate = true, colormap = cmap_rgb, colorrange = clims)
+cp = contour!(scene, b, levels = 30, linewidth = 4, color = :black, alpha = 0.5)
+axis = scene[Axis]
+axis.names.axisnames = ["South to North [m]", "Depth [m]"]
+newscene = title(scene, statenames[ii] * " with " * statenames[4] * " contours")
 
-
-scene = heatmap(u, interpolate = true)
-contour!(scene, b, levels = 20, linewidth = 4, color = :black, alpha = 0.5)
+ls = colorlegend(scene[end-1], raw = true, camera = campixel!)
+scene_final = vbox(newscene, ls)
+display(scene_final)
