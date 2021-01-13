@@ -314,9 +314,7 @@ function visualize(states::Array{Array{S, 2},1}; statenames = string.(1:length(s
     return scene
 end
 
-
-
-function volumeslice(states::AbstractArray; statenames = string.(1:length(states)), units = ["" for i in eachindex(states)], aspect = (1, 1, 32/192), resolution = (2678, 1030), statistics = false, title = "Volume plot of ", bins = 300)
+function volumeslice(states::AbstractArray; statenames = string.(1:length(states)), units = ["" for i in eachindex(states)], aspect = (1, 1, 32/192), resolution = (2678, 1030), statistics = false, title = "Volume plot of ", bins = 300, statlabelsize = (20,20))
 scene, layout = layoutscene(resolution = resolution)
 volumescene = layout[2:4, 2:4] = LScene(scene)
 menuwidth = round(Int, 350)
@@ -387,7 +385,7 @@ layout[3, 1] = Label(scene, "Statistics", textsize = 50)
 hscene = layout[4, 1] = Axis(scene, xlabel = @lift(statenames[$statenode] * " " * units[$statenode]), 
                     xlabelcolor = :black, ylabel = "pdf", 
                     ylabelcolor = :black, xlabelsize = 40, ylabelsize = 40,
-                    xticklabelsize = 0, yticklabelsize = 0,
+                    xticklabelsize = statlabelsize[1], yticklabelsize = statlabelsize[2],
                     xtickcolor = :black, ytickcolor = :black,
                     xticklabelcolor  = :black, yticklabelcolor = :black)
 
@@ -474,7 +472,7 @@ layout[3, 7] = Label(scene, "Slice Statistics", textsize = 50)
 hslicescene = layout[4, 7] = Axis(scene, xlabel = @lift(statenames[$statenode] * " " * units[$statenode]), 
                     xlabelcolor = :black, ylabel = "pdf", 
                     ylabelcolor = :black, xlabelsize = 40, ylabelsize = 40,
-                    xticklabelsize = 0, yticklabelsize = 0,
+                    xticklabelsize = statlabelsize[1], yticklabelsize = statlabelsize[2],
                     xtickcolor = :black, ytickcolor = :black,
                     xticklabelcolor  = :black, yticklabelcolor = :black)
 

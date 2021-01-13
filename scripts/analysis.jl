@@ -23,7 +23,8 @@ weak_files = [
 # http://juliaplots.org/MakieReferenceImages/gallery/index.html
 filename = files[end-2]
 states, statenames, units = grabstates(filename)
-scene = volumeslice(states, statenames = statenames, aspect = (1,1, 32/192), statistics = true, units = units);
+scene = volumeslice(states, statenames = statenames, aspect = (1, 1, 32/192), 
+                    statistics = true, units = units, statlabelsize = (15, 15) );
 # display(scene)
 ## save interaction
 seconds = 20
