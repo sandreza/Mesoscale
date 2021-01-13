@@ -1,4 +1,4 @@
-using JLD2, LinearAlgebra, Oceananigans, Printf
+using JLD2, LinearAlgebra, Oceananigans, Printf, Statistics
 record_interaction = false
 include(pwd() * "/scripts/vizinanigans.jl")
 include(pwd() * "/scripts/states.jl")
@@ -24,7 +24,7 @@ weak_files = [
 filename = files[end-2]
 states, statenames, units = grabstates(filename)
 scene = volumeslice(states, statenames = statenames, aspect = (1,1, 32/192), statistics = true, units = units);
-display(scene)
+# display(scene)
 ## save interaction
 seconds = 20
 fps = 10

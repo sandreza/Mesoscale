@@ -15,17 +15,17 @@ Constructs states for visualisation automatically from jld2 file
 """
 function grabstates(filename)
     file = jldopen(filename)
-    grid = file["grid"]
-    xS, yS, zS = size(grid)
+    ogrid = file["grid"]
+    xS, yS, zS = size(ogrid)
     btmp = file["tracers"]["b"]["data"]
     ghost = Int((length(btmp[:,1,1])-xS)/2)
     b = file["tracers"]["b"]["data"][ghost:(xS + ghost - 1), ghost:(yS + ghost - 1), ghost:(zS + ghost - 1)]
     u = file["velocities"]["u"]["data"][ghost:(xS + ghost - 1), ghost:(yS + ghost - 1), ghost:(zS + ghost - 1)]
     v = file["velocities"]["v"]["data"][ghost:(xS + ghost - 1), ghost:(yS + 1 + ghost - 1), ghost:(zS + ghost - 1)]
     w = file["velocities"]["w"]["data"][ghost:(xS + ghost - 1), ghost:(yS + ghost - 1), ghost:(zS + 1 + ghost - 1)]
-    x = grid.xC[1:xS]
-    y = grid.yC[1:yS]
-    z = grid.zC[1:zS]
+    x = ogrid.xC[1:xS]
+    y = ogrid.yC[1:yS]
+    z = ogrid.zC[1:zS]
     f = file["coriolis"].f₀
     β = file["coriolis"].β
     # Cell-Centered Values

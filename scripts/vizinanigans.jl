@@ -1,7 +1,5 @@
 using Oceananigans
-using GLMakie, AbstractPlotting
-using ImageTransformations, Colors
-using AbstractPlotting.MakieLayout
+using GLMakie
 using Statistics, Printf
 
 """
@@ -25,7 +23,7 @@ function visualize(model::Oceananigans.AbstractModel)
 end
 
 """
-visualize(states::AbstractArray; statenames = string.(1:length(states)), quantiles = (0.1, 0.99), aspect = false, resolution = (1920, 1080), statistics = false, title = "Field = ")
+visualize(states::AbstractArray; statenames = string.(1:length(states)), quantiles = (0.1, 0.99), aspect = (1,1,1), resolution = (1920, 1080), statistics = false, title = "Field = ")
 
 # Description 
 Visualize 3D states 
@@ -42,7 +40,7 @@ Visualize 3D states
 # Return
 - `scene`: Scene. A preliminary scene object for manipulation
 """
-function visualize(states::AbstractArray; statenames = string.(1:length(states)), units = ["" for i in eachindex(states)], aspect = false, resolution = (1920, 1080), statistics = false, title = "Field = ", bins = 300)
+function visualize(states::AbstractArray; statenames = string.(1:length(states)), units = ["" for i in eachindex(states)], aspect = (1,1,1), resolution = (1920, 1080), statistics = false, title = "Field = ", bins = 300)
     # Create scene
     scene, layout = layoutscene(resolution = resolution)
     lscene = layout[2:4, 2:4] = LScene(scene) 
@@ -56,13 +54,13 @@ function visualize(states::AbstractArray; statenames = string.(1:length(states))
     colornode = Node(colorchoices[1])
 
     if statistics
-        llscene = layout[4,1] = LAxis(scene, xlabel = @lift(statenames[$statenode] * units[$statenode]), 
+        llscene = layout[4,1] = Axis(scene, xlabel = @lift(statenames[$statenode] * units[$statenode]), 
                          xlabelcolor = :black, ylabel = "pdf", 
                          ylabelcolor = :black, xlabelsize = 40, ylabelsize = 40,
                          xticklabelsize = 25, yticklabelsize = 25,
                          xtickcolor = :black, ytickcolor = :black,
                          xticklabelcolor  = :black, yticklabelcolor = :black)
-        layout[3, 1] = LText(scene, "Statistics", width = width, textsize = 50)
+        layout[3, 1] = Label(scene, "Statistics", width = width, textsize = 50)
     end
 
     # x,y,z are for determining the aspect ratio of the box
@@ -73,9 +71,9 @@ function visualize(states::AbstractArray; statenames = string.(1:length(states))
     end
 
     # Clim sliders
-    upperclim_slider = LSlider(scene, range = range(0, 1, length = 101), startvalue = 0.99)
+    upperclim_slider = Slider(scene, range = range(0, 1, length = 101), startvalue = 0.99)
     upperclim_node = upperclim_slider.value
-    lowerclim_slider = LSlider(scene, range = range(0, 1, length = 101), startvalue = 0.01)
+    lowerclim_slider = Slider(scene, range = range(0, 1, length = 101), startvalue = 0.01)
     lowerclim_node = lowerclim_slider.value
 
     # Lift Nodes
@@ -90,11 +88,11 @@ function visualize(states::AbstractArray; statenames = string.(1:length(states))
         histogram_node = @lift(histogram($state, bins = bins))
         xs = @lift($histogram_node[1])
         ys = @lift($histogram_node[2])
-        pdf = AbstractPlotting.barplot!(llscene, xs, ys, color = :red, 
+        pdf = GLMakie.AbstractPlotting.barplot!(llscene, xs, ys, color = :red, 
                         strokecolor = :red, 
                         strokewidth = 1)
-        @lift(AbstractPlotting.xlims!(llscene, extrema($state)))
-        @lift(AbstractPlotting.ylims!(llscene, extrema($histogram_node[2])))
+        @lift(GLMakie.AbstractPlotting.xlims!(llscene, extrema($state)))
+        @lift(GLMakie.AbstractPlotting.ylims!(llscene, extrema($histogram_node[2])))
         vlines!(llscene, @lift($clims[1]), color = :black, linewidth = width / 100)
         vlines!(llscene, @lift($clims[2]), color = :black, linewidth = width / 100)
     end
@@ -109,38 +107,36 @@ function visualize(states::AbstractArray; statenames = string.(1:length(states))
     eyeposition = Float32[2, 2, 1.3]
     lookat = Float32[0.82, 0.82, 0.1]
     # Title
-    supertitle = layout[1, 2:4] = LText(scene, titlename , textsize = 50, color = :black)
+    supertitle = layout[1, 2:4] = Label(scene, titlename , textsize = 50, color = :black)
     
 
     # Menus
-    statemenu = LMenu(scene, options = zip(statenames, stateindex))
+    statemenu = Menu(scene, options = zip(statenames, stateindex))
     on(statemenu.selection) do s
         statenode[] = s
-        update_cam!(scene.children[1], eyeposition, lookat, Vec3f0(0, 0, 1))
     end
 
-    colormenu = LMenu(scene, options = zip(colorchoices, colorchoices))
+    colormenu = Menu(scene, options = zip(colorchoices, colorchoices))
     on(colormenu.selection) do s
         colornode[] = s
-        update_cam!(scene.children[1], eyeposition, lookat, Vec3f0(0, 0, 1))
     end
     lowerclim_string = @lift("lower clim quantile = " *  @sprintf("%0.2f", $lowerclim_node) * ", value = " * @sprintf("%0.1e", $clims[1]))
     upperclim_string = @lift("upper clim quantile = " *  @sprintf("%0.2f", $upperclim_node) * ", value = " * @sprintf("%0.1e", $clims[2]))
     # depends on makie version, vbox for old, vgrid for new
     layout[2, 1] = vgrid!(
-        LText(scene, "State", width = nothing),
+        Label(scene, "State", width = nothing),
         statemenu,
-        LText(scene, "Color", width = nothing),
+        Label(scene, "Color", width = nothing),
         colormenu,
-        LText(scene, lowerclim_string, width = nothing),
+        Label(scene, lowerclim_string, width = nothing),
         lowerclim_slider,
-        LText(scene, upperclim_string, width = nothing),
+        Label(scene, upperclim_string, width = nothing),
         upperclim_slider,
     )
-    layout[1,1] = LText(scene, "Menu", width = width, textsize = 50)
+    layout[1,1] = Label(scene, "Menu", width = width, textsize = 50)
 
     # Modify Axis
-    axis = scene.children[1][Axis] 
+    axis = scene.children[1][OldAxis] 
     # axis[:names][:axisnames] = ("↓ Zonal [m] ", "Meriodonal [m]↓ ", "Depth [m]↓ ")
     axis[:names][:axisnames] = ("↓", "↓ ", "↓ ")
     axis[:names][:align] = ((:left, :center), (:right, :center), (:right, :center))
@@ -160,11 +156,9 @@ function visualize(states::AbstractArray; statenames = string.(1:length(states))
     labels = (xtickslabels, ytickslabels, ztickslabels)
     axis[:ticks][:labels] = labels
 
-    update_cam!(scene.children[1], eyeposition, lookat, Vec3f0(0, 0, 1))
     display(scene)
     # Change the default camera position after the fact
     # note that these change dynamically as the plot is manipulated
-    update_cam!(scene.children[1], eyeposition, lookat, Vec3f0(0, 0, 1))
     return scene
 end
 
@@ -194,10 +188,10 @@ function histogram(array; bins = minimum([100, length(array)]), normalize = true
 end
 
 # 2D visualization
-function visualize(states::Array{Array{S, 2},1}; statenames = string.(1:length(states)), units = ["" for i in eachindex(states)], aspect = false, resolution = (2412, 1158), title = "Zonal and Temporal Average of ", xlims = (0,1), ylims = (0,1), bins = 300) where {S}
+function visualize(states::Array{Array{S, 2},1}; statenames = string.(1:length(states)), units = ["" for i in eachindex(states)], aspect = (1,1,1), resolution = (2412, 1158), title = "Zonal and Temporal Average of ", xlims = (0,1), ylims = (0,1), bins = 300) where {S}
     # Create scene
     scene, layout = layoutscene(resolution = resolution)
-    lscene = layout[2:4, 2:4] = LAxis(scene, xlabel = "South to North [m]", 
+    lscene = layout[2:4, 2:4] = Axis(scene, xlabel = "South to North [m]", 
                          xlabelcolor = :black, ylabel = "Depth [m]", 
                          ylabelcolor = :black, xlabelsize = 40, ylabelsize = 40,
                          xticklabelsize = 25, yticklabelsize = 25,
@@ -218,18 +212,18 @@ function visualize(states::Array{Array{S, 2},1}; statenames = string.(1:length(s
     interpolationnode = Node(interpolationchoices[1])
 
     # Statistics
-    llscene = layout[4,1] = LAxis(scene, xlabel = @lift(statenames[$statenode] * " " * units[$statenode]), 
+    llscene = layout[4,1] = Axis(scene, xlabel = @lift(statenames[$statenode] * " " * units[$statenode]), 
                     xlabelcolor = :black, ylabel = "pdf", 
                     ylabelcolor = :black, xlabelsize = 40, ylabelsize = 40,
                     xticklabelsize = 25, yticklabelsize = 25,
                     xtickcolor = :black, ytickcolor = :black,
                     xticklabelcolor  = :black, yticklabelcolor = :black)
-    layout[3, 1] = LText(scene, "Statistics", width = width, textsize = 50)
+    layout[3, 1] = Label(scene, "Statistics", width = width, textsize = 50)
 
     # Clim sliders
-    upperclim_slider = LSlider(scene, range = range(0, 1, length = 101), startvalue = 0.99)
+    upperclim_slider = Slider(scene, range = range(0, 1, length = 101), startvalue = 0.99)
     upperclim_node = upperclim_slider.value
-    lowerclim_slider = LSlider(scene, range = range(0, 1, length = 101), startvalue = 0.01)
+    lowerclim_slider = Slider(scene, range = range(0, 1, length = 101), startvalue = 0.01)
     lowerclim_node = lowerclim_slider.value
    
     #ylims = @lift(range($lowerval, $upperval, length = $))
@@ -245,7 +239,7 @@ function visualize(states::Array{Array{S, 2},1}; statenames = string.(1:length(s
     # newrange = @lift(range($lowerval, $upperval, length = 4))
     # lscene.yticks = @lift(Array($newrange))
     titlename = @lift(title * $statename) # use padding and appropriate centering
-    layout[1, 2:4] = LText(scene, titlename, textsize = 50)
+    layout[1, 2:4] = Label(scene, titlename, textsize = 50)
     # heatmap 
     heatmap1 = heatmap!(lscene, xlims, 
             ylims,
@@ -257,26 +251,26 @@ function visualize(states::Array{Array{S, 2},1}; statenames = string.(1:length(s
     histogram_node = @lift(histogram($state, bins = bins))
     xs = @lift($histogram_node[1])
     ys = @lift($histogram_node[2])
-    pdf = AbstractPlotting.barplot!(llscene, xs, ys, color = :red, 
+    pdf = GLMakie.AbstractPlotting.barplot!(llscene, xs, ys, color = :red, 
                     strokecolor = :red, 
                     strokewidth = 1)
-    @lift(AbstractPlotting.xlims!(llscene, extrema($state)))
-    @lift(AbstractPlotting.ylims!(llscene, extrema($histogram_node[2])))
+    @lift(GLMakie.AbstractPlotting.xlims!(llscene, extrema($state)))
+    @lift(GLMakie.AbstractPlotting.ylims!(llscene, extrema($histogram_node[2])))
     vlines!(llscene, @lift($clims[1]), color = :black, linewidth = width / 100)
     vlines!(llscene, @lift($clims[2]), color = :black, linewidth = width / 100)
 
     # Menus
-    statemenu = LMenu(scene, options = zip(statenames, stateindex))
+    statemenu = Menu(scene, options = zip(statenames, stateindex))
     on(statemenu.selection) do s
         statenode[] = s
     end
 
-    colormenu = LMenu(scene, options = zip(colorchoices, colorchoices))
+    colormenu = Menu(scene, options = zip(colorchoices, colorchoices))
     on(colormenu.selection) do s
         colornode[] = s
     end
 
-    interpolationmenu = LMenu(scene, options = zip(interpolationlabels, interpolationchoices))
+    interpolationmenu = Menu(scene, options = zip(interpolationlabels, interpolationchoices))
     on(interpolationmenu.selection) do s
         interpolationnode[] = s
     heatmap1 = heatmap!(lscene, xlims, 
@@ -286,7 +280,7 @@ function visualize(states::Array{Array{S, 2},1}; statenames = string.(1:length(s
     end
 
     newlabel = @lift($statename * " " * $unit)
-    cbar = LColorbar(scene, heatmap1, label = newlabel)
+    cbar = Colorbar(scene, heatmap1, label = newlabel)
     cbar.width = Relative(1/3)
     cbar.height = Relative(5/6)
     cbar.halign = :center
@@ -299,23 +293,23 @@ function visualize(states::Array{Array{S, 2},1}; statenames = string.(1:length(s
 
     # depends on makie version, vbox for old, vgrid for new
     layout[2, 1] = vgrid!(
-        LText(scene, "State", width = nothing),
+        Label(scene, "State", width = nothing),
         statemenu,
-        LText(scene, "plotting options", width = width, textsize = 30, padding = (0,0, 10, 0)),
+        Label(scene, "plotting options", width = width, textsize = 30, padding = (0,0, 10, 0)),
         interpolationmenu,
-        LText(scene, "Color", width = nothing),
+        Label(scene, "Color", width = nothing),
         colormenu,
-        LText(scene, lowerclim_string, width = nothing),
+        Label(scene, lowerclim_string, width = nothing),
         lowerclim_slider,
-        LText(scene, upperclim_string, width = nothing),
+        Label(scene, upperclim_string, width = nothing),
         upperclim_slider,
     )
 
     layout[2:4, 5] = vgrid!(
-        LText(scene, "Color Bar", width = width/2, textsize = 50, padding = (25, 0, 0, 00)),
+        Label(scene, "Color Bar", width = width/2, textsize = 50, padding = (25, 0, 0, 00)),
         cbar,
     )
-    layout[1,1] = LText(scene, "Menu", width = width, textsize = 50)
+    layout[1,1] = Label(scene, "Menu", width = width, textsize = 50)
     display(scene)
     return scene
 end
@@ -326,9 +320,9 @@ function volumeslice(states::AbstractArray; statenames = string.(1:length(states
 scene, layout = layoutscene(resolution = resolution)
 volumescene = layout[2:4, 2:4] = LScene(scene)
 menuwidth = round(Int, 350)
-layout[1,1] = LText(scene, "Menu", width = menuwidth, textsize = 50)
+layout[1,1] = Label(scene, "Menu", width = menuwidth, textsize = 50)
 
-slice_slider = LSlider(scene, range = range(0, 1, length = 101), startvalue = 0.0)
+slice_slider = Slider(scene, range = range(0, 1, length = 101), startvalue = 0.0)
 slice_node = slice_slider.value
 
 directionindex = [1, 2, 3]
@@ -338,7 +332,7 @@ directionnode = Node(directionindex[1])
 stateindex = collect(1:length(states))
 statenode = Node(stateindex[1])
 
-layout[1, 2:4] = LText(scene, @lift(title * statenames[$statenode]), textsize = 50)
+layout[1, 2:4] = Label(scene, @lift(title * statenames[$statenode]), textsize = 50)
 
 colorchoices = [:balance, :thermal, :dense, :deep, :curl, :thermometer]
 colornode = Node(colorchoices[1])
@@ -367,9 +361,9 @@ matz .= constz
 sliceconst = [matx, maty, matz]
 planeslice = @lift(sliceconst[$directionnode])
 
-upperclim_slider = LSlider(scene, range = range(0, 1, length = 101), startvalue = 0.99)
+upperclim_slider = Slider(scene, range = range(0, 1, length = 101), startvalue = 0.99)
 upperclim_node = upperclim_slider.value
-lowerclim_slider = LSlider(scene, range = range(0, 1, length = 101), startvalue = 0.01)
+lowerclim_slider = Slider(scene, range = range(0, 1, length = 101), startvalue = 0.01)
 lowerclim_node = lowerclim_slider.value
 
 clims = @lift((quantile($state[:], $lowerclim_node) , quantile($state[:], $upperclim_node)))
@@ -377,7 +371,7 @@ clims = @lift((quantile($state[:], $lowerclim_node) , quantile($state[:], $upper
 volume!(volumescene, 0..aspect[1], 0..aspect[2], 0..aspect[3], state, overdraw = false, colorrange = clims, colormap = @lift(to_colormap($colornode)))
 
 
-alpha_slider = LSlider(scene, range = range(0, 1, length = 101), startvalue = 0.5)
+alpha_slider = Slider(scene, range = range(0, 1, length = 101), startvalue = 0.5)
 alphanode = alpha_slider.value
 
 slicecolormap = @lift(cgrad(:viridis, alpha = $alphanode))
@@ -389,8 +383,8 @@ v = volume!(volumescene, 0..aspect[1], 0..aspect[2], 0..aspect[3],
 
 # Volume histogram
 
-layout[3, 1] = LText(scene, "Statistics", textsize = 50)
-hscene = layout[4, 1] = LAxis(scene, xlabel = @lift(statenames[$statenode] * " " * units[$statenode]), 
+layout[3, 1] = Label(scene, "Statistics", textsize = 50)
+hscene = layout[4, 1] = Axis(scene, xlabel = @lift(statenames[$statenode] * " " * units[$statenode]), 
                     xlabelcolor = :black, ylabel = "pdf", 
                     ylabelcolor = :black, xlabelsize = 40, ylabelsize = 40,
                     xticklabelsize = 0, yticklabelsize = 0,
@@ -400,20 +394,20 @@ hscene = layout[4, 1] = LAxis(scene, xlabel = @lift(statenames[$statenode] * " "
 histogram_node = @lift(histogram($state, bins = bins))
 vxs = @lift($histogram_node[1])
 vys = @lift($histogram_node[2])
-pdf = AbstractPlotting.barplot!(hscene, vxs, vys, color = :red, 
+pdf = GLMakie.AbstractPlotting.barplot!(hscene, vxs, vys, color = :red, 
                 strokecolor = :red, 
                 strokewidth = 1)
 
-@lift(AbstractPlotting.xlims!(hscene, extrema($vxs))) 
-@lift(AbstractPlotting.ylims!(hscene, extrema($vys)))
+@lift(GLMakie.AbstractPlotting.xlims!(hscene, extrema($vxs))) 
+@lift(GLMakie.AbstractPlotting.ylims!(hscene, extrema($vys)))
 vlines!(hscene, @lift($clims[1]), color = :black, linewidth = menuwidth / 100)
 vlines!(hscene, @lift($clims[2]), color = :black, linewidth = menuwidth / 100)
 
 
 # Slice
-sliceupperclim_slider = LSlider(scene, range = range(0, 1, length = 101), startvalue = 0.99)
+sliceupperclim_slider = Slider(scene, range = range(0, 1, length = 101), startvalue = 0.99)
 sliceupperclim_node = sliceupperclim_slider.value
-slicelowerclim_slider = LSlider(scene, range = range(0, 1, length = 101), startvalue = 0.01)
+slicelowerclim_slider = Slider(scene, range = range(0, 1, length = 101), startvalue = 0.01)
 slicelowerclim_node = slicelowerclim_slider.value
 
 
@@ -423,7 +417,7 @@ sliceyaxislabel = @lift(["z", "z", "y"][$directionnode])
 slicexaxis = @lift([[1,$ny], [1, $nx], [1,$nx]][$directionnode])
 sliceyaxis = @lift([[1,$nz], [1, $nz], [1,$ny]][$directionnode])
 
-slicescene = layout[2:4, 5:6] = LAxis(scene, xlabel = slicexaxislabel, ylabel = sliceyaxislabel)
+slicescene = layout[2:4, 5:6] = Axis(scene, xlabel = slicexaxislabel, ylabel = sliceyaxislabel)
 
 sliced_state1 = @lift( $state[round(Int, 1 + $slice_node * (size($state)[1]-1)), 1:size($state)[2], 1:size($state)[3]])
 sliced_state2 = @lift( $state[1:size($state)[1], round(Int, 1 + $slice_node * (size($state)[2]-1)), 1:size($state)[3]])
@@ -439,7 +433,7 @@ heatmap1 = heatmap!(slicescene, slicexaxis, sliceyaxis, sliced_state, interpolat
 
 # Colorbar
 newlabel = @lift($statename * " " * $unit)
-cbar = LColorbar(scene, heatmap1, label = newlabel)
+cbar = Colorbar(scene, heatmap1, label = newlabel)
 cbar.width = Relative(1/3)
 # cbar.height = Relative(5/6)
 cbar.halign = :left
@@ -447,15 +441,15 @@ cbar.halign = :left
 # cbar.labelpadding = -250
 cbar.labelsize = 50
 
-@lift(AbstractPlotting.xlims!(slicescene, extrema($slicexaxis))) 
-@lift(AbstractPlotting.ylims!(slicescene, extrema($sliceyaxis)))
+@lift(GLMakie.AbstractPlotting.xlims!(slicescene, extrema($slicexaxis))) 
+@lift(GLMakie.AbstractPlotting.ylims!(slicescene, extrema($sliceyaxis)))
 
 sliceindex = @lift([round(Int, 1 + $slice_node * ($nx-1)), round(Int, 1 + $slice_node * ($ny-1)), round(Int, 1 + $slice_node * ($nz-1))][$directionnode])
 slicestring = @lift(directionnames[$directionnode] * " of " * statenames[$statenode] ) 
-layout[1, 5:6] = LText(scene, slicestring, textsize = 50)
+layout[1, 5:6] = Label(scene, slicestring, textsize = 50)
 
 
-axis = scene.children[1][Axis] 
+axis = scene.children[1][OldAxis] 
 axis[:names][:axisnames] = ("↓", "↓ ", "↓ ")
 axis[:names][:align] = ((:left, :center), (:right, :center), (:right, :center))
 axis[:names][:textsize] = (50.0, 50.0, 50.0)
@@ -463,21 +457,21 @@ axis[:ticks][:textsize] = (00.0, 00.0, 00.0)
 
 
 # Menus
-statemenu = LMenu(scene, options = zip(statenames, stateindex))
+statemenu = Menu(scene, options = zip(statenames, stateindex))
 on(statemenu.selection) do s
     statenode[] = s
 end
 
-colormenu = LMenu(scene, options = zip(colorchoices, colorchoices))
+colormenu = Menu(scene, options = zip(colorchoices, colorchoices))
 on(colormenu.selection) do s
     colornode[] = s
 end
 
 
 # Slice Statistics
-layout[1, 7] = LText(scene, "Slice Menu", width = menuwidth, textsize = 50)
-layout[3, 7] = LText(scene, "Slice Statistics", textsize = 50)
-hslicescene = layout[4, 7] = LAxis(scene, xlabel = @lift(statenames[$statenode] * " " * units[$statenode]), 
+layout[1, 7] = Label(scene, "Slice Menu", width = menuwidth, textsize = 50)
+layout[3, 7] = Label(scene, "Slice Statistics", textsize = 50)
+hslicescene = layout[4, 7] = Axis(scene, xlabel = @lift(statenames[$statenode] * " " * units[$statenode]), 
                     xlabelcolor = :black, ylabel = "pdf", 
                     ylabelcolor = :black, xlabelsize = 40, ylabelsize = 40,
                     xticklabelsize = 0, yticklabelsize = 0,
@@ -487,19 +481,19 @@ hslicescene = layout[4, 7] = LAxis(scene, xlabel = @lift(statenames[$statenode] 
 slicehistogram_node = @lift(histogram($sliced_state, bins = bins))
 xs = @lift($slicehistogram_node[1])
 ys = @lift($slicehistogram_node[2])
-pdf = AbstractPlotting.barplot!(hslicescene, xs, ys, color = :blue, 
+pdf = GLMakie.AbstractPlotting.barplot!(hslicescene, xs, ys, color = :blue, 
                 strokecolor = :blue, 
                 strokewidth = 1)
 
-@lift(AbstractPlotting.xlims!(hslicescene, extrema($xs))) 
-@lift(AbstractPlotting.ylims!(hslicescene, extrema($ys)))
+@lift(GLMakie.AbstractPlotting.xlims!(hslicescene, extrema($xs))) 
+@lift(GLMakie.AbstractPlotting.ylims!(hslicescene, extrema($ys)))
 vlines!(hslicescene, @lift($sliceclims[1]), color = :black, linewidth = menuwidth / 100)
 vlines!(hslicescene, @lift($sliceclims[2]), color = :black, linewidth = menuwidth / 100)
 
 interpolationnames = ["contour", "heatmap"]
 interpolationchoices = [true, false]
 interpolationnode = Node(interpolationchoices[1])
-interpolationmenu = LMenu(scene, options = zip(interpolationnames, interpolationchoices))
+interpolationmenu = Menu(scene, options = zip(interpolationnames, interpolationchoices))
 
 on(interpolationmenu.selection) do s
     interpolationnode[] = s
@@ -507,7 +501,7 @@ on(interpolationmenu.selection) do s
     heatmap!(slicescene, slicexaxis, sliceyaxis, sliced_state, interpolate = s, colormap = slicecolormapnode, colorrange = sliceclims)
 end
 
-directionmenu = LMenu(scene, options = zip(directionnames, directionindex))
+directionmenu = Menu(scene, options = zip(directionnames, directionindex))
 
 on(directionmenu.selection) do s
     directionnode[] = s
@@ -518,19 +512,19 @@ lowerclim_string = @lift("quantile = " *  @sprintf("%0.2f", $lowerclim_node) * "
 upperclim_string = @lift("quantile = " *  @sprintf("%0.2f", $upperclim_node) * ", value = " * @sprintf("%0.1e", $clims[2]))
 alphastring = @lift("Slice alpha = " * @sprintf("%0.2f", $alphanode))
 layout[2, 1] = vgrid!(
-    LText(scene, "State", width = nothing),
+    Label(scene, "State", width = nothing),
     statemenu,
-    LText(scene, "Color", width = nothing),
+    Label(scene, "Color", width = nothing),
     colormenu,
-    LText(scene, "Slice Direction", width = nothing),
+    Label(scene, "Slice Direction", width = nothing),
     directionmenu,
-    LText(scene, alphastring, width = nothing),
+    Label(scene, alphastring, width = nothing),
     alpha_slider,
-    LText(scene, slicemenustring, width = nothing),
+    Label(scene, slicemenustring, width = nothing),
     slice_slider,
-    LText(scene, lowerclim_string, width = nothing),
+    Label(scene, lowerclim_string, width = nothing),
     lowerclim_slider,
-    LText(scene, upperclim_string, width = nothing),
+    Label(scene, upperclim_string, width = nothing),
     upperclim_slider,
 )
 
@@ -538,11 +532,11 @@ slicelowerclim_string = @lift("quantile = " *  @sprintf("%0.2f", $slicelowerclim
 sliceupperclim_string = @lift("quantile = " *  @sprintf("%0.2f", $sliceupperclim_node) * ", value = " * @sprintf("%0.1e", $sliceclims[2]))
 
 layout[2,7] = vgrid!(
-    LText(scene, "Contour Plot Type", width = nothing), 
+    Label(scene, "Contour Plot Type", width = nothing), 
     interpolationmenu,
-    LText(scene, slicelowerclim_string, width = nothing),
+    Label(scene, slicelowerclim_string, width = nothing),
     slicelowerclim_slider,
-    LText(scene, sliceupperclim_string, width = nothing), 
+    Label(scene, sliceupperclim_string, width = nothing), 
     sliceupperclim_slider,
     cbar,
 )
