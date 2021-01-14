@@ -11,7 +11,8 @@ files = [pwd() * "/Channel_1_checkpoint_iteration404905.jld2",
          pwd() * "/Channel_3_checkpoint_iteration1087211.jld2",
          pwd() * "/Channel_4_checkpoint_iteration6160221.jld2",
          pwd() * "/Channel_8_checkpoint_iteration3164301.jld2",
-         pwd() * "/Channel_16_checkpoint_iteration6317902.jld2",
+         # pwd() * "/Channel_16_checkpoint_iteration6317902.jld2",
+         pwd() * "/Channel_16_checkpoint_iteration1003423.jld2",
          pwd() * "/Channel_24_checkpoint_iteration8612852.jld2", 
          pwd() * "/Channel_32_checkpoint_iteration1272125.jld2"
 ]
