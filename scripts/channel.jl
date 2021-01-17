@@ -10,14 +10,14 @@ FT   = Float64
 ic_load = true
 
 write_slices = false
-write_zonal  = true
+write_zonal  = false
 slice_output_interval = 48hour
 zonal_output_interval = 365day
 
 time_avg_window =  zonal_output_interval / 2  # needs to be a float
-checkpoint_interval = 365 * 1 *  day
+checkpoint_interval = 365 * 5 *  day
 
-resolution = 1
+resolution = 3
 descriptor = string(resolution)
 filename = "Channel_" * descriptor
 
@@ -33,7 +33,7 @@ const Lz = 3.0kilometer
 maxΔt = 1100.0 * 16 / resolution  # [s]
 Δt =  ic_load ? maxΔt : Δt = 300.0 * 16 / resolution # [s]
 
-end_time = 2 * 365day 
+end_time = 200 * 365day 
 advection   = WENO5()
 timestepper = :RungeKutta3
 # Rough target resolution
