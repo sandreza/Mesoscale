@@ -71,7 +71,7 @@ end
 struct Gradient{T}
     g::T
 end
-struct Field{T}
+struct ScalarField{T}
     data::T
 end
 
@@ -85,7 +85,7 @@ function (p::PartialDerivative)(ϕ::AbstractArray)
     return *(p, ϕ)
 end
 
-*(∇::PartialDerivative, ϕ::Field) = *(∇, ϕ.data)
+*(∇::PartialDerivative, ϕ::ScalarField) = *(∇, ϕ.data)
 
 function hydrostatic_pressure(b,x,y,z)
     p = ∫dz(b, z)
