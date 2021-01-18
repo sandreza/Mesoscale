@@ -11,14 +11,20 @@ files = [pwd() * "/Channel_1_checkpoint_iteration404905.jld2",
          pwd() * "/Channel_3_checkpoint_iteration1087211.jld2",
          pwd() * "/Channel_4_checkpoint_iteration6160221.jld2",
          pwd() * "/Channel_8_checkpoint_iteration3164301.jld2",
-         # pwd() * "/Channel_16_checkpoint_iteration6317902.jld2",
-         pwd() * "/Channel_16_checkpoint_iteration1003423.jld2",
+         pwd() * "/Channel_16_checkpoint_iteration6317902.jld2",
          pwd() * "/Channel_24_checkpoint_iteration8612852.jld2", 
          pwd() * "/Channel_32_checkpoint_iteration1272125.jld2"
 ]
 weak_files = [
         pwd() * "/Weak_Channel_1_checkpoint_iteration370489.jld2",
         pwd() * "/Weak_Channel_3_checkpoint_iteration1087211.jld2"
+]
+
+new_files = [
+    pwd() * "/Channel_3_checkpoint_iteration1075121.jld2",
+    pwd() * "/Channel_16_checkpoint_iteration1003423.jld2",
+    pwd() * "/Ridge_8_checkpoint_iteration939858.jld2",
+    pwd() * "/Channel_1_checkpoint_iteration370489.jld2",
 ]
 ##
 # http://juliaplots.org/MakieReferenceImages/gallery/index.html
@@ -32,7 +38,7 @@ seconds = 20
 fps = 10
 frames = round(Int, fps * seconds )
 if record_interaction
-record(scene, pwd() * "/slice.mp4"; framerate = fps) do io
+GLMakie.record(scene, pwd() * "/slice.mp4"; framerate = fps) do io
     for i = 1:frames
         sleep(1/fps)
         recordframe!(io)
