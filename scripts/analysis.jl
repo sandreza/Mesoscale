@@ -24,11 +24,12 @@ new_files = [
     pwd() * "/Channel_3_checkpoint_iteration1075121.jld2",
     pwd() * "/Channel_16_checkpoint_iteration1003423.jld2",
     pwd() * "/Ridge_8_checkpoint_iteration939858.jld2",
+    pwd() * "/Ridge_8_checkpoint_iteration6078160.jld2",
     pwd() * "/Channel_1_checkpoint_iteration370489.jld2",
 ]
 ##
 # http://juliaplots.org/MakieReferenceImages/gallery/index.html
-filename = files[end-2]
+filename = files[end]
 states, statenames, units = grabstates(filename)
 scene = volumeslice(states, statenames = statenames, aspect = (1, 1, 32/192), 
                     statistics = true, units = units, statlabelsize = (15, 15) );
@@ -38,7 +39,7 @@ seconds = 20
 fps = 10
 frames = round(Int, fps * seconds )
 if record_interaction
-GLMakie.record(scene, pwd() * "/slice.mp4"; framerate = fps) do io
+GLMakie.record(scene, pwd() * "/ridge.mp4"; framerate = fps) do io
     for i = 1:frames
         sleep(1/fps)
         recordframe!(io)
@@ -46,11 +47,11 @@ GLMakie.record(scene, pwd() * "/slice.mp4"; framerate = fps) do io
 end
 end
 ##
-filename = files[end-1]
+filename = new_files[end]
 states, statenames, units1 = grabstates(filename)
 title = "" * grabtitle(filename)
 
-filename2 = files[end-1]
+filename2 = new_files[2]
 states2, statenames2, units2 = grabstates(filename2)
 title2 = " "  * grabtitle(filename2)
 
