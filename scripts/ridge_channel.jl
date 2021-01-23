@@ -3,21 +3,21 @@ include(pwd() * "/scripts/dependencies.jl")
 
 # Architecture
 CUDA.allowscalar(true)
-arch = CPU()
+arch = GPU()
 FT   = Float64
 
 # File IO 
 ic_load = false
 
 write_slices = false
-write_zonal  = false
+write_zonal  = true
 slice_output_interval = 48hour
 zonal_output_interval = 365day
 
 time_avg_window =  zonal_output_interval / 2  # needs to be a float
-checkpoint_interval = 365 * 1 *  day
+checkpoint_interval = 365 * 5 *  day
 
-resolution = 2
+resolution = 16
 descriptor = string(resolution)
 filename = "Ridge_" * descriptor
 
@@ -30,10 +30,10 @@ const Ly = 1000.0kilometer
 const Lz = 3.0kilometer
 
 # Discretization
-maxΔt = 1100.0 * 16 / resolution  # [s]
+maxΔt = 300.0 * 16 / resolution  # [s]
 Δt =  ic_load ? maxΔt : Δt = 300.0 * 16 / resolution # [s]
 
-end_time = 2 * 365day 
+end_time = 60 * 365day 
 advection   = WENO5()
 timestepper = :RungeKutta3
 # Rough target resolution
@@ -125,7 +125,7 @@ Fb = Forcing(Fb_function, parameters = parameters, discrete_form = true)
 forcings = (b = Fb, ) 
 
 # Immersed Boundary
-const ridge_height = 2000.0 #[m]
+const ridge_height = 500.0 #[m]
 const ridge_base = -3000.0  #[m]
 @inline ridge_shape(x,z,L) = -z + ridge_base + ridge_height * exp(-40 *(x-L/2)^2 / L^2)
 @inline smoothed_ridge(x,z,L) =  (tanh(ridge_shape(x,z,L)) +1)/2

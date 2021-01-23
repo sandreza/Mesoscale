@@ -7,28 +7,27 @@ arch = GPU()
 FT   = Float64
 
 # File IO 
-ic_load = true
+ic_load = false
 
 write_slices = false
-write_zonal  = true
+write_zonal  = false
 slice_output_interval = 48hour
 zonal_output_interval = 5*365day
 
 time_avg_window =  zonal_output_interval / 2  # needs to be a float
 checkpoint_interval = 365 * 5 *  day
 
-resolution = 1
+resolution = 16
 descriptor = string(resolution)
-filename = "Channel_" * descriptor
+filename = "Abernathy_" * descriptor
 
 if ic_load
     filepath = pwd() * "/" * getlatest(filename)
 end
 ## Domain
 const Lx = 1000.0kilometer 
-const Ly = 1000.0kilometer
-const Lz = 3.0kilometer
-
+const Ly = 2000.0kilometer
+const Lz = 2985
 # Discretization
 maxΔt = 1100.0 * 16 / resolution  # [s]
 Δt =  ic_load ? maxΔt : Δt = 300.0 * 16 / resolution # [s]
@@ -81,7 +80,7 @@ parameters = (
     h = h,                     # [m]    relexaction profile scale
     ΔB = ΔB,                   # [m/s²] buoyancy jump
     Lz = Lz,                   # [m]
-    Lsponge = 900kilometer,   # [m]
+    Lsponge = 1980kilometer,   # [m]
     λᵗ = 7.0day,               # [s]
     Qᵇ = 10/(ρ * cᵖ) * α * g,  # [m² / s³]
     Qᵇ_cutoff = Ly * 5/6.      # [m]
