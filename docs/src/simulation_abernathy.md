@@ -74,7 +74,7 @@ with parameter values
 |   Parameter             | Value       | Units | Description |
 |   :-------:             | :---:       | :---:  |:---:       |
 | ``Q``           | ``10 `` |  ``\frac{W}{\text{m}^2}``      | surface flux|
-| ``\Delta b``           | ``8 \times \alpha \times 10`` | ``\frac{\text{m}}{\text{ s}^2}``           | buoyancy jump|
+| ``\Delta b``           | ``8 \times \alpha g`` | ``\frac{\text{m}}{\text{ s}^2}``           | buoyancy jump|
 | ``h``           | ``1`` | ``\text{km}``           | northern wall stratification e-folding length|
 | ``\lambda^t``           | ``7 \times 86400`` | ``\text{s}``           | relaxation time|
 | ``L_{\text{sponge}}``           | ``1980`` | ``\text{km}``           | northern wall meridional activation level |
