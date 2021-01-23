@@ -1,6 +1,6 @@
 
-function grabzonalstates(file)
-    ghost = 3 # since using WENO
+function grabzonalstates(file; ghost = 3)
+    # ghost should be 3 WENO
     zonalstatistics = jldopen(file)
     tkeys = keys(zonalstatistics["timeseries"]["t"])
     t = [zonalstatistics["timeseries"]["t"][tkey] for tkey in tkeys]
