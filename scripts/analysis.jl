@@ -30,11 +30,15 @@ new_files = [
 ridge_files = [
     pwd() * "/Ridge_8_checkpoint_iteration939858.jld2",
     pwd() * "/Ridge_8_checkpoint_iteration6078160.jld2",
-    pwd() * "/Ridge_16_checkpoint_iteration3153600.jld2",
+    pwd() * "/Ridge_16_checkpoint_iteration1051200.jld2",
+]
+
+relaxation_files = [
+    pwd() * "/Relaxation_Channel_16_checkpoint_iteration1445551.jld2"
 ]
 ##
 # http://juliaplots.org/MakieReferenceImages/gallery/index.html
-filename = new_files[end]
+filename = relaxation_files[end]
 states, statenames, units = grabstates(filename)
 scene = volumeslice(states, statenames = statenames, aspect = (1, 1, 32/192), 
                     statistics = true, units = units, statlabelsize = (15, 15) );
@@ -63,12 +67,17 @@ title2 = " "  * grabtitle(filename2)
 scene = visualize(states, states2, statenames = statenames, statenames2 = statenames2, aspect = (1,1, 32/192), statistics = true, title = title, title2 = title2, units1 = units1, units2 = units2)
 ##
 # instantaneous zonal 
-filename = new_files[1]
+filename = pwd() * "/Weno_20_checkpoint_iteration21030963.jld2" # new_files[1]
 states, statenames, units1 = grabstates(filename)
 function zonalmean(state)
     return mean(state, dims = 1)[1,:,:]
 end
 meanstates = zonalmean.(states)
+statenames[3]
+v̅ =  zonalmean(states[3])
+b̅ =  zonalmean(states[5])
+vb = zonalmean(states[3] .* states[5])
+visualize([v̅, b̅, vb, vb - v̅ .* b̅ ], statenames = ["v̄", "b̄", "avg(vb)",  " v'b' "], title = "Zonal Average")
 scene = visualize(meanstates, statenames = statenames, title = "Zonal Average ")
 ##
 filename = new_files[end]
