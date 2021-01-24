@@ -41,7 +41,7 @@ function grabstates(filename)
     ω = ∇ × [u, v, w]
     ∇b = [∂x(b), ∂y(b), ∂z(b)]
     coriolis =  f .+ β * reshape(y, (1, length(y) ,1)) 
-    fpβ = coriolis[1:end-1] + coriolis[2:end]  # f plus beta
+    fpβ = coriolis[:, 1:end-1, :] + coriolis[:, 2:end, :]  # f plus beta
     ω∇b = ω⋅∇b
     pv = ω∇b + fpβ .* ∇b[3]
     alignment = ω∇b ./ ( sqrt.(ω⋅ω) .* sqrt.(∇b⋅∇b) )

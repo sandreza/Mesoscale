@@ -36,9 +36,13 @@ ridge_files = [
 relaxation_files = [
     pwd() * "/Relaxation_Channel_16_checkpoint_iteration1445551.jld2"
 ]
+
+abernathy_files = [
+    pwd() * "/Abernathy_16_checkpoint_iteration1158859.jld2"
+]
 ##
 # http://juliaplots.org/MakieReferenceImages/gallery/index.html
-filename = relaxation_files[end]
+filename = abernathy_files[end]
 states, statenames, units = grabstates(filename)
 scene = volumeslice(states, statenames = statenames, aspect = (1, 1, 32/192), 
                     statistics = true, units = units, statlabelsize = (15, 15) );
