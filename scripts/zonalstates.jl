@@ -1,5 +1,5 @@
 
-function grabzonalstates(file; ghost = 3)
+function grabzonalstates(file; ghost = 3, startind = 1)
     # ghost should be 3 WENO
     zonalstatistics = jldopen(file)
     tkeys = keys(zonalstatistics["timeseries"]["t"])
@@ -11,7 +11,7 @@ function grabzonalstates(file; ghost = 3)
     fields = [:u, :v, :w, :b, :vb, :vv, :wb, :ww]
     for field in fields
         label = string(field)
-        @eval $field = sum([zonalstatistics["timeseries"][$label][tkey][1,:,:] for tkey in tkeys])
+        @eval $field = mean([zonalstatistics["timeseries"][$label][tkeys[i]][1,:,:] for i in $startind:length(tkeys)])
     end
     close(zonalstatistics)
 

@@ -16,12 +16,13 @@ files = [
 new_files = [
     pwd() * "/Channel_8_zonal_averages.jld2",
     pwd() * "/Ridge_8_zonal_averages.jld2",
+    pwd() * "/Relaxation_Channel_16_zonal_averages.jld2"
 ]
 ##
-file = pwd() * "/Weno_20_zonal_averages.jld2" # new_files[1]
+file = new_files[3] # new_files[1]
 zonalstatistics = jldopen(file)
 tkeys = keys(zonalstatistics["timeseries"]["t"])
-states, statenames, units, domain = grabzonalstates(file, ghost = 1)
+states, statenames, units, domain = grabzonalstates(file, ghost = 3, startind = 15)
 li = 1 # bottom
 mval = 0 # positive
 ui = length(domain[2])-mval # top  
