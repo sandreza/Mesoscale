@@ -7,7 +7,7 @@ arch = GPU()
 FT   = Float64
 
 # File IO 
-ic_load = false
+ic_load = true
 
 write_slices = false
 write_zonal  = false
@@ -32,7 +32,7 @@ const Lz = 2985
 maxΔt = 1100.0 * 16 / resolution  # [s]
 Δt =  ic_load ? maxΔt : Δt = 300.0 * 16 / resolution # [s]
 
-end_time = 200 * 365day 
+end_time = 10 * 365day 
 advection   = WENO5()
 timestepper = :RungeKutta3
 # Rough target resolution
@@ -169,6 +169,24 @@ if write_zonal
     simulation.output_writers[:statistics] = zonal_statistics
 end
 simulation.output_writers[:checkpoint] = checkpointer
+
+## add output for Xiaozhou
+
+u, v, w = model.velocities
+b = model.tracers.b
+Xiaozhou_fields = Dict(
+    :v => v,
+    :b => b,
+)
+
+# 
+Xiaozhou_schedule = TimeInterval(5day) 
+location = "/storage6/MesoscaleRuns/"
+Xiaozhou_output = JLD2OutputWriter(model, Xiaozhou_fields,
+                                    schedule = Xiaozhou_schedule,
+                                    prefix = location * filename * "_moc_data", force = true)
+
+simulation.output_writers[:Xiaozhou] = Xiaozhou_output
 
 ## Run
 run!(simulation)
