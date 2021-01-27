@@ -179,7 +179,6 @@ Xiaozhou_fields = Dict(
     :b => b,
 )
 
-# 
 Xiaozhou_schedule = TimeInterval(5day) 
 location = "/storage6/MesoscaleRuns/"
 Xiaozhou_output = JLD2OutputWriter(model, Xiaozhou_fields,
