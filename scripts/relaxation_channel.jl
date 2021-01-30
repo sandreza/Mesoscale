@@ -7,7 +7,7 @@ arch = GPU()
 FT   = Float64
 
 # File IO 
-ic_load = true
+ic_load = false
 
 write_slices = false
 write_zonal  = true
@@ -17,9 +17,9 @@ zonal_output_interval = 5*365day
 time_avg_window =  zonal_output_interval / 2  # needs to be a float
 checkpoint_interval = 365 * 5 *  day
 
-resolution = 1
+resolution = 16
 descriptor = string(resolution)
-filename = "Channel_" * descriptor
+filename = "Relaxation_Channel_" * descriptor
 
 if ic_load
     filepath = pwd() * "/" * getlatest(filename)
@@ -84,7 +84,8 @@ parameters = (
     Lsponge = 900kilometer,   # [m]
     λᵗ = 7.0day,               # [s]
     Qᵇ = 10/(ρ * cᵖ) * α * g,  # [m² / s³]
-    Qᵇ_cutoff = Ly * 5/6.      # [m]
+    Qᵇ_cutoff = Ly * 5/6,      # [m]
+    λˢ = 1e-4, # [m/s]
 )
 
 # Momentum Boundary Conditions
@@ -101,9 +102,8 @@ bottom_v_bc =  BoundaryCondition(Flux, vlineardrag, discrete_form = true, parame
 v_bcs = VVelocityBoundaryConditions(grid, bottom = bottom_v_bc)
 
 # Buoyancy Boundary Conditions Forcing. Note: Flux convention opposite of Abernathy
-@inline cutoff(j, grid, p ) = grid.yC[j] > p.Qᵇ_cutoff ? -0.0 : 1.0
-@inline surface_flux(j, grid, p) = p.Qᵇ * cos(3π * grid.yC[j] / p.Ly) * cutoff(j, grid, p)
-@inline relaxation(i, j, grid, clock, state, p) = @inbounds surface_flux(j, grid, p)
+@inline relaxation_profile(j, grid, p) = p.ΔB * (grid.yC[j]/ p.Ly)
+@inline relaxation(i, j, grid, clock, state, p) =  @inbounds p.λˢ * ( state.b[i, j, grid.Nz] - relaxation_profile(j, grid, p))
 top_b_bc = BoundaryCondition(Flux, relaxation, discrete_form = true, parameters = parameters)
 b_bcs = TracerBoundaryConditions(grid, top = top_b_bc)
 
