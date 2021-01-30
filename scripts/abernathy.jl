@@ -10,7 +10,7 @@ FT   = Float64
 ic_load = true
 
 write_slices = false
-write_zonal  = false
+write_zonal  = true
 slice_output_interval = 48hour
 zonal_output_interval = 5*365day
 
@@ -32,7 +32,7 @@ const Lz = 2985
 maxΔt = 1100.0 * 16 / resolution  # [s]
 Δt =  ic_load ? maxΔt : Δt = 300.0 * 16 / resolution # [s]
 
-end_time = 10 * 365day 
+end_time = 100 * 365day 
 advection   = WENO5()
 timestepper = :RungeKutta3
 # Rough target resolution
@@ -171,7 +171,7 @@ end
 simulation.output_writers[:checkpoint] = checkpointer
 
 ## add output for Xiaozhou
-
+#=
 u, v, w = model.velocities
 b = model.tracers.b
 Xiaozhou_fields = Dict(
@@ -186,7 +186,7 @@ Xiaozhou_output = JLD2OutputWriter(model, Xiaozhou_fields,
                                     prefix = location * filename * "_moc_data", force = true)
 
 simulation.output_writers[:Xiaozhou] = Xiaozhou_output
-
+=#
 ## Run
 run!(simulation)
 
