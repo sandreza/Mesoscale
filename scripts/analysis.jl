@@ -39,12 +39,13 @@ relaxation_files = [
 
 abernathy_files = [
     pwd() * "/Abernathy_16_checkpoint_iteration1158859.jld2"
+    pwd() * "/Abernathy_16_checkpoint_iteration286890.jld2"
 ]
 ##
 # http://juliaplots.org/MakieReferenceImages/gallery/index.html
 filename = abernathy_files[end]
 states, statenames, units = grabstates(filename)
-scene = volumeslice(states, statenames = statenames, aspect = (1, 1, 32/192), 
+scene = volumeslice(states, statenames = statenames, aspect = (1, 2, 32/192), 
                     statistics = true, units = units, statlabelsize = (15, 15) );
 # display(scene)
 ## save interaction
@@ -71,7 +72,7 @@ title2 = " "  * grabtitle(filename2)
 scene = visualize(states, states2, statenames = statenames, statenames2 = statenames2, aspect = (1,1, 32/192), statistics = true, title = title, title2 = title2, units1 = units1, units2 = units2)
 ##
 # instantaneous zonal 
-filename = pwd() * "/Weno_20_checkpoint_iteration21030963.jld2" # new_files[1]
+# filename = pwd() * "/Weno_20_checkpoint_iteration21030963.jld2" # new_files[1]
 states, statenames, units1 = grabstates(filename)
 function zonalmean(state)
     return mean(state, dims = 1)[1,:,:]
