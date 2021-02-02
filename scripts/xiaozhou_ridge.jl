@@ -53,15 +53,15 @@ model = IncompressibleModel(
 
 
 N² = 1e-6
-U₀(x,y,z) = 1e-3 * randn()
-V₀(x,y,z) = 1e-3 * randn()
+U₀(x,y,z) = 0e-3 * randn()
+V₀(x,y,z) = 0e-3 * randn()
 B₀(x,y, z) = N² * (z + Lz)
 set!(model, b=B₀, u = U₀, v = V₀)
 
 
 Δt = 200.0
 maxΔt = 200.0
-end_time = 10day
+end_time = 5day
 Ni = 1000
 Δt_wizard = TimeStepWizard(cfl = 1.0, Δt = Δt, max_change = 1.05, max_Δt = maxΔt)
 cfl = AdvectiveCFL(Δt_wizard)
@@ -82,6 +82,7 @@ simulation = Simulation(model, Δt=Δt_wizard,
 ##
 run!(simulation)
 ##
+##
 vstates = [Array(interior(model.velocities[velocity]))[:,1,:] for velocity in keys(model.velocities)]
 vstatenames = [string(velocity) for velocity in keys(model.velocities)]
 tstates = [Array(interior(model.tracers[tracer])[:,1,:]) for tracer in keys(model.tracers)]
@@ -89,3 +90,6 @@ tstatenames = [string(tracer) for tracer in keys(model.tracers)]
 states = vcat(vstates, tstates)
 statenames = vcat(vstatenames, tstatenames)
 scene = visualize(states, statenames = statenames)
+
+GLMakie.heatmap(diff, colormap = to_colormap(:balance))
+
