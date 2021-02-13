@@ -43,10 +43,12 @@ abernathy_files = [
 ]
 ##
 # http://juliaplots.org/MakieReferenceImages/gallery/index.html
-filename = abernathy_files[end]
+filename = abernathy_files[1]
 states, statenames, units = grabstates(filename)
 scene = volumeslice(states, statenames = statenames, aspect = (1, 2, 32/192), 
                     statistics = true, units = units, statlabelsize = (15, 15) );
+
+
 # display(scene)
 ## save interaction
 seconds = 20
