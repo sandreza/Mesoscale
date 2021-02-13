@@ -2,7 +2,7 @@
 function grabzonalstates(file; ghost = 3, startind = 1)
     # ghost should be 3 WENO
     zonalstatistics = jldopen(file)
-    tkeys = keys(zonalstatistics["timeseries"]["t"])
+    tkeys = keys(zonalstatistics["timeseries"]["t"])[1:1]
     t = [zonalstatistics["timeseries"]["t"][tkey] for tkey in tkeys]
     yC = zonalstatistics["grid"]["yC"][ghost+1:end-ghost]
     zC = zonalstatistics["grid"]["zC"][ghost+1:end-ghost]
