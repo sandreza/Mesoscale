@@ -28,7 +28,8 @@ function channel_looper(Q, τ)
     resolution = 16
     descriptor = string(resolution)
     descriptor2 = generate_descriptor(Q, τ)
-    filename = "Abernathy_" * descriptor * descriptor2
+    location = "/storage6/MesoscaleRuns/"
+    filename = location * "Abernathy_" * descriptor * descriptor2
 
     if ic_load
         loadfilename = "Abernathy_" * "16"
