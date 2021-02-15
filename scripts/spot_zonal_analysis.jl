@@ -24,4 +24,6 @@ vb = mean(v .* b, dims = 1)[1,:,:]
 vpbp = vb - mean(v, dims=1)[1,:,:] .* mean(b, dims=1)[1,:,:]
 zstates = [vb, vpbp]
 zstatenames = ["vb", "v'b'"]
+
+heatmap(mean(b,dims=1)[1,:,:], colormap = :balance, colorrange = (0,2e-3))
 scene = visualize(zstates, statenames = zstatenames)
