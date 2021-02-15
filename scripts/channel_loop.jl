@@ -13,5 +13,6 @@ Qlist = [10]
 for Q in Qlist, τ in τlist
     simulationdescription = generate_descriptor(Q, τ)
     println("Currentely doing ", simulationdescription)
+    channel_looper(Q, τ)
 end
 
