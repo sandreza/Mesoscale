@@ -15,7 +15,7 @@ function channel_looper(Q, τ)
     FT   = Float64
 
     # File IO 
-    ic_load = true
+    ic_load = true 
 
     write_slices = false
     write_zonal  = true
@@ -25,14 +25,14 @@ function channel_looper(Q, τ)
     time_avg_window =  zonal_output_interval / 2  # needs to be a float
     checkpoint_interval = 365 * 10 *  day
 
-    resolution = 16
+    resolution = 1
     descriptor = string(resolution)
     descriptor2 = generate_descriptor(Q, τ)
     location = "/storage6/MesoscaleRuns/"
     filename = location * "Abernathy_" * descriptor * descriptor2
 
     if ic_load
-        loadfilename = "Abernathy_" * "16"
+        loadfilename = "Abernathy_" * "1"
         filepath = pwd() * "/" * getlatest(loadfilename)
     end
     ## Domain
@@ -172,8 +172,7 @@ function print_progress(simulation)
     umax = maximum(abs, model.velocities.u.data.parent)
     vmax = maximum(abs, model.velocities.v.data.parent)
     wmax = maximum(abs, model.velocities.w.data.parent)
-    meanb = mean(view(model.tracers.b.data, 2:Nx-1, 2:Ny-1, 2:Nz-1))
-
+    meanb = interiorparent(model.tracers.b) |> Array |> mean
     @printf("[%05.2f%%] i: %d, t: %.2e days, umax: (%6.3e, %6.3e, %6.3e) m/s, CFL: %6.4e, next Δt: %.1e s\n",
             progress, i, t / day, umax, vmax, wmax, cfl(model), Δt_wizard.Δt)
     println(" ")
