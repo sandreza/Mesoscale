@@ -40,10 +40,11 @@ relaxation_files = [
 abernathy_files = [
     pwd() * "/Abernathy_16_checkpoint_iteration1158859.jld2"
     pwd() * "/Abernathy_16_checkpoint_iteration286890.jld2"
+    pwd() * "/Abernathy_16_τ0.20_Q1_checkpoint_iteration2866921.jld2"
 ]
 ##
 # http://juliaplots.org/MakieReferenceImages/gallery/index.html
-filename = abernathy_files[1]
+filename = abernathy_files[end]
 states, statenames, units = grabstates(filename)
 scene = volumeslice(states, statenames = statenames, aspect = (1, 2, 32/192), 
                     statistics = true, units = units, statlabelsize = (15, 15) );

@@ -7,6 +7,7 @@ include(pwd() * "/scripts/zonalstates.jl")
 include(pwd() * "/analysis_scripts/" * "post_analysis.jl") 
 
 file = pwd() * "/Abernathy_16_zonal_averages.jld2"
+file = pwd() * "/Abernathy_16_τ0.05_Q10_zonal_averages.jld2"
 zonalstatistics = jldopen(file)
 tkeys = keys(zonalstatistics["timeseries"]["t"])
 
@@ -17,6 +18,7 @@ vb = zonalstatistics["timeseries"][label][tkeys[i]][1,:,:]
 
 ##
 filename = pwd() * "/Abernathy_16_checkpoint_iteration1158859.jld2"
+filename = pwd() * "/Abernathy_16_τ0.05_Q10_zonal_averages.jld2"
 states, statenames, units = grabstates(filename)
 v = states[3]
 b = states[5]

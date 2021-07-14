@@ -7,7 +7,9 @@ lscene = layout[1, 1] = Axis(scene, xlabel = "South to North [m]",
         xtickcolor = :black, ytickcolor = :black,
         xticklabelcolor  = :black, yticklabelcolor = :black,
         titlesize = 50) 
-u = states[1]
+statestring = "ν ≈  f v'b' / ∂ᶻb / ∂ᶻu"
+fieldindex = findall(x->x==statestring, statenames)
+u = log10.(abs.(states[fieldindex[1]]))
 b = states[4]
 statenames[4]
 
@@ -16,11 +18,11 @@ ylims = (-3000, 0)
 xlims = Array(range(xlims[1], xlims[2], length = 4)) 
 ylims = Array(range(ylims[1], ylims[2], length = 4)) 
 
-state = b .* 1.0
+state = u .* 1.0
 cmap_rgb = to_colormap(:balance);
-clims = extrema(b)
+clims = quantile.(Ref(state[:]), (0.2,0.8))
 heatmap1 = heatmap!(lscene, xlims, ylims, state, interpolate = true, colormap = cmap_rgb, colorrange = clims)
-contour!(lscene,0..1e6,-3000..0, b, levels = 20, linewidth = 4, color = :black, alpha = 0.5)
+contour!(lscene,0..1e6,-3000..0, b, levels = 40, linewidth = 4, color = :black, alpha = 0.5)
 display(scene)
 ##
 ii = 11

@@ -232,7 +232,7 @@ function visualize(states::Array{Array{S, 2},1}; statenames = string.(1:length(s
     statename = @lift(statenames[$statenode])
     unit = @lift(units[$statenode])
     oclims = @lift((quantile($state[:], $lowerclim_node) , quantile($state[:], $upperclim_node)))
-    cmap_rgb = @lift($oclims[1] < $oclims[2] ? to_colormap($colornode) : reverse(to_colormap($colornode)))
+    cmap_rgb = colornode
     clims = @lift($oclims[1] != $oclims[2] ? (minimum($oclims), maximum($oclims)) : (minimum($oclims)-1, maximum($oclims)+1))
     xlims = Array(range(xlims[1], xlims[2], length = 4)) #collect(range(xlims[1], xlims[2], length = size(states[1])[1]))
     ylims = Array(range(ylims[1], ylims[2], length = 4)) #@lift(collect(range($lowerval], $upperval, length = size($state)[2])))
@@ -284,7 +284,7 @@ function visualize(states::Array{Array{S, 2},1}; statenames = string.(1:length(s
     cbar.width = Relative(1/3)
     cbar.height = Relative(5/6)
     cbar.halign = :center
-    cbar.flipaxisposition = true
+    # cbar.flipaxisposition = true
     # cbar.labelpadding = -350
     cbar.labelsize = 50
 
@@ -424,7 +424,7 @@ sliced_states = @lift([$sliced_state1, $sliced_state2, $sliced_state3])
 sliced_state = @lift($sliced_states[$directionnode]) 
 
 oclims = @lift((quantile($sliced_state[:], $slicelowerclim_node) , quantile($sliced_state[:], $sliceupperclim_node)))
-slicecolormapnode = @lift($oclims[1] < $oclims[2] ? to_colormap($colornode) : reverse(to_colormap($colornode)))
+slicecolormapnode = colornode
 sliceclims = @lift($oclims[1] != $oclims[2] ? (minimum($oclims), maximum($oclims)) : (minimum($oclims)-1, maximum($oclims)+1))
 
 heatmap1 = heatmap!(slicescene, slicexaxis, sliceyaxis, sliced_state, interpolate = true, colormap = slicecolormapnode, colorrange = sliceclims)
