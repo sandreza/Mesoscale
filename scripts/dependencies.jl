@@ -10,6 +10,6 @@ using Oceananigans.Utils
 using Oceananigans.AbstractOperations
 using Oceananigans.Advection
 # CUDA
-using CUDA
+# using CUDA
 
 include(pwd() * "/scripts/ic.jl")

@@ -2,28 +2,34 @@
 include(pwd() * "/scripts/dependencies.jl")
 
 # Architecture
-CUDA.allowscalar(true)
-arch = GPU()
+# CUDA.allowscalar(true)
+arch = CPU()
 FT   = Float64
 
 # File IO 
 ic_load = false
 
 write_slices = false
-write_zonal  = true
+write_zonal  = false
 slice_output_interval = 48hour
 zonal_output_interval = 365day
 
 time_avg_window =  zonal_output_interval / 2  # needs to be a float
 checkpoint_interval = 365 * 5 *  day
 
-resolution = 16
+resolution = 1
 descriptor = string(resolution)
 filename = "Ridge_" * descriptor
 
 if ic_load
     filepath = pwd() * "/" * getlatest(filename)
 end
+
+## units
+const kilometer = 1000 # meters
+const day = 86400      # seconds
+const meter = 1
+
 ## Domain
 const Lx = 1000.0kilometer 
 const Ly = 1000.0kilometer
