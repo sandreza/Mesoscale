@@ -51,7 +51,7 @@ const Ny = round(Int, Ly / Δy / 16) * resolution
 const Nz = round(Int, Lz / Δz / 16) * 16
 # Create Grid
 topology = (Periodic, Bounded, Bounded)
-grid = RegularCartesianGrid(topology=topology, 
+grid = RegularRectilinearGrid(topology=topology, 
                             size=(Nx, Ny, Nz), 
                             x=(0, Lx), y=(0, Ly), z=(-Lz, 0))
 
@@ -101,17 +101,18 @@ parameters = (
 # Zonal Velocity
 top_u_bc = BoundaryCondition(Flux, windstress, parameters = parameters)
 bottom_u_bc =  BoundaryCondition(Flux, ulineardrag, discrete_form = true, parameters = parameters)
-u_bcs = UVelocityBoundaryConditions(grid, top = top_u_bc, bottom = bottom_u_bc)
+##
+u_bcs = FieldBoundaryConditions(top = top_u_bc, bottom = bottom_u_bc)
 # Meridional Velocity
 bottom_v_bc =  BoundaryCondition(Flux, vlineardrag, discrete_form = true, parameters = parameters)
-v_bcs = VVelocityBoundaryConditions(grid, bottom = bottom_v_bc)
+v_bcs = FieldBoundaryConditions(bottom = bottom_v_bc)
 
 # Buoyancy Boundary Conditions Forcing. Note: Flux convention opposite of Abernathy
 @inline cutoff(j, grid, p ) = grid.yC[j] > p.Qᵇ_cutoff ? -0.0 : 1.0
 @inline surface_flux(j, grid, p) = p.Qᵇ * cos(3π * grid.yC[j] / p.Ly) * cutoff(j, grid, p)
 @inline relaxation(i, j, grid, clock, state, p) = @inbounds surface_flux(j, grid, p)
 top_b_bc = BoundaryCondition(Flux, relaxation, discrete_form = true, parameters = parameters)
-b_bcs = TracerBoundaryConditions(grid, top = top_b_bc)
+b_bcs = FieldBoundaryConditions(top = top_b_bc)
 
 # Save boundary conditions as named tuple
 bcs = (b = b_bcs,  u = u_bcs, v = v_bcs,)
@@ -150,8 +151,24 @@ model = IncompressibleModel(
                 forcing = forcings,
               advection = advection,
             timestepper = timestepper,
+            # immersed_boundary = ridge,
+)
+
+##
+model = IncompressibleModel(
+           architecture = arch,
+                   grid = grid,
+               coriolis = coriolis,
+               buoyancy = buoyancy,
+                closure = closure,
+                tracers = (:b,),
+    boundary_conditions = bcs,
+                forcing = forcings,
+              advection = advection,
+            timestepper = timestepper,
             immersed_boundary = ridge,
 )
+##
 
 # Initial Conditions
 if ic_load
@@ -174,6 +191,7 @@ simulation = Simulation(model, Δt=Δt_wizard,
                         iteration_interval=Ni, 
                         progress=print_progress)
 # IO
+##
 if write_slices
     simulation.output_writers[:surface] = surface_output_writer
     simulation.output_writers[:middepth] = middepth_output_writer
