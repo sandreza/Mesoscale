@@ -6,6 +6,12 @@ include(pwd() * "/scripts/dependencies.jl")
 arch = CPU()
 FT   = Float64
 
+## units
+const kilometer = 1000 # meters
+const day = 86400      # seconds
+const meter = 1
+const hour = 60
+
 # File IO 
 ic_load = false
 
@@ -25,10 +31,6 @@ if ic_load
     filepath = pwd() * "/" * getlatest(filename)
 end
 
-## units
-const kilometer = 1000 # meters
-const day = 86400      # seconds
-const meter = 1
 
 ## Domain
 const Lx = 1000.0kilometer 
@@ -132,16 +134,34 @@ Fb = Forcing(Fb_function, parameters = parameters, discrete_form = true)
 forcings = (b = Fb, ) 
 
 # Immersed Boundary
-const ridge_height = 500.0 #[m]
-const ridge_base = -3000.0  #[m]
+const ridge_height = 500.0  # [m]
+const ridge_base = -3000.0  # [m]
 @inline ridge_shape(x,z,L) = -z + ridge_base + ridge_height * exp(-40 *(x-L/2)^2 / L^2)
 @inline smoothed_ridge(x,z,L) =  (tanh(ridge_shape(x,z,L)) +1)/2
 @inline ridge(x, y, z) = 0 < ridge_shape(x,z,1e6) 
 
+##
+# Load Dataset
+using NCDatasets
+using DataStructures
+
+ds = Dataset("/Users/andresouza/Desktop/Julia/ExploringData/topo_20.1.nc","r")
+stride = 4
+height = ds["z"]
+
+function ridge_closure(height, Nx, Ny)
+    function realistic_ridge(x,y,z)
+       i = round(Int, x / Lx * Nx) + 1000 # good for domain to shift by 1000 for this case
+       j = round(Int, y / Ly * Ny) + 1000
+       return z < height[i,j]
+    end
+end
+rridge = ridge_closure(height, Nx, Ny)
+
+
 # Model Setup
 model = IncompressibleModel(
            architecture = arch,
-             float_type = FT,
                    grid = grid,
                coriolis = coriolis,
                buoyancy = buoyancy,
@@ -151,22 +171,7 @@ model = IncompressibleModel(
                 forcing = forcings,
               advection = advection,
             timestepper = timestepper,
-            # immersed_boundary = ridge,
-)
-
-##
-model = IncompressibleModel(
-           architecture = arch,
-                   grid = grid,
-               coriolis = coriolis,
-               buoyancy = buoyancy,
-                closure = closure,
-                tracers = (:b,),
-    boundary_conditions = bcs,
-                forcing = forcings,
-              advection = advection,
-            timestepper = timestepper,
-            immersed_boundary = ridge,
+            immersed_boundary = rridge,
 )
 ##
 
