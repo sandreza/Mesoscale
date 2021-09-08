@@ -64,17 +64,17 @@ closure = AnisotropicDiffusivity(νx = νh, νy = νh, νz =νv, κx = κh, κy 
 
 bc_params = (
     Ly = Ly,
-    τ = 0.2,                   # [N m⁻²] Zonal stress
-    ρ = ρ,                     # [kg / m³]
-    μ = 1.1e-3,                # [m/s]  linear drag
-    H = Lz,                    # [m]
-    h = h,                # [m]    relexaction profile scale
-    ΔB = ΔB,          # [m/s²] buoyancy jump
-    Lz = Lz,                   # [m]
-    Lsponge = 1980kilometer,   # [m]
-    λᵗ = 7.0*86400.0,          # [s]
-    Qᵇ = 10/(ρ * cᵖ) * α * g,  # [m² / s³]
-    Qᵇ_cutoff = Ly * 5/6.      # [m]
+    τ = 0.2,                    # [N m⁻²] Zonal stress
+    ρ = ρ,                      # [kg / m³]
+    μ = 1.1e-3,                 # [m/s]  linear drag
+    H = Lz,                     # [m]
+    h = h,                      # [m]    relexaction profile scale
+    ΔB = ΔB,                    # [m/s²] buoyancy jump
+    Lz = Lz,                    # [m]
+    Lsponge = 1980kilometer,    # [m]
+    λᵗ = 7.0 * 86400.0,         # [s]
+    Qᵇ = 10/(ρ * cᵖ) * α * g,   # [m² / s³]
+    Qᵇ_cutoff = Ly * 5/6.       # [m]
 )
 
 # Momentum Boundary Conditions
