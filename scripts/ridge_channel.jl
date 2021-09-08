@@ -134,8 +134,8 @@ Fb = Forcing(Fb_function, parameters = parameters, discrete_form = true)
 forcings = (b = Fb, ) 
 
 # Immersed Boundary
-const ridge_height = 500.0  # [m]
-const ridge_base = -3000.0  # [m]
+const ridge_height =   500.0  # [m]
+const ridge_base   = -3000.0  # [m]
 @inline ridge_shape(x,z,L) = -z + ridge_base + ridge_height * exp(-40 *(x-L/2)^2 / L^2)
 @inline smoothed_ridge(x,z,L) =  (tanh(ridge_shape(x,z,L)) +1)/2
 @inline ridge(x, y, z) = 0 < ridge_shape(x,z,1e6) 
