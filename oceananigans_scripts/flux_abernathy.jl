@@ -10,6 +10,7 @@ using Random
 import Oceananigans.Grids: ynode
 
 hydrostatic = true
+stretched_grid = true
 const Lx = 1000kilometers # zonal domain length [m]
 const Ly = 2000kilometers # meridional domain length [m]
 
@@ -30,13 +31,19 @@ z_faces[Nz+1] = 0
 arch = CPU()
 FT = Float64
 
-grid = VerticallyStretchedRectilinearGrid(architecture = arch,
-                                          topology = (Periodic, Bounded, Bounded),
-                                          size = (Nx, Ny, Nz),
-                                          halo = (3, 3, 3),
-                                          x = (0, Lx),
-                                          y = (0, Ly),
-                                          z_faces = z_faces)
+if stretched_grid
+    grid = VerticallyStretchedRectilinearGrid(architecture = arch,
+                                            topology = (Periodic, Bounded, Bounded),
+                                            size = (Nx, Ny, Nz),
+                                            halo = (3, 3, 3),
+                                            x = (0, Lx),
+                                            y = (0, Ly),
+                                            z_faces = z_faces)
+else
+    grid = RegularRectilinearGrid(topology=topology, 
+                            size=(Nx, Ny, Nz), 
+                            x=(0, Lx), y=(0, Ly), z=(-Lz, 0))
+end
 
 
 
@@ -144,31 +151,29 @@ convective_adjustment = ConvectiveAdjustmentVerticalDiffusivity(convective_κz =
 @info "Building a model..."
 
 if hydrostatic
-model = HydrostaticFreeSurfaceModel(architecture = arch,
-                                    grid = grid,
-                                    free_surface = ImplicitFreeSurface(),
-                                    momentum_advection = WENO5(),
-                                    tracer_advection = WENO5(),
-                                    buoyancy = BuoyancyTracer(),
-                                    coriolis = coriolis,
-                                    closure = (closure, convective_adjustment),
-                                    tracers = :b,
-                                    boundary_conditions = (b=b_bcs, u=u_bcs, v=v_bcs),
-                                    forcing = (b=Fb,),
-                                    )
-
-
+    model = HydrostaticFreeSurfaceModel(architecture = arch,
+                                        grid = grid,
+                                        free_surface = ImplicitFreeSurface(),
+                                        momentum_advection = WENO5(),
+                                        tracer_advection = WENO5(),
+                                        buoyancy = BuoyancyTracer(),
+                                        coriolis = coriolis,
+                                        closure = (closure, convective_adjustment),
+                                        tracers = :b,
+                                        boundary_conditions = (b=b_bcs, u=u_bcs, v=v_bcs),
+                                        forcing = (b=Fb,),
+                                        )
 else
-model = NonhydrostaticModel(architecture = arch,
-                                    grid = grid,
-                                    advection = WENO5(),
-                                    buoyancy = BuoyancyTracer(),
-                                    coriolis = coriolis,
-                                    closure = (closure),
-                                    tracers = :b,
-                                    boundary_conditions = (b=b_bcs, u=u_bcs, v=v_bcs),
-                                    forcing = (b=Fb,),
-                                    )
+    model = NonhydrostaticModel(architecture = arch,
+                                        grid = grid,
+                                        advection = WENO5(),
+                                        buoyancy = BuoyancyTracer(),
+                                        coriolis = coriolis,
+                                        closure = (closure),
+                                        tracers = :b,
+                                        boundary_conditions = (b=b_bcs, u=u_bcs, v=v_bcs),
+                                        forcing = (b=Fb,),
+                                        )
 end
 
 @info "Built $model."
