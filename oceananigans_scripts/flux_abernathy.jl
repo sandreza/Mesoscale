@@ -28,7 +28,7 @@ z_faces = vcat([-Lz], -Lz .+ cumsum(Δz_center))
 z_faces[Nz+1] = 0
 
 
-arch = CPU()
+arch = GPU()
 FT = Float64
 
 if stretched_grid
