@@ -38,17 +38,7 @@ zonal_fields = Dict(
     :v => AveragedField( v, dims=(1,)),
     :w => AveragedField( w, dims=(1,)),
     :b => AveragedField( b, dims=(1,)),
-   #= 
-    :uu => AveragedField(u * u, dims=(1,), data=u_scratch.data),
-    :vv => AveragedField(v * v, dims=(1,), data=v_scratch.data),
-    :ww => AveragedField(w * w, dims=(1,), data=w_scratch.data),
-    :uv => AveragedField(u * v, dims=(1,), data=u_scratch.data),
-    :vw => AveragedField(w * v, dims=(1,), data=w_scratch.data),
-    :uw => AveragedField(w * u, dims=(1,), data=w_scratch.data),
-    :ub => AveragedField(u * b, dims=(1,), data=u_scratch.data),
-    :vb => AveragedField(v * b, dims=(1,), data=v_scratch.data),
-    :wb => AveragedField(w * b, dims=(1,), data=w_scratch.data),
-    =#
+
     :uu => AveragedField(u * u, dims= 1),
     :vv => AveragedField(v * v, dims= 1),
     :ww => AveragedField(w * w, dims= 1),

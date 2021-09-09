@@ -16,7 +16,7 @@ const Ly = 2000kilometers # meridional domain length [m]
 
 
 # number of grid points
-Nx = 16 * 2
+Nx = 16 * 8
 Ny = Nx * 2
 Nz = 16 * 2
 
@@ -213,33 +213,33 @@ function print_progress(sim)
     return nothing
 end
 
-simulation = Simulation(model, Δt=wizard, stop_time=50days, progress=print_progress, iteration_interval=10)
+simulation = Simulation(model, Δt=wizard, stop_time=60years, progress=print_progress, iteration_interval=1000)
 
 #####
 ##### Diagnostics
 #####
 
+u, v, w = model.velocities
+b = model.tracers.b
 
+# ζ = ComputedField(∂x(v) - ∂y(u))
 
- u, v, w = model.velocities
- b = model.tracers.b
+averaged_outputs = Dict(
+    :u => AveragedField(u, dims=(1,)),
+    :v => AveragedField(v, dims=(1,)),
+    :w => AveragedField(w, dims=(1,)),
+    :b => AveragedField(b, dims=(1,)),
 
- ζ = ComputedField(∂x(v) - ∂y(u))
-
- B = AveragedField(b, dims=1)
- V = AveragedField(v, dims=1)
- W = AveragedField(w, dims=1)
-
- b′ = b - B
- v′ = v - V
- w′ = w - W
-
- v′b′ = AveragedField(v′ * b′, dims=1)
- w′b′ = AveragedField(w′ * b′, dims=1)
-
- outputs = (; b, ζ, w)
-
- averaged_outputs = (; v′b′, w′b′, B)
+    :uu => AveragedField(u * u, dims= 1),
+    :vv => AveragedField(v * v, dims= 1),
+    :ww => AveragedField(w * w, dims= 1),
+    :uv => AveragedField(u * v, dims= 1),
+    :vw => AveragedField(w * v, dims= 1),
+    :uw => AveragedField(w * u, dims= 1),
+    :ub => AveragedField(u * b, dims= 1),
+    :vb => AveragedField(v * b, dims= 1),
+    :wb => AveragedField(w * b, dims= 1),
+)
 
 # #####
 # ##### Build checkpointer and output writer
@@ -250,15 +250,8 @@ simulation = Simulation(model, Δt=wizard, stop_time=50days, progress=print_prog
                                                          prefix = "eddying_channel",
                                                          force = true)
 
- simulation.output_writers[:fields] = JLD2OutputWriter(model, outputs,
-                                                       schedule = TimeInterval(5days),
-                                                       prefix = "eddying_channel",
-                                                       field_slicer = nothing,
-                                                       verbose = true,
-                                                       force = true)
-
  simulation.output_writers[:averages] = JLD2OutputWriter(model, averaged_outputs,
-                                                         schedule = AveragedTimeInterval(1days, window=1days, stride=1),
+                                                         schedule = AveragedTimeInterval(365days, window=365days, stride=5),
                                                          prefix = "eddying_channel_averages",
                                                          verbose = true,
                                                          force = true)
