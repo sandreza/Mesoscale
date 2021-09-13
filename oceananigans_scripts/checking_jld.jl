@@ -11,9 +11,15 @@ s_index = 2
 t_index = 30 # 10 year averages, lets look at year 100ish
 
 state_name = s_keys[s_index]
-state_name = "b"
+state_name = "u"
 
 field = jl_file["timeseries"][state_name][t_keys[t_index]][1,:,:]
+field_nh = jl_file_nh["timeseries"][state_name][t_keys[t_index]][1,:,:]
+
+state_name = "b"
+
+field_b = jl_file["timeseries"][state_name][t_keys[t_index]][1,:,:]
+field_nh_b = jl_file_nh["timeseries"][state_name][t_keys[t_index]][1,:,:]
 
 function get_grid(field, jl_file; ghost = 3)
     yC = jl_file["grid"]["yᵃᶜᵃ"][ghost+1:end-ghost]
@@ -31,19 +37,30 @@ y,z = get_grid(field, jl_file)
 
 colorrange = extrema(field)
 
-fig, ax, hm = heatmap(y, z, field, colorrange = colorrange, colormap = :balance, interpolate = true)
-contour!(ax, y, z, field, levels = 20, color = :black, linewidth = 3.0,)
+fig = Figure(resolution = (1186, 596))
+ax_h = fig[1,1] = Axis(fig)
+hm = heatmap!(ax_h, y, z, field, colorrange = colorrange, colormap = :balance, interpolate = true)
+contour!(ax_h, y, z, field_b, levels = 20, color = :black, linewidth = 3.0,)
 
-Colorbar(fig[1,2], hm, label = state_name) # , ticks = contour_levels)
+ax_nh = fig[1,2] = Axis(fig)
+heatmap!(ax_nh, y, z, field_nh, colorrange = colorrange, colormap = :balance, interpolate = true)
+contour!(ax_nh, y, z, field_nh_b, levels = 20, color = :black, linewidth = 3.0,)
 
-ax.limits = (extrema(y)..., extrema(z)...)
+Colorbar(fig[1,3], hm, label = state_name) # , ticks = contour_levels)
 
-ax.title = state_name
-ax.titlesize = 40
-ax.ylabel = "Depth [m]"
-ax.xlabel = "South to North [m]"
-ax.xlabelsize = 25
-ax.ylabelsize = 25 
+
+
+for tmpax in [ax_h, ax_nh]
+    tmpax.title = state_name
+    tmpax.titlesize = 40
+    tmpax.ylabel = "Depth [m]"
+    tmpax.xlabel = "South to North [m]"
+    tmpax.xlabelsize = 25
+    tmpax.ylabelsize = 25 
+    tmpax.limits = (extrema(y)..., extrema(z)...)
+end
+
+# ax1 = fig[jj,ii] = Axis(fig)
 
 display(fig)
 
