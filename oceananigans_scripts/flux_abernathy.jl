@@ -9,12 +9,17 @@ using Random
 
 import Oceananigans.Grids: ynode
 
-hydrostatic = true
-stretched_grid = true
+hydrostatic = false
+stretched_grid = false
 const Lx = 1000kilometers # zonal domain length [m]
 const Ly = 2000kilometers # meridional domain length [m]
 
+# file output
+prefix = "fluxernathy_nh_ns"
 
+# time
+Δt = 300 * 2
+stop_time = 300years
 # number of grid points
 Nx = 16 * 8
 Ny = Nx * 2
@@ -30,10 +35,10 @@ z_faces[Nz+1] = 0
 
 arch = GPU()
 FT = Float64
-
+topology = (Periodic, Bounded, Bounded)
 if stretched_grid
     grid = VerticallyStretchedRectilinearGrid(architecture = arch,
-                                            topology = (Periodic, Bounded, Bounded),
+                                            topology = topology,
                                             size = (Nx, Ny, Nz),
                                             halo = (3, 3, 3),
                                             x = (0, Lx),
@@ -192,7 +197,7 @@ set!(model, b=bᵢ)
 #####
 ##### Simulation building
 
-wizard = TimeStepWizard(cfl=0.1, Δt=5minutes, max_change=1.1, max_Δt=20minutes)
+wizard = Δt # TimeStepWizard(cfl=0.1, Δt=Δt, max_change=1.0, max_Δt=Δt)
 
 wall_clock = [time_ns()]
 
@@ -205,15 +210,15 @@ function print_progress(sim)
             maximum(abs, sim.model.velocities.u),
             maximum(abs, sim.model.velocities.v),
             maximum(abs, sim.model.velocities.w),
-            prettytime(sim.Δt.Δt))
- #           prettytime(sim.Δt))
+ #           prettytime(sim.Δt.Δt))
+            prettytime(sim.Δt))
 
     wall_clock[1] = time_ns()
     
     return nothing
 end
 
-simulation = Simulation(model, Δt=wizard, stop_time=60years, progress=print_progress, iteration_interval=1000)
+simulation = Simulation(model, Δt=wizard, stop_time=stop_time, progress=print_progress, iteration_interval=1000)
 
 #####
 ##### Diagnostics
@@ -245,16 +250,16 @@ averaged_outputs = Dict(
 # ##### Build checkpointer and output writer
 # #####
 
- simulation.output_writers[:checkpointer] = Checkpointer(model,
-                                                         schedule = TimeInterval(100days),
-                                                         prefix = "eddying_channel",
-                                                         force = true)
+simulation.output_writers[:checkpointer] = Checkpointer(model,
+                                                    schedule = TimeInterval(5 * 365days),
+                                                    prefix = prefix,
+                                                    force = true)
 
- simulation.output_writers[:averages] = JLD2OutputWriter(model, averaged_outputs,
-                                                         schedule = AveragedTimeInterval(365days, window=365days, stride=5),
-                                                         prefix = "eddying_channel_averages",
-                                                         verbose = true,
-                                                         force = true)
+simulation.output_writers[:averages] = JLD2OutputWriter(model, averaged_outputs,
+                                                    schedule = AveragedTimeInterval(10*365days, window=10*365days, stride=10),
+                                                    prefix = prefix * "_averages",
+                                                    verbose = true,
+                                                    force = true)
 
  @info "Running the simulation..."
 
