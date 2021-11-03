@@ -1,3 +1,5 @@
+# CHANGE OUTPUT TIME
+
 using Printf
 using Statistics
 
@@ -18,9 +20,9 @@ const Ly = 2000kilometers # meridional domain length [m]
 
 
 symbol_list = Symbol[]
-case = "trial"
-if case == "trial"
-    jlist = [1,2]
+case = "trial2"
+if case == "trial2"
+    jlist = [1,2,3]
     klist = [1,2,3,4]
 end
 for j in jlist, k in klist
@@ -33,7 +35,7 @@ prefix = "relaxation_channel_tracers_restarted_"* "smooth_forcing" * "_case_" * 
 
 # time
 Δt = 300 * 2
-stop_time = 200 * 365days # 300years
+stop_time = 25 * 365days # 300years
 # number of grid points
 Nx = 16 * 8
 Ny = Nx * 2
@@ -168,7 +170,7 @@ for i in eachindex(f_n_list)
         @inline function $f_n(i, j, k, grid, clock, model_fields, parameters) 
             y = ynode(Center(), j, grid)
             z = znode(Center(), k, grid)
-            forcing = cos( acos(π * (-z / parameters.Lz) ) * $kk) * cos(acos(π * (y / parameters.Ly) )* $jj)
+            forcing = cos( acos(2 * (-z / parameters.Lz)-1 ) * $kk) * cos(acos(2 * (y / parameters.Ly)-1)* $jj)
             return forcing
         end
         push!($f_list, Forcing($f_n, discrete_form = true, parameters = parameters))
@@ -297,10 +299,25 @@ averaged_outputs = Dict(
     :uw => AveragedField(w * u, dims= 1),
 )
 
+vsymbol_list = []
+for j in jlist, k in klist
+    push!(vsymbol_list, Meta.parse("vc_k"*string(j) * "_j"*string(k)))
+end
+push!(vsymbol_list, Meta.parse("vb"))
+vt_list = Tuple(vsymbol_list)
+
+wsymbol_list = []
+for j in jlist, k in klist
+    push!(wsymbol_list, Meta.parse("wc_k"*string(j) * "_j"*string(k)))
+end
+push!(wsymbol_list, Meta.parse("wb"))
+wt_list = Tuple(wsymbol_list)
+
+
 for i in eachindex(tracer_name_list)
     push!(averaged_outputs, tracer_name_list[i] => AveragedField(getproperty(model.tracers, tracer_name_list[i]), dims=(1,))) 
-    push!(averaged_outputs, tracer_name_list[i] => AveragedField(v * getproperty(model.tracers, tracer_name_list[i]), dims=(1,))) 
-    push!(averaged_outputs, tracer_name_list[i] => AveragedField(w * getproperty(model.tracers, tracer_name_list[i]), dims=(1,))) 
+    push!(averaged_outputs, vt_list[i] => AveragedField(v * getproperty(model.tracers, tracer_name_list[i]), dims=(1,))) 
+    push!(averaged_outputs, wt_list[i] => AveragedField(w * getproperty(model.tracers, tracer_name_list[i]), dims=(1,))) 
 end
 
 simulation.output_writers[:averages] = JLD2OutputWriter(model, averaged_outputs,
@@ -315,3 +332,4 @@ simulation.output_writers[:averages] = JLD2OutputWriter(model, averaged_outputs,
 tic = time()
 run!(simulation, pickup=false)
 toc = time()
+println("The total time for the simulation is ", (toc-tic)/86400, " days" )
