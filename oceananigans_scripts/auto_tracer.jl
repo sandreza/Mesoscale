@@ -20,13 +20,22 @@ const Ly = 2000kilometers # meridional domain length [m]
 
 
 symbol_list = Symbol[]
-case = "trial2"
-if case == "trial2"
-    jlist = [1,2,3]
-    klist = [1,2,3,4]
+case = "trial0"
+# case = "trial1"
+# case = "trial2"
+if case == "trial0"
+    jlist = [0,1,2]
+    klist = [0,1,2,3]
+elseif case == "trial1"
+    jlist = [0,1,2]
+    klist = [4,5,6,7]
+elseif case == "trial2"
+    jlist = [0,1,2]
+    klist = [4+4,4+5,4+6,4+7]
 end
+
 for j in jlist, k in klist
-    push!(symbol_list, Meta.parse("c_k"*string(j) * "_j"*string(k)))
+    push!(symbol_list, Meta.parse("c_j"*string(j) * "_k"*string(k)))
 end
 t_list = Tuple(symbol_list)
 
@@ -35,7 +44,7 @@ prefix = "relaxation_channel_tracers_restarted_"* "smooth_forcing" * "_case_" * 
 
 # time
 Δt = 300 * 2
-stop_time = 25 * 365days # 300years
+stop_time = 200 * 365days # 300years
 # number of grid points
 Nx = 16 * 8
 Ny = Nx * 2
@@ -158,7 +167,7 @@ Fb = Forcing(buoyancy_relaxation, discrete_form = true, parameters = parameters)
 function_name_list = Symbol[]
 jk_list = []
 for j in jlist, k in klist
-    push!(function_name_list, Meta.parse("forcing_c_k"*string(j) * "_j"*string(k)))
+    push!(function_name_list, Meta.parse("forcing_c_j"*string(j) * "_k"*string(k)))
     push!(jk_list, (j,k))
 end
 f_n_list = Tuple(function_name_list)
@@ -301,14 +310,14 @@ averaged_outputs = Dict(
 
 vsymbol_list = []
 for j in jlist, k in klist
-    push!(vsymbol_list, Meta.parse("vc_k"*string(j) * "_j"*string(k)))
+    push!(vsymbol_list, Meta.parse("vc_j"*string(j) * "_k"*string(k)))
 end
 push!(vsymbol_list, Meta.parse("vb"))
 vt_list = Tuple(vsymbol_list)
 
 wsymbol_list = []
 for j in jlist, k in klist
-    push!(wsymbol_list, Meta.parse("wc_k"*string(j) * "_j"*string(k)))
+    push!(wsymbol_list, Meta.parse("wc_j"*string(j) * "_k"*string(k)))
 end
 push!(wsymbol_list, Meta.parse("wb"))
 wt_list = Tuple(wsymbol_list)
