@@ -1,9 +1,9 @@
 using JLD2, LinearAlgebra, Statistics
-
+plotting = true
 # prefix = "fluxernathy_tracers_restarted_j1_k10_averages.jld2"
 # prefix = "fluxernathy_tracers_restarted_j1_k20_averages.jld2"
-# prefix = "fluxernathy_tracers_restarted_smooth_forcing_j2_k2_averages.jld2"
-prefix = "fluxernathy_tracers_restarted_smooth_forcing_j10_k10_averages.jld2"
+prefix = "fluxernathy_tracers_restarted_smooth_forcing_j2_k2_averages.jld2"
+# prefix = "fluxernathy_tracers_restarted_smooth_forcing_j10_k10_averages.jld2"
 include(pwd() * "/oceananigans_scripts/utils.jl")
 
 function c_flux_gradient(jld2_file; tracer_strings=["c1", "c2", "c3", "c4"], time_index = 22)
@@ -113,4 +113,56 @@ for j in 1:m, k in 1:n
     b2 .= 0.0
     mask[j,k] = 0.0
     println("finishing j = $j and k = $k")
+end
+
+if plotting
+    using GLMakie 
+
+    fig = Figure()
+    ax11 = fig[1,1] = Axis(fig, title = "K¹¹ : diapycnal gradient, diapycnal flux")
+    field = K[1,1,:,:];
+    clims = quantile.(Ref(field[:]), [0.1, 0.9])
+    hm11 = heatmap!(ax11, field, colorrange = clims, colormap = :thermal)
+
+    Colorbar(fig[1,2], hm11, label = " ",
+    topspinevisible = true, 
+    bottomspinevisible = true, 
+    leftspinevisible = true,
+    rightspinevisible = true)
+
+    ax12 = fig[1,3] = Axis(fig, title = "K¹² : isopycnal gradient, diapycnal flux")
+    field = K[1,2,:,:];
+    clims = quantile.(Ref(field[:]), [0.1, 0.9])
+    hm12 = heatmap!(ax12, field, colorrange = clims, colormap = :thermal)
+
+    Colorbar(fig[1,4], hm12, label = " ",
+    topspinevisible = true, 
+    bottomspinevisible = true, 
+    leftspinevisible = true,
+    rightspinevisible = true)
+
+
+    ax21 = fig[2,1] = Axis(fig, title = "K²¹: diapycnal gradient, isopycnal flux")
+    field = K[2,1,:,:];
+    clims = quantile.(Ref(field[:]), [0.1, 0.9])
+    hm21 = heatmap!(ax21, field, colorrange = clims, colormap = :thermal)
+
+    Colorbar(fig[2,2], hm21, label = " ",
+    topspinevisible = true, 
+    bottomspinevisible = true, 
+    leftspinevisible = true,
+    rightspinevisible = true)
+
+
+    ax22 = fig[2,3] = Axis(fig, title = "K²² : isopycnal gradient, isopycnal flux")
+    field = K[2,2,:,:];
+    clims = quantile.(Ref(field[:]), [0.1, 0.9])
+    hm22 = heatmap!(ax22, field, colorrange = clims, colormap = :thermal)
+
+    Colorbar(fig[2,4], hm22, label = " ",
+    topspinevisible = true, 
+    bottomspinevisible = true, 
+    leftspinevisible = true,
+    rightspinevisible = true)
+
 end
