@@ -1,10 +1,16 @@
 using JLD2, LinearAlgebra, Statistics
-plotting = false
-check_answer = true
+plotting = true
+check_answer = false
 # prefix = "fluxernathy_tracers_restarted_j1_k10_averages.jld2"
 # prefix = "fluxernathy_tracers_restarted_j1_k20_averages.jld2"
-prefix = "fluxernathy_tracers_restarted_smooth_forcing_j2_k2_averages.jld2"
+# prefix = "fluxernathy_tracers_restarted_smooth_forcing_j2_k2_averages.jld2"
 # prefix = "fluxernathy_tracers_restarted_smooth_forcing_j10_k10_averages.jld2"
+# prefix = "fluxernathy_tracers_restarted_smooth_forcing_j6_k10_averages.jld2"
+# prefix = "fluxernathy_tracers_restarted_smooth_forcing_j6_k6_averages.jld2"
+# prefix = "relaxation_channel_tracers_restarted_smooth_forcing_j1_k1_averages.jld2"
+# prefix = "relaxation_channel_tracers_restarted_smooth_forcing_j1_k10_averages.jld2"
+# prefix = "relaxation_channel_tracers_restarted_smooth_forcing_j10_k1_averages.jld2"
+prefix = "relaxation_channel_tracers_restarted_smooth_forcing_j30_k1_averages.jld2"
 include(pwd() * "/oceananigans_scripts/utils.jl")
 
 function c_flux_gradient(jld2_file; tracer_strings=["c1", "c2", "c3", "c4"], time_index = 22)
@@ -96,7 +102,10 @@ b1 = zeros(2)
 b2 = zeros(2)
 
 numtracers = 4
-case_weights = ones(numtracers) ./ numtracers # evenly weight different cases (silly due to normalization of c?)
+case_weights = zeros(numtracers)
+for i in 1:numtracers
+    case_weights[i] = 1.0 / maximum(abs.(cs[i])) # normalize case by tracer magnitudes
+end
 
 for j in 1:m, k in 1:n
     mask[j, k] = 1.0

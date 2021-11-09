@@ -23,15 +23,10 @@ symbol_list = Symbol[]
 case = "trial0"
 # case = "trial1"
 # case = "trial2"
-if case == "trial0"
+if case[1:5] == "trial"
+    i = Meta.parse(case[6:end])
     jlist = [0,1,2]
-    klist = [0,1,2,3]
-elseif case == "trial1"
-    jlist = [0,1,2]
-    klist = [4,5,6,7]
-elseif case == "trial2"
-    jlist = [0,1,2]
-    klist = [4+4,4+5,4+6,4+7]
+    klist = [4*i+0,4*i+1,4*i+2,4*i+3]
 end
 
 for j in jlist, k in klist
