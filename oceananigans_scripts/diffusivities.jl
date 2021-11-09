@@ -1,5 +1,6 @@
 using JLD2, LinearAlgebra, Statistics
-plotting = true
+plotting = false
+check_answer = true
 # prefix = "fluxernathy_tracers_restarted_j1_k10_averages.jld2"
 # prefix = "fluxernathy_tracers_restarted_j1_k20_averages.jld2"
 prefix = "fluxernathy_tracers_restarted_smooth_forcing_j2_k2_averages.jld2"
@@ -71,7 +72,21 @@ jl_file = jldopen(prefix, "r+")
 cs, cys, czs, vcps, wcps, ∇c∇bs, ∇c∇ᵖbs, u⃗c∇bs, u⃗c∇ᵖbs = c_flux_gradient(jl_file)
 # to incorporate multiple files, use: [cs[1:2]..., cs[3:4]...]
 
-m,n = size(∇c∇bs[1])
+m, n = size(∇c∇bs[1])
+if check_answer
+    check_K = zeros(2,2, m,n)
+    y,z = get_grid(cs[1], jl_file; ghost = 3)
+    y̅ = avg(y)
+    z̅ = avg(z)
+    for j in 1:m, k in 1:n, i in 1:4
+        check_K[1,1,j,k] = 3*((y̅[j]/y̅[end]^2)^2 + (z̅[k]/z̅[1])^2)
+        check_K[1,2,j,k] = (y̅[j]/y̅[end]^2)^2
+        check_K[2,1,j,k] = (z̅[k]/z̅[1]^2)^2
+        check_K[2,2,j,k] = 10*((y̅[j]/y̅[end]^2)^2 + (z̅[k]/z̅[1])^2)
+        u⃗c∇bs[i][j,k]  = -check_K[1,1,j,k]*∇c∇bs[i][j,k] - check_K[1,2,j,k] * ∇c∇ᵖbs[i][j,k]
+        u⃗c∇ᵖbs[i][j,k] = - check_K[2,1,j,k]* ∇c∇bs[i][j,k] - check_K[2,2,j,k] * ∇c∇ᵖbs[i][j,k]
+    end
+end
 
 K = zeros(2,2, m,n)
 
@@ -115,14 +130,19 @@ for j in 1:m, k in 1:n
     println("finishing j = $j and k = $k")
 end
 
+if check_answer 
+    err = norm(check_K - K) / norm(check_K)
+    println("The error is $err")
+end
+
 if plotting
     using GLMakie 
-
+    interpolation_flag = true
     fig = Figure()
     ax11 = fig[1,1] = Axis(fig, title = "K¹¹ : diapycnal gradient, diapycnal flux")
     field = K[1,1,:,:];
     clims = quantile.(Ref(field[:]), [0.1, 0.9])
-    hm11 = heatmap!(ax11, field, colorrange = clims, colormap = :thermal)
+    hm11 = heatmap!(ax11, field, colorrange = clims, colormap = :thermal, interpolate = interpolation_flag)
 
     Colorbar(fig[1,2], hm11, label = " ",
     topspinevisible = true, 
@@ -133,7 +153,7 @@ if plotting
     ax12 = fig[1,3] = Axis(fig, title = "K¹² : isopycnal gradient, diapycnal flux")
     field = K[1,2,:,:];
     clims = quantile.(Ref(field[:]), [0.1, 0.9])
-    hm12 = heatmap!(ax12, field, colorrange = clims, colormap = :thermal)
+    hm12 = heatmap!(ax12, field, colorrange = clims, colormap = :thermal, interpolate = interpolation_flag)
 
     Colorbar(fig[1,4], hm12, label = " ",
     topspinevisible = true, 
@@ -145,7 +165,7 @@ if plotting
     ax21 = fig[2,1] = Axis(fig, title = "K²¹: diapycnal gradient, isopycnal flux")
     field = K[2,1,:,:];
     clims = quantile.(Ref(field[:]), [0.1, 0.9])
-    hm21 = heatmap!(ax21, field, colorrange = clims, colormap = :thermal)
+    hm21 = heatmap!(ax21, field, colorrange = clims, colormap = :thermal, interpolate = interpolation_flag)
 
     Colorbar(fig[2,2], hm21, label = " ",
     topspinevisible = true, 
@@ -157,7 +177,7 @@ if plotting
     ax22 = fig[2,3] = Axis(fig, title = "K²² : isopycnal gradient, isopycnal flux")
     field = K[2,2,:,:];
     clims = quantile.(Ref(field[:]), [0.1, 0.9])
-    hm22 = heatmap!(ax22, field, colorrange = clims, colormap = :thermal)
+    hm22 = heatmap!(ax22, field, colorrange = clims, colormap = :thermal, interpolate = interpolation_flag)
 
     Colorbar(fig[2,4], hm22, label = " ",
     topspinevisible = true, 
