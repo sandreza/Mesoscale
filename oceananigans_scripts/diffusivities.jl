@@ -11,6 +11,8 @@ check_answer = false
 # prefix = "relaxation_channel_tracers_restarted_smooth_forcing_j1_k10_averages.jld2"
 # prefix = "relaxation_channel_tracers_restarted_smooth_forcing_j10_k1_averages.jld2"
 prefix = "relaxation_channel_tracers_restarted_smooth_forcing_j30_k1_averages.jld2"
+
+prefix = "relaxation_channel_tracers_restarted_smooth_forcing_case_trial0_averages.jld2"
 include(pwd() * "/oceananigans_scripts/utils.jl")
 
 function c_flux_gradient(jld2_file; tracer_strings=["c1", "c2", "c3", "c4"], time_index = 22)
@@ -75,7 +77,19 @@ end
 
 ## Grab Tracers for analysis
 jl_file = jldopen(prefix, "r+")
-cs, cys, czs, vcps, wcps, ∇c∇bs, ∇c∇ᵖbs, u⃗c∇bs, u⃗c∇ᵖbs = c_flux_gradient(jl_file)
+
+case = "trial0"
+if case[1:5] == "trial"
+    i = Meta.parse(case[6:end])
+    jlist = [0,1,2]
+    klist = [4*i+0,4*i+1,4*i+2,4*i+3]
+end
+tracer_strings = []
+for j in jlist, k in klist
+    push!(tracer_strings, "c_j"*string(j) * "_k"*string(k))
+end
+
+cs, cys, czs, vcps, wcps, ∇c∇bs, ∇c∇ᵖbs, u⃗c∇bs, u⃗c∇ᵖbs = c_flux_gradient(jl_file, tracer_strings = tracer_strings)
 # to incorporate multiple files, use: [cs[1:2]..., cs[3:4]...]
 
 m, n = size(∇c∇bs[1])
@@ -101,15 +115,17 @@ A = zeros(2,2)
 b1 = zeros(2)
 b2 = zeros(2)
 
-numtracers = 4
+tracer_indices = 4:4:12
+numtracers = length(tracer_strings)
+
 case_weights = zeros(numtracers)
-for i in 1:numtracers
+for i in tracer_indices
     case_weights[i] = 1.0 / maximum(abs.(cs[i])) # normalize case by tracer magnitudes
 end
 
 for j in 1:m, k in 1:n
     mask[j, k] = 1.0
-    for i in 1:numtracers
+    for i in tracer_indices
         ωⁱ = case_weights[i]
         # calculate matrix entries
         A[1,1] += ωⁱ * mean(∇c∇bs[i]  .* ∇c∇bs[i]  .* mask) 
@@ -170,7 +186,6 @@ if plotting
     leftspinevisible = true,
     rightspinevisible = true)
 
-
     ax21 = fig[2,1] = Axis(fig, title = "K²¹: diapycnal gradient, isopycnal flux")
     field = K[2,1,:,:];
     clims = quantile.(Ref(field[:]), [0.1, 0.9])
@@ -181,7 +196,6 @@ if plotting
     bottomspinevisible = true, 
     leftspinevisible = true,
     rightspinevisible = true)
-
 
     ax22 = fig[2,3] = Axis(fig, title = "K²² : isopycnal gradient, isopycnal flux")
     field = K[2,2,:,:];

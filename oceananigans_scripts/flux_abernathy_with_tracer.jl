@@ -6,25 +6,28 @@ using Oceananigans.Units
 using Oceananigans.OutputReaders: FieldTimeSeries
 using Oceananigans.Grids: xnode, ynode, znode
 using Random
+using JLD2
 
 import Oceananigans.Grids: ynode
 
 hydrostatic = false
 stretched_grid = false
+load_from_checkpoint = true
 const Lx = 1000kilometers # zonal domain length [m]
 const Ly = 2000kilometers # meridional domain length [m]
 
+tracer_case_j = 1
+tracer_case_k = 1
 # file output
-prefix = "fluxernathy_nh"
-prefix = "testy"
+prefix = "fluxernathy_tracers_restarted_"* "smooth_forcing" * "_j"* string(tracer_case_j) * "_k" * string(tracer_case_k)
 
 # time
 Δt = 300 * 2
-stop_time = 300years
+stop_time = 200 * 365days # 300years
 # number of grid points
 Nx = 16 * 8
 Ny = Nx * 2
-Nz = 32
+Nz = 35
 
 # stretched grid 
 k_center = collect(1:Nz)
@@ -52,11 +55,7 @@ else
                             x=(0, Lx), y=(0, Ly), z=(-Lz, 0))
 end
 
-
-
 @info "Built a grid: $grid."
-
-
 
 #####
 ##### Boundary conditions
@@ -79,7 +78,9 @@ parameters = (
     H = Lz,                              # domain depth [m]
     h = 1000.0,                          # exponential decay scale of stable stratification [m]
     y_sponge = 19/20 * Ly,               # southern boundary of sponge layer [m]
-    λt = 7.0days                         # relaxation time scale [s]
+    λt = 7.0days,                        # relaxation time scale [s]
+    tracer_case_j = tracer_case_j,       # integer
+    tracer_case_k = tracer_case_k,       # integer
 )
 
 @inline function buoyancy_flux(i, j, grid, clock, model_fields, p)
@@ -137,8 +138,55 @@ end
 
 Fb = Forcing(buoyancy_relaxation, discrete_form = true, parameters = parameters)
 
-# closure
 
+@inline function c1_forcing(i, j, k, grid, clock, model_fields, parameters)
+    tracer_case_j = parameters.tracer_case_j 
+    tracer_case_k = parameters.tracer_case_k
+    # forcingvalk = k == (35 - tracer_case_k+1) ? 1.0 : 0.0
+    #forcingvalj = j == (tracer_case_j - 20) ? 1.0 : 0.0
+    y = ynode(Center(), j, grid)
+    z = znode(Center(), k, grid)
+    forcingval = sin(2 * π * y / parameters.Ly * tracer_case_j)
+    return forcingval
+end
+
+@inline function c2_forcing(i, j, k, grid, clock, model_fields, parameters)
+    tracer_case_j = parameters.tracer_case_j 
+    tracer_case_k = parameters.tracer_case_k
+    # forcingvalk = k == (35 - tracer_case_k - 0) ? 1.0 : 0.0
+    #forcingvalj = j == (tracer_case_j - 10) ? 1.0 : 0.0
+    y = ynode(Center(), j, grid)
+    z = znode(Center(), k, grid)
+    forcingval = sin(2 * π * z / parameters.Lz * tracer_case_k)
+    return forcingval
+end
+@inline function c3_forcing(i, j, k, grid, clock, model_fields, parameters)
+    tracer_case_j = parameters.tracer_case_j 
+    tracer_case_k = parameters.tracer_case_k
+    # forcingvalk = k == (35 - tracer_case_k-1) ? 1.0 : 0.0
+    #forcingvalj = j == (tracer_case_j + 10) ? 1.0 : 0.0
+    y = ynode(Center(), j, grid)
+    z = znode(Center(), k, grid)
+    forcingval = sin(2 * π * z / parameters.Lz * tracer_case_k) * sin(2 * π * y / parameters.Ly * tracer_case_j)
+    return forcingval
+end
+@inline function c4_forcing(i, j, k, grid, clock, model_fields, parameters)
+    tracer_case_j = parameters.tracer_case_j 
+    tracer_case_k = parameters.tracer_case_k
+    # forcingvalk = k == (35 - tracer_case_k-2) ? 1.0 : 0.0
+    #forcingvalj = j == (tracer_case_j + 20) ? 1.0 : 0.0
+    y = ynode(Center(), j, grid)
+    z = znode(Center(), k, grid)
+    forcingval = sin(π * z / parameters.Lz * tracer_case_k + π * y / parameters.Ly * tracer_case_j) * sin(π * z / parameters.Lz * tracer_case_k - π * y / parameters.Ly * tracer_case_j)
+    return forcingval
+end
+
+Fc1 = Forcing(c1_forcing, discrete_form = true, parameters = parameters)
+Fc2 = Forcing(c2_forcing, discrete_form = true, parameters = parameters)
+Fc3 = Forcing(c3_forcing, discrete_form = true, parameters = parameters)
+Fc4 = Forcing(c4_forcing, discrete_form = true, parameters = parameters)
+
+# closure
 κh = 0.5e-5 # [m²/s] horizontal diffusivity
 νh = 12.0   # [m²/s] horizontal viscocity
 κz = 0.5e-5 # [m²/s] vertical diffusivity
@@ -166,7 +214,7 @@ if hydrostatic
                                         buoyancy = BuoyancyTracer(),
                                         coriolis = coriolis,
                                         closure = (closure, convective_adjustment),
-                                        tracers = :b,
+                                        tracers = (:b, :c1),
                                         boundary_conditions = (b=b_bcs, u=u_bcs, v=v_bcs),
                                         forcing = (b=Fb,),
                                         )
@@ -177,12 +225,12 @@ else
                                         buoyancy = BuoyancyTracer(),
                                         coriolis = coriolis,
                                         closure = (closure),
-                                        tracers = :b,
+                                        tracers = (:b, :c1, :c2, :c3, :c4),
                                         boundary_conditions = (b=b_bcs, u=u_bcs, v=v_bcs),
-                                        forcing = (b=Fb,),
+                                        forcing = (b=Fb, c1 = Fc1, c2 = Fc2, c3 = Fc3, c4 = Fc4),
                                         )
 end
-
+# c2 = Fc2, c3 = Fc3, c4 = Fc4
 @info "Built $model."
 
 #####
@@ -194,6 +242,19 @@ Random.seed!(1)
 ε(σ) = σ * randn()
 bᵢ(x, y, z) = parameters.ΔB * ( exp(z/parameters.h) - exp(-Lz/parameters.h) ) / (1 - exp(-Lz/parameters.h)) + ε(1e-8)
 
+# initial tracer forcing
+#  , c1 = c1ᵢ
+#=
+c1ᵢ = interior(model.tracers.c1)
+k = Nz # top 
+c1i_a = Array(c1ᵢ)
+c1i_a[:,:,k] .= 1.0
+if arch ==  GPU()
+    c1i_a = Oceananigans.CUDA.CuArray(c1i_a)
+end
+c1ᵢ .= c1i_a
+=#
+# set model forcing
 set!(model, b=bᵢ)
 
 #####
@@ -220,6 +281,29 @@ function print_progress(sim)
     return nothing
 end
 
+if load_from_checkpoint 
+    jl_file = jldopen("fluxernathy_tracers_iteration9986400.jld2", "r+")
+    u = Oceananigans.CUDA.CuArray(jl_file["velocities"]["u"]["data"])
+    v = Oceananigans.CUDA.CuArray(jl_file["velocities"]["v"]["data"])
+    w = Oceananigans.CUDA.CuArray(jl_file["velocities"]["w"]["data"])
+
+    b = Oceananigans.CUDA.CuArray(jl_file["tracers"]["b"]["data"])
+    #=
+    c1 = Oceananigans.CUDA.CuArray(jl_file["tracers"]["c1"]["data"])
+    c2 = Oceananigans.CUDA.CuArray(jl_file["tracers"]["c2"]["data"])
+    c3 = Oceananigans.CUDA.CuArray(jl_file["tracers"]["c3"]["data"])
+    c4 = Oceananigans.CUDA.CuArray(jl_file["tracers"]["c4"]["data"])
+    =#
+
+    model.velocities.u.data[:] .= u[:]
+    model.velocities.v.data[:] .= v[:]
+    model.velocities.w.data[:] .= w[:]
+    model.tracers.b.data[:] .= b[:]
+
+else
+    nothing
+end
+
 simulation = Simulation(model, Δt=wizard, stop_time=stop_time, progress=print_progress, iteration_interval=1000)
 
 #####
@@ -228,14 +312,34 @@ simulation = Simulation(model, Δt=wizard, stop_time=stop_time, progress=print_p
 
 u, v, w = model.velocities
 b = model.tracers.b
+c1 = model.tracers.c1
+c2 = model.tracers.c2
+c3 = model.tracers.c3
+c4 = model.tracers.c4
 
 # ζ = ComputedField(∂x(v) - ∂y(u))
 
 averaged_outputs = Dict(
-    :u => AveragedField(u, dims=(1,)),
-    :v => AveragedField(v, dims=(1,)),
-    :w => AveragedField(w, dims=(1,)),
-    :b => AveragedField(b, dims=(1,)),
+    :u  => AveragedField(u,  dims=(1,)),
+    :v  => AveragedField(v,  dims=(1,)),
+    :w  => AveragedField(w,  dims=(1,)),
+    :b  => AveragedField(b,  dims=(1,)),
+    :c1 => AveragedField(c1, dims=(1,)),
+    :c2 => AveragedField(c2, dims=(1,)),
+    :c3 => AveragedField(c3, dims=(1,)),
+    :c4 => AveragedField(c4, dims=(1,)),
+
+    :vb  => AveragedField(v * b,  dims=(1,)),
+    :vc1 => AveragedField(v * c1, dims=(1,)),
+    :vc2 => AveragedField(v * c2, dims=(1,)),
+    :vc3 => AveragedField(v * c3, dims=(1,)),
+    :vc4 => AveragedField(v * c4, dims=(1,)),
+
+    :wb  => AveragedField(w * b,  dims=(1,)),
+    :wc1 => AveragedField(w * c1, dims=(1,)),
+    :wc2 => AveragedField(w * c2, dims=(1,)),
+    :wc3 => AveragedField(w * c3, dims=(1,)),
+    :wc4 => AveragedField(w * c4, dims=(1,)),
 
     :uu => AveragedField(u * u, dims= 1),
     :vv => AveragedField(v * v, dims= 1),
@@ -243,20 +347,30 @@ averaged_outputs = Dict(
     :uv => AveragedField(u * v, dims= 1),
     :vw => AveragedField(w * v, dims= 1),
     :uw => AveragedField(w * u, dims= 1),
-    :ub => AveragedField(u * b, dims= 1),
-    :vb => AveragedField(v * b, dims= 1),
-    :wb => AveragedField(w * b, dims= 1),
+
 )
+
+#=
+:uu => AveragedField(u * u, dims= 1),
+:vv => AveragedField(v * v, dims= 1),
+:ww => AveragedField(w * w, dims= 1),
+:uv => AveragedField(u * v, dims= 1),
+:vw => AveragedField(w * v, dims= 1),
+:uw => AveragedField(w * u, dims= 1),
+:ub => AveragedField(u * b, dims= 1),
+:vb => AveragedField(v * b, dims= 1),
+:wb => AveragedField(w * b, dims= 1),
+=#
 
 # #####
 # ##### Build checkpointer and output writer
 # #####
-
+#=
 simulation.output_writers[:checkpointer] = Checkpointer(model,
-                                                    schedule = TimeInterval(5 * 365days),
+                                                    schedule = TimeInterval(10 * 365days),
                                                     prefix = prefix,
                                                     force = true)
-
+=#
 simulation.output_writers[:averages] = JLD2OutputWriter(model, averaged_outputs,
                                                     schedule = AveragedTimeInterval(10*365days, window=10*365days, stride=10),
                                                     prefix = prefix * "_averages",
@@ -266,4 +380,7 @@ simulation.output_writers[:averages] = JLD2OutputWriter(model, averaged_outputs,
  @info "Running the simulation..."
 
 #  try
+tic = time()
 run!(simulation, pickup=false)
+toc = time()
+println("The amount of time for the simulation was ", (toc-tic)/ (60 * 60), " hours")

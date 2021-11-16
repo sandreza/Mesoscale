@@ -21,8 +21,9 @@ const Ly = 2000kilometers # meridional domain length [m]
 
 symbol_list = Symbol[]
 case = "trial0"
-# case = "trial1"
-# case = "trial2"
+case = "trial1"
+case = "trial2"
+case = "trial3"
 if case[1:5] == "trial"
     i = Meta.parse(case[6:end])
     jlist = [0,1,2]

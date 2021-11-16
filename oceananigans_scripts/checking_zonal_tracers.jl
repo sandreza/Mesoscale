@@ -2,7 +2,7 @@ using JLD2
 using GLMakie
 using Statistics
 tracer_string = "b"
-tracer_string = "c_j"*string(2) * "_k"*string(6)
+tracer_string = "c_j"*string(2) * "_k"*string(3)
 tracer_case_j = 1
 tracer_case_k = 1
 # file output
@@ -33,7 +33,7 @@ prefix = "relaxation_channel_tracers_restarted_smooth_forcing_j2_k2_averages.jld
 # prefix = "relaxation_channel_tracers_restarted_smooth_forcing_j1_k32_averages.jld2"
 prefix = "sin_relaxation_channel_nh_averages.jld2"
 
-prefix = "relaxation_channel_tracers_restarted_smooth_forcing_case_trial1_averages.jld2"
+prefix = "relaxation_channel_tracers_restarted_smooth_forcing_case_trial0_averages.jld2"
 jl_file = jldopen(prefix, "r+")
 
 function get_grid(field, jl_file; ghost = 3)
@@ -106,7 +106,7 @@ buoyancy_contour = true
 check_grad = true # change this nob
 custom_clims =  clim_options[2] 
 tracer_string2 = nothing # "c2" # "c3" #nothing # "c2" # nothing # "c2" # nothing
-time_index = 4
+time_index = 22
 b = get_field("b", time_index, jl_file) 
 if tracer_string2==nothing
     c = get_field(tracer_string, time_index, jl_file) 
