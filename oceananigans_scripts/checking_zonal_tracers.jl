@@ -1,14 +1,29 @@
 using JLD2
 using GLMakie
 using Statistics
+
+case = "trial5"
+case = "attempt5"
+if case[1:5] == "trial"
+    i = Meta.parse(case[6:end])
+    jlist = [0, 1, 2]
+    klist = [4*i+0,4*i+1,4*i+2,4*i+3]
+elseif case[1:7] == "attempt"
+    i = Meta.parse(case[8:end])
+    jlist = [2 * i + 3, 2*i + 4]
+    klist = [1, 2, 3, 4, 5, 6]
+end
+
+prefix = "relaxation_channel_tracers_restarted_smooth_forcing_case_"*case * "_averages.jld2"
+tind = [2, 6]
 tracer_string = "b"
-tracer_string = "c_j"*string(2) * "_k"*string(3)
+tracer_string = "c_j"*string(jlist[tind[1]]) * "_k"*string(klist[tind[2]])
 tracer_case_j = 1
 tracer_case_k = 1
 # file output
 # prefix = "fluxernathy_tracers_iteration9986400.jld2"
 # prefix = "fluxernathy_tracers_restarted_j1_k1_averages.jld2"
-prefix = "checkme2.jld2"
+# prefix = "checkme2.jld2"
 # prefix = "fluxernathy_nh_ns_averages.jld2"
 # prefix = "fluxernathy_averages.jld2"
 # prefix = "fluxernathy_tracers_restarted_j1_k10_averages.jld2"
@@ -25,24 +40,29 @@ prefix = "checkme2.jld2"
 # prefix = "fluxernathy_tracers_restarted_smooth_forcing_j6_k10_averages.jld2"
 # prefix = "fluxernathy_tracers_restarted_smooth_forcing_j6_k6_averages.jld2"
 # prefix = "relaxation_channel_nh_averages.jld2"
-prefix = "relaxation_channel_tracers_restarted_smooth_forcing_j1_k1_averages.jld2"
-prefix = "relaxation_channel_tracers_restarted_smooth_forcing_j2_k2_averages.jld2"
+# prefix = "relaxation_channel_tracers_restarted_smooth_forcing_j1_k1_averages.jld2"
+# prefix = "relaxation_channel_tracers_restarted_smooth_forcing_j2_k2_averages.jld2"
 # prefix = "relaxation_channel_tracers_restarted_smooth_forcing_j1_k10_averages.jld2"
 # prefix = "relaxation_channel_tracers_restarted_smooth_forcing_j10_k1_averages.jld2"
 # prefix = "relaxation_channel_tracers_restarted_smooth_forcing_j30_k1_averages.jld2"
 # prefix = "relaxation_channel_tracers_restarted_smooth_forcing_j1_k32_averages.jld2"
-prefix = "sin_relaxation_channel_nh_averages.jld2"
+# prefix = "sin_relaxation_channel_nh_averages.jld2"
 
-prefix = "relaxation_channel_tracers_restarted_smooth_forcing_case_trial0_averages.jld2"
+# prefix = "relaxation_channel_tracers_restarted_smooth_forcing_case_trial0_averages.jld2"
 jl_file = jldopen(prefix, "r+")
 
 function get_grid(field, jl_file; ghost = 3)
+    gridstrings = keys(jl_file["grid"])
 
-    yC = collect(jl_file["grid"]["yC"])[ghost+1:end-ghost]
-    zC = collect(jl_file["grid"]["zC"])[ghost+1:end-ghost]
+    yC_string = "yC" in gridstrings ? "yC" : "yᵃᶜᵃ" 
+    zC_string = "zC" in gridstrings ? "zC" : "zᵃᵃᶜ"
+    yF_string = "yF" in gridstrings ? "yF" : "Δyᵃᶠᵃ"
+    zF_string = "zF" in gridstrings ? "zF" : "zᵃᵃᶠ"
+    yC = collect(jl_file["grid"][yC_string])[ghost+1:end-ghost]
+    zC = collect(jl_file["grid"][zC_string])[ghost+1:end-ghost]
 
-    yF = collect(jl_file["grid"]["yF"])[ghost+1:end-ghost]
-    zF = collect(jl_file["grid"]["zF"])[ghost+1:end-ghost]
+    yF = collect(jl_file["grid"][yF_string])[ghost+1:end-ghost]
+    zF = collect(jl_file["grid"][zF_string])[ghost+1:end-ghost]
 
 
     y = size(field)[1] == size(yC)[1] ? yC : yF

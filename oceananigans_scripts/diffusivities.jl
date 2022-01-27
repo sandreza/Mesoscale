@@ -11,8 +11,28 @@ check_answer = false
 # prefix = "relaxation_channel_tracers_restarted_smooth_forcing_j1_k10_averages.jld2"
 # prefix = "relaxation_channel_tracers_restarted_smooth_forcing_j10_k1_averages.jld2"
 prefix = "relaxation_channel_tracers_restarted_smooth_forcing_j30_k1_averages.jld2"
-
 prefix = "relaxation_channel_tracers_restarted_smooth_forcing_case_trial0_averages.jld2"
+
+# case = "trial5"
+case = "attempt5"
+if case[1:5] == "trial"
+    i = Meta.parse(case[6:end])
+    jlist = [0, 1, 2]
+    klist = [4*i+0,4*i+1,4*i+2,4*i+3]
+elseif case[1:7] == "attempt"
+    i = Meta.parse(case[8:end])
+    jlist = [2 * i + 3, 2*i + 4]
+    klist = [1, 2, 3, 4, 5, 6]
+end
+
+prefix = "relaxation_channel_tracers_restarted_smooth_forcing_case_"*case * "_averages.jld2"
+
+tracer_strings = []
+for j in jlist, k in klist
+    push!(tracer_strings, "c_j" * string(j) * "_k" * string(k))
+end
+# selection of tracers later
+
 include(pwd() * "/oceananigans_scripts/utils.jl")
 
 function c_flux_gradient(jld2_file; tracer_strings=["c1", "c2", "c3", "c4"], time_index = 22)
@@ -74,10 +94,10 @@ function c_flux_gradient(jld2_file; tracer_strings=["c1", "c2", "c3", "c4"], tim
     return cs, cys, czs, vcps, wcps, ∇c∇bs, ∇c∇ᵖbs, u⃗c∇bs, u⃗c∇ᵖbs
 end
 
-
 ## Grab Tracers for analysis
 jl_file = jldopen(prefix, "r+")
 
+#=
 case = "trial0"
 if case[1:5] == "trial"
     i = Meta.parse(case[6:end])
@@ -88,6 +108,7 @@ tracer_strings = []
 for j in jlist, k in klist
     push!(tracer_strings, "c_j"*string(j) * "_k"*string(k))
 end
+=#
 
 cs, cys, czs, vcps, wcps, ∇c∇bs, ∇c∇ᵖbs, u⃗c∇bs, u⃗c∇ᵖbs = c_flux_gradient(jl_file, tracer_strings = tracer_strings)
 # to incorporate multiple files, use: [cs[1:2]..., cs[3:4]...]
@@ -115,7 +136,7 @@ A = zeros(2,2)
 b1 = zeros(2)
 b2 = zeros(2)
 
-tracer_indices = 4:4:12
+tracer_indices = 1:12
 numtracers = length(tracer_strings)
 
 case_weights = zeros(numtracers)
