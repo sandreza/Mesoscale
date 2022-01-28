@@ -70,3 +70,13 @@ V₁ = V[:, end-1] # first baroclinic mode
 λ₂ = (-λ⁻²[end-2])^(-0.5) # Second Rossby Deformation Radius
 V₁ = V[:, end-1] # second baroclinic mode
 
+P = V' # projection operator since orthonormal
+B₁ = P[end-1, :]' # last row is projection operator
+
+uu = u[hi, zi_b-1:zi_s]
+û = P * uu
+norm(û[end] * V[:, end] - uu) / norm(uu)
+norm(û[end] * V[:, end] + û[end-1] * V[:, end-1] - uu) / norm(uu)
+norm(û[end] * V[:, end] + û[end-1] * V[:, end-1] + û[end-2] * V[:, end-2] - uu) / norm(uu)
+û = reverse(abs.(P * uu[hi, zi_b-1:zi_s]))
+
