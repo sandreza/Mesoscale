@@ -73,17 +73,63 @@ end
 
 ##
 using Statistics
-options = (; xlabel = "first barotropic",
+options = (; xlabel = "barotropic projections",
     xlabelcolor = :black, ylabel = "Depth [m]",
     ylabelcolor = :black, xlabelsize = 40, ylabelsize = 40,
     xticklabelsize = 25, yticklabelsize = 25,
     xtickcolor = :black, ytickcolor = :black,
     xticklabelcolor = :black, yticklabelcolor = :black,
     titlesize = 50)
-    
+
 fig2 = Figure()
 ax1 = Axis(fig2[1, 1]; options...)
 
-α = maximum(abs.(u[hi, zi_b-1:zi_s] .- mean(u[hi, zi_b-1:zi_s]))) / maximum(abs.(V₁ .- mean(V₁)))
-scatter!(ax1, α * (V₁ .- mean(V₁)), z[zi_b-1:zi_s])
-scatter!(ax1, u[hi, zi_b-1:zi_s] .- mean(u[hi, zi_b-1:zi_s]), z[zi_b-1:zi_s])
+
+truth = lines!(ax1, uu, z[zi_b-1:zi_s], color = :black)
+b0 = lines!(ax1, û[end] * V[:, end], z[zi_b-1:zi_s], color = :red)
+b1 = lines!(ax1, û[end] * V[:, end] + û[end-1] * V[:, end-1], z[zi_b-1:zi_s], color = :blue)
+b2 = lines!(ax1, û[end] * V[:, end] + û[end-1] * V[:, end-1] + û[end-2] * V[:, end-2], z[zi_b-1:zi_s], color = :purple)
+axislegend(ax1, [truth, b0, b1, b2], ["truth", "b0", "b1", "b2"], position = :rb)
+
+##
+options = (; xlabel = "y [m]",
+    xlabelcolor = :black, ylabel = "Diffusivity",
+    ylabelcolor = :black, xlabelsize = 40, ylabelsize = 40,
+    xticklabelsize = 25, yticklabelsize = 25,
+    xtickcolor = :black, ytickcolor = :black,
+    xticklabelcolor = :black, yticklabelcolor = :black,
+    titlesize = 50)
+
+fig2 = Figure()
+ax3 = Axis(fig2[1, 1]; options...)
+
+scatter!(ax3, [D̅list[:]...])
+ylims!(ax3, (0, 0.25))
+
+##
+options = (; xlabel = "y indices",
+    xlabelcolor = :black, ylabel = "First Baroclinic Mode Amplitude",
+    ylabelcolor = :black, xlabelsize = 40, ylabelsize = 40,
+    xticklabelsize = 25, yticklabelsize = 25,
+    xtickcolor = :black, ytickcolor = :black,
+    xticklabelcolor = :black, yticklabelcolor = :black,
+    titlesize = 50)
+
+fig2 = Figure()
+ax3 = Axis(fig2[1, 1]; options...)
+
+scatter!(ax3, [𝒰list[:]...])
+# ylims!(ax3, (0, 0.25))
+##
+options = (; xlabel = "y indices",
+    xlabelcolor = :black, ylabel = "First Baroclinic Mode Amplitude",
+    ylabelcolor = :black, xlabelsize = 40, ylabelsize = 40,
+    xticklabelsize = 25, yticklabelsize = 25,
+    xtickcolor = :black, ytickcolor = :black,
+    xticklabelcolor = :black, yticklabelcolor = :black,
+    titlesize = 50)
+
+fig2 = Figure()
+ax3 = Axis(fig2[1, 1]; options...)
+
+scatter!(ax3, [λlist[:]...])
