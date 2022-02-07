@@ -44,7 +44,8 @@ case = "trial5"
 # case = "attempt14" 
 # case = "attempt15" 
 # case = "attempt16" 
-# case = "attempt17" # do this next
+case = "attempt17"
+# case = "attempt18" # do this next
 if case[1:5] == "trial"
     # fixed horizontal variation, varying vertical 
     # tests nonlocality in vertical 

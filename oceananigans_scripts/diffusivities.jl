@@ -1,5 +1,5 @@
 using JLD2, LinearAlgebra, Statistics
-plotting = true
+plotting = false
 check_answer = false
 # prefix = "fluxernathy_tracers_restarted_j1_k10_averages.jld2"
 # prefix = "fluxernathy_tracers_restarted_j1_k20_averages.jld2"
