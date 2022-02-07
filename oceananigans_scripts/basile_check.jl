@@ -25,12 +25,12 @@ vb = get_field("vb", time_index, jl_file)
 wb = get_field("wb", time_index, jl_file)
 w = get_field("w", time_index, jl_file)
 
-vbp = avgy(avgz(avgy(vb) - avgy(v) .* b))
-wbp = avgy(avgz(avgz(wb) - avgz(w) .* b))
-
 u = get_field("u", time_index, jl_file)
 v = get_field("v", time_index, jl_file)
 w = get_field("w", time_index, jl_file)
+
+vbp = avgy(avgz(avgy(vb) - avgy(v) .* b))
+wbp = avgy(avgz(avgz(wb) - avgz(w) .* b))
 
 uz = ∂z(u, z)
 
@@ -66,8 +66,6 @@ end
 Δz = z[2] - z[1]
 mat = sturm_louiville_operator(collect(1:10), Δz)
 eigen(mat)
-
-𝒟(c₁, c₂) = f₀ * c₁ * 𝒰 * λ₁ * exp(c₂ * 𝒰 / λ₁)
 
 𝒰list = []
 λlist = []
@@ -143,40 +141,68 @@ for hi in 1:255
 end
 
 ##
-𝒟(c₁, c₂; 𝒰 = 𝒰, λ₁ = λ₁, f₀ = -1e-4) = f₀ * c₁ * 𝒰 * λ₁ * exp(c₂ * 𝒰 / λ₁)
+𝒟(c₁, c₂; 𝒰 = 𝒰, λ₁ = λ₁, f₀ = -1e-4) = sign(f₀) * c₁ * 𝒰 * λ₁ * exp(c₂ * 𝒰 / λ₁)
 vpbp = avgz(avgy(vb) - avgy(v) .* b)
 
 # c₁ is scaled by 100
 # c₂ is scaled by hours
 
-function loss_function(c₁, c₂; norm_function = maximum, zinds = 10:28, yinds = 80:180)
+function loss_function(c₁, c₂; norm_function = maximum, zinds = 10:28, yinds = 80:180, debug = false)
     loss = []
 
     for hi in yinds
-        𝒰 = 𝒰list[hi]
+        𝒰 = abs(𝒰list[hi])
         λ₁ = λlist[hi]
-        push!(loss, norm(𝒟(c₁, 86400 / 24 * c₂, 𝒰 = 𝒰, λ₁ = λ₁) * uz[hi, zinds] - vpbp[hi, zinds]))
+        push!(loss, norm(𝒟(c₁, c₂, 𝒰 = 𝒰, λ₁ = λ₁) * uz[hi, zinds] - vpbp[hi, zinds]))
     end
-    return norm_function(loss)
+    if debug
+        return loss
+    else
+        return norm_function(loss)
+    end
 end
 
 NN = 100
-c1vals = reshape(collect(0:NN) ./ NN * 1.0, (NN + 1, 1))
-c2vals = reshape(collect(0:NN) ./ NN * 1.0, (1, NN + 1))
-lossvals = loss_function.(c1vals, c2vals)
+# A priori determine ranges for optimization: 
+zinds = 10:28
+hi = 100 # middle horizontal index
+𝒰1 = 𝒰list[hi]
+λ₁1 = λlist[hi]
+p¹ = mean(vpbp[hi, zinds] ./ uz[hi, zinds])
+hi = 150
+𝒰2 = 𝒰list[hi]
+λ₁2 = λlist[hi]
+p² = mean(vpbp[hi, zinds] ./ uz[hi, zinds])
+# p¹ =  c₁ * 𝒰1 * λ₁1 * exp(c₂ * 𝒰1 / λ₁1)
+# p² =  c₁ * 𝒰2 * λ₁2 * exp(c₂ * 𝒰2 / λ₁2)
+# c₂ = ln(p¹ / p²) / (𝒰1 / λ₁1 -  𝒰2 / λ₁2)
+c₂guess = log((p¹ * 𝒰2 * λ₁2) / (p² * 𝒰1 * λ₁1)) / (𝒰1 / λ₁1 - 𝒰2 / λ₁2)
+c₁guess = -p¹ / (𝒰1 * λ₁1 * exp(c₂guess * 𝒰1 / λ₁1))
+-p² / (𝒰2 * λ₁2 * exp(c₂guess * 𝒰2 / λ₁2))
 
+c1vals = reshape(collect(0:NN) ./ NN * 5 * c₁guess, (NN + 1, 1))
+c2vals = reshape(collect(0:NN) ./ NN * 5 * c₂guess, (1, NN + 1))
+lossvals = loss_function.(c1vals, c2vals)
+loss_function(c₁guess, c₂guess, debug = true)
+loss_function(0, 0)
 println("relative decrease ", minimum(lossvals) / loss_function(0, 0))
 
 zinds = 10:28
 hi = 100
-norm(𝒟(0.5, 0.03, 𝒰 = 𝒰, λ₁ = λ₁) * uz[hi, zinds] - vpbp[hi, zinds]) / norm(vpbp[hi, zinds])
+𝒰 = 𝒰list[hi]
+λ₁ = λlist[hi]
+norm(𝒟(c₁guess, c₂guess, 𝒰 = 𝒰, λ₁ = λ₁) * uz[hi, zinds] - vpbp[hi, zinds]) / norm(vpbp[hi, zinds])
 
 c1min = c1vals[argmin(lossvals)[1]]
 c2min = c2vals[argmin(lossvals)[2]]
-
+norm(𝒟(c1min, c2min, 𝒰 = 𝒰, λ₁ = λ₁) * uz[hi, zinds] - vpbp[hi, zinds]) / norm(vpbp[hi, zinds])
+##
 for hi in 70:5:180
     println("---------")
     println(" y = ", y[hi])
+    println(" distance percent ", y[hi]/y[end])
+    𝒰 = 𝒰list[hi]
+    λ₁ = λlist[hi]
     er1 = norm(𝒟(c1min, c2min, 𝒰 = 𝒰, λ₁ = λ₁) * uz[hi, zinds] - vpbp[hi, zinds]) / norm(vpbp[hi, zinds])
     println("error = ", er1)
     println("---------")
