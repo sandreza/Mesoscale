@@ -11,7 +11,7 @@ cases = ["trial1", "trial2", "trial3", "trial4"]
 cases = []
 
 for i in 1:5
-    push!(cases, "trial"*string(i))
+    push!(cases, "trial" * string(i))
 end
 
 for i in 1:7
@@ -136,9 +136,14 @@ for case in cases
 end
 ##
 # relative differences
+mask = zeros(1,1, size(diffusivities[1])[3:end]...)
+# remove dependencies on boundary
+for j in 80:(254-80), k in 9:30-9
+    mask[1,1, j,k] = 1.0
+end
 error_matrix = zeros(length(diffusivities), length(diffusivities))
 for i in eachindex(diffusivities), j in eachindex(diffusivities)
-    error_matrix[i,j] = norm(diffusivities[i] - diffusivities[j]) / mean(norm.(diffusivities))
+    error_matrix[i, j] = norm(diffusivities[i] .* mask - diffusivities[j] .* mask) / norm(0.5 * (diffusivities[i] .* mask + diffusivities[j] .* mask))
     # println(norm(diffusivities[i] - diffusivities[j]) / mean(norm.(diffusivities)))
 end
 error_matrix
