@@ -29,7 +29,7 @@ jl_file = jldopen(prefix, "r+")
 cs, cys, czs, vcps, wcps, ∇c∇bs, ∇c∇ᵖbs, u⃗c∇bs, u⃗c∇ᵖbs = c_flux_gradient(jl_file, tracer_strings = tracer_strings)
 # to incorporate multiple files, use: [cs[1:2]..., cs[3:4]...]
 tracer_indices = 1:12
-m, n = size(∇c∇bs[1])
+m, n = size(cys[1])
 
 check_K = zeros(2, 2, m, n)
 y, z = get_grid(cs[1], jl_file; ghost = 3)
@@ -41,8 +41,8 @@ for j in 1:m, k in 1:n, i in tracer_indices
     check_K[1, 2, j, k] = (y̅[j] / y̅[end]^2)^2
     check_K[2, 1, j, k] = (z̅[k] / z̅[1]^2)^2
     check_K[2, 2, j, k] = 10 * ((y̅[j] / y̅[end]^2)^2 + (z̅[k] / z̅[1])^2)
-    u⃗c∇bs[i][j, k] = -check_K[1, 1, j, k] * ∇c∇bs[i][j, k] - check_K[1, 2, j, k] * ∇c∇ᵖbs[i][j, k]
-    u⃗c∇ᵖbs[i][j, k] = -check_K[2, 1, j, k] * ∇c∇bs[i][j, k] - check_K[2, 2, j, k] * ∇c∇ᵖbs[i][j, k]
+    vcps[i][j, k] = -check_K[1, 1, j, k] * cys[i][j, k] - check_K[1, 2, j, k] * czs[i][j, k]
+    wcps[i][j, k] = -check_K[2, 1, j, k] * cys[i][j, k] - check_K[2, 2, j, k] * czs[i][j, k]
 end
 
 K = zeros(2, 2, m, n)
@@ -64,27 +64,15 @@ for j in 1:m, k in 1:n
     for i in tracer_indices
         ωⁱ = case_weights[i]
         # calculate matrix entries
-        #=
-        # if we want to calculate the average in a neighborhood
-        A[1, 1] += ωⁱ * mean(∇c∇bs[i] .* ∇c∇bs[i] .* mask)
-        A[1, 2] += ωⁱ * mean(∇c∇bs[i] .* ∇c∇ᵖbs[i] .* mask)
-        A[2, 2] += ωⁱ * mean(∇c∇ᵖbs[i] .* ∇c∇ᵖbs[i] .* mask)
+        A[1, 1] += ωⁱ * cys[i][j, k] * cys[i][j, k]
+        A[1, 2] += ωⁱ * cys[i][j, k] * czs[i][j, k]
+        A[2, 2] += ωⁱ * czs[i][j, k] * czs[i][j, k]
         # calculate rhs 1 for κ¹¹, κ¹²
-        b1[1] -= ωⁱ * mean(∇c∇bs[i] .* u⃗c∇bs[i] .* mask)
-        b1[2] -= ωⁱ * mean(∇c∇ᵖbs[i] .* u⃗c∇bs[i] .* mask)
+        b1[1] -= ωⁱ * cys[i][j, k] * vcps[i][j, k]
+        b1[2] -= ωⁱ * czs[i][j, k] * vcps[i][j, k]
         # calculate rhs 2 for κ²¹, κ²²
-        b2[1] -= ωⁱ * mean(∇c∇bs[i] .* u⃗c∇ᵖbs[i] .* mask)
-        b2[2] -= ωⁱ * mean(∇c∇ᵖbs[i] .* u⃗c∇ᵖbs[i] .* mask)
-        =#
-        A[1, 1] += ωⁱ * ∇c∇bs[i][j,k] * ∇c∇bs[i][j,k]  
-        A[1, 2] += ωⁱ * ∇c∇bs[i][j,k] * ∇c∇ᵖbs[i][j,k] 
-        A[2, 2] += ωⁱ * ∇c∇ᵖbs[i][j,k] * ∇c∇ᵖbs[i][j,k]
-        # calculate rhs 1 for κ¹¹, κ¹²
-        b1[1] -= ωⁱ * ∇c∇bs[i][j,k] * u⃗c∇bs[i][j,k]  
-        b1[2] -= ωⁱ * ∇c∇ᵖbs[i][j,k] * u⃗c∇bs[i][j,k] 
-        # calculate rhs 2 for κ²¹, κ²²
-        b2[1] -= ωⁱ * ∇c∇bs[i][j,k] * u⃗c∇ᵖbs[i][j,k] 
-        b2[2] -= ωⁱ * ∇c∇ᵖbs[i][j,k] * u⃗c∇ᵖbs[i][j,k]
+        b2[1] -= ωⁱ * cys[i][j, k] * wcps[i][j, k]
+        b2[2] -= ωⁱ * czs[i][j, k] * wcps[i][j, k]
     end
     A[2, 1] = A[1, 2]
     # save 

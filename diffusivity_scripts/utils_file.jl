@@ -28,28 +28,32 @@ function c_flux_gradient(jld2_file; tracer_strings = ["c1", "c2", "c3", "c4"], t
         local c = get_field(tracer_string, time_index, jl_file)
         local vc = get_field("v" * tracer_string, time_index, jl_file)
         local wc = get_field("w" * tracer_string, time_index, jl_file)
-
+    
         local vcp = avgy(avgz(avgy(vc) - avgy(v) .* c))
         local wcp = avgy(avgz(avgz(wc) - avgz(w) .* c))
-
+    
         local cz = avgy(∂z(c, z))
         local cy = avgz(∂y(c, y))
-
+    
         local vcp_avg = avgz(avgy(vcp))
         local wcp_avg = avgz(avgy(wcp))
-
+    
         local ∇c∇b = cy .* by + cz .* bz
         local ∇c∇ᵖb = cy .* bz - cz .* by
-
+    
         local u⃗c∇b = vcp .* by + wcp .* bz
         local u⃗c∇ᵖb = vcp .* bz - wcp .* by
-
+    
+        # redo the average
+        local cy = avgy(avgz(cy))
+        local cz = avgy(avgz(cz))
+    
         push!(cs, c)
         push!(cys, cy)
         push!(czs, cz)
         push!(vcps, vcp_avg)
         push!(wcps, wcp_avg)
-
+    
         push!(∇c∇bs, ∇c∇b)
         push!(∇c∇ᵖbs, ∇c∇ᵖb)
         push!(u⃗c∇bs, u⃗c∇b)
