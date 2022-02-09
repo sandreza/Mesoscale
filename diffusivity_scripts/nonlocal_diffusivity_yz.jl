@@ -66,7 +66,7 @@ for case in cases
 end
 
 ##
-skip = 5
+skip = 60 # number of tracers used to estimate diffusivity
 skipper = floor(Int, length(cs)/skip)
 tracer_index_partitions = [skip*(j-1) + 1: skip*j for j in 1:skipper]
 
@@ -74,12 +74,10 @@ for tracer_indices in tracer_index_partitions
     println("currently on ", tracer_indices)
     m, n = size(cys[1])
 
-    jn_u = 0 #jn_u, j "neighbors" up
-    jn_d = 0 #jn_d, j "neighbors" down
-    kn_u = 0 #kn_u, k "neighbors" up
-    kn_d = 0 #kn_d, k "neighbors" up
-
-
+    jn_u = 0 #jn_u, j "neighbors" right
+    jn_d = 0 #jn_d, j "neighbors" left
+    kn_u = 12 #kn_u, k "neighbors" up
+    kn_d = 12 #kn_d, k "neighbors" down
 
     numtracers = length(cs)
 
@@ -115,18 +113,36 @@ for tracer_indices in tracer_index_partitions
             BB .+= -v⃗ * [vcps[i][j, k] wcps[i][j, k]] * ωⁱ
         end
         # regularize coefficients
+        Δ = similar(AA) .* 0
+        for i in 1:ntg-1
+            Δ[i, i] = 2
+            Δ[i, i+1] = -1
+            Δ[i+1, i] = -1
+        end
+        hntg = (l_jn_u + l_jn_d + 1) * (l_kn_u + l_kn_d + 1)
+        # Handle boundaries (only valid for 1D)
+        Δ[1, 1] = 1
+        Δ[hntg, hntg] = 1
+        Δ[hntg, hntg+1] = 0
+        Δ[hntg, hntg-1] = -1
+    
+        Δ[hntg+1, hntg+1] = 1
+        Δ[hntg+1, hntg+1+1] = -1
+        Δ[hntg+1, hntg-1+1] = 0
+        Δ[end, end] = 1
+    
         λ = 1e-8 * maximum(abs.(AA))
-        AA += λ*I
+        AA += λ * Δ
         # save
         K[:, 1:ntg, j, k] .= Transpose(AA \ BB)
-        if (j==100) & (k == 10)
+        if (j == 100) & (k == 10)
             println("------------")
             println("j = ", j, " k = ", k)
             println(K[:, 1:ntg, j, k])
             println(Transpose(AA \ BB))
             println("------------")
         end
-
+    
     end
     push!(diffusivities, K)
 
