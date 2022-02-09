@@ -71,17 +71,17 @@ B .= 0.0
 for i in 1:12
     ωⁱ = case_weights[i]
     # calculate matrix entries
-    v⃗ = [cys[i][j, k], czs[i][j, k], czs[i][j, k+1], czs[i][j, k-1], czs[i][j-1, k], czs[i][j+1, k]]
+    v⃗ = [cys[i][j, k], czs[i][j, k], cys[i][j, k+1], cys[i][j, k-1], cys[i][j-1, k], cys[i][j+1, k]]
     b = [vcps[i][j, k] wcps[i][j, k]]
     AA .+= (v⃗ * v⃗' * ωⁱ)
-    B  .+= -v⃗ * [vcps[i][j, k] wcps[i][j, k]] * ωⁱ
+    B .+= -v⃗ * [vcps[i][j, k] wcps[i][j, k]] * ωⁱ
 end
 
 # save 
 KK = (AA \ B)'
 
 i = 1
-v⃗ = [cys[i][j, k], czs[i][j, k], czs[i][j, k+1], czs[i][j, k-1], czs[i][j-1, k], czs[i][j+1, k]]
+v⃗ = [cys[i][j, k], czs[i][j, k], cys[i][j, k+1], cys[i][j, k-1], cys[i][j-1, k], cys[i][j+1, k]]
 b = [vcps[i][j, k] wcps[i][j, k]]
 err = KK * v⃗ + b'
 err[1] / abs(b[1]) * 100
