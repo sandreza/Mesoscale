@@ -29,6 +29,7 @@ cys = []
 czs = []
 vcps = []
 wcps = []
+tracer_string_list = []
 
 for case in cases
     println("currently on case ", case)
@@ -62,6 +63,7 @@ for case in cases
         push!(czs, l_czs[i])
         push!(vcps, l_vcps[i])
         push!(wcps, l_wcps[i])
+        push!(tracer_string_list, tracer_strings)
     end
 end
 

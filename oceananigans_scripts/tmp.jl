@@ -45,7 +45,6 @@ end
 
 f₀ = 1e-4
 
-
 avgz(vb)[hi, :] ./ uz[hi, :]
 
 vbp[hi, :]

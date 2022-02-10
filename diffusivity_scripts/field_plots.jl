@@ -1,0 +1,57 @@
+using JLD2
+using GLMakie
+using Statistics
+
+include(pwd() * "/oceananigans_scripts/utils.jl")
+include(pwd() * "/diffusivity_scripts/utils_file.jl")
+
+cases = []
+
+for i in 1:5
+    push!(cases, "trial" * string(i))
+end
+
+for i in 1:16
+    if i != 8
+        push!(cases, "attempt" * string(i))
+    end
+end
+
+
+# cs, cys, czs, vcps, wcps, tracer_string_list = flux_gradient_cases(cases)
+b, by, bz, u, v, w, eke, vpbp, wpbp, y, z = physical_fields()
+
+## now for plotting
+options = (; xlabel = "South to North [m]", ylabelsize = 32,
+    xlabelsize = 32, xgridstyle = :dash, ygridstyle = :dash, xtickalign = 1,
+    xticksize = 30, ytickalign = 1, yticksize = 30,
+    xticklabelsize = 30, yticklabelsize = 30, titlesize = 40)
+
+axlist = []
+fig = Figure(resolution = (3000, 700))
+ax01 = fig[1, 1] = Axis(fig; title = "Buoyancy [m/s²]", ylabel = "Depth [m]", options...)
+clims01 = symmetric_quantiles(b, 0.01, symmetrize = false)
+blevels = b[end, 1:2:end]
+hm01 = heatmap!(ax01, y, z, b, colormap = :thermometer, interpolate = true, colorrange = clims01)
+push!(axlist, ax01)
+Colorbar(fig[1, 2], hm01, height = Relative(3 / 4), width = 25, ticklabelsize = 30,
+    labelsize = 30, ticksize = 25, tickalign = 1,)
+
+
+ax02 = fig[1, 3] = Axis(fig; title = "Zonal Velocity [m/s]", options...)
+clims02 = symmetric_quantiles(u, 0.01, symmetrize = false)
+hm02 = heatmap!(ax02, y, z, u, colormap = :thermometer, interpolate = true, colorrange = clims02)
+push!(axlist, ax02)
+Colorbar(fig[1, 4], hm02, height = Relative(3 / 4), width = 25, ticklabelsize = 30,
+    labelsize = 30, ticksize = 25, tickalign = 1,)
+
+ax03 = fig[1, 5] = Axis(fig;title = "Eddy Kinetic Energy [m/s]", options...)
+clims03 = symmetric_quantiles(eke, 0.01, symmetrize = false)
+hm03 = heatmap!(ax03, y, z, eke, colormap = :thermometer, interpolate = true, colorrange = clims03)
+push!(axlist, ax03)
+Colorbar(fig[1, 6], hm03, height = Relative(3 / 4), width = 25, ticklabelsize = 30,
+    labelsize = 30, ticksize = 25, tickalign = 1)
+
+for ax in [ax01]
+    contour!(ax, y, z, b, levels = blevels, color = :black, linewidth = 3)
+end
