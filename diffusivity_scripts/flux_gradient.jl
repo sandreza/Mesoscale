@@ -18,10 +18,10 @@ for i in 1:16
     end
 end
 
-# cs, cys, czs, vcps, wcps, tracer_string_list = flux_gradient_cases(cases)
-# b, by, bz, u, v, w, eke, vpbp, wpbp, y, z = physical_fields()
+cs, cys, czs, vcps, wcps, tracer_string_list = flux_gradient_cases(cases)
+b, by, bz, u, v, w, eke, vpbp, wpbp, y, z = physical_fields()
 
-ti = 1 # tracer index
+ti = 64 # tracer index
 cmax = norm(cs[ti]) ./ sqrt(length(cs[ti]))
 ∇c = [[cys[ti] ./ cmax] [czs[ti] ./ cmax]]
 u⃗c = [[vcps[ti] ./ cmax] [wcps[ti] ./ cmax]]
