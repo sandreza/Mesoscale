@@ -29,7 +29,9 @@ for ti in 1:numcases^2
     ci = argmin(abs.(tmp .- ti))
     ii = ci[1] - 1
     jj = ci[2] - 1
+    ti = ti + 49*3
     println("currently on i=", ii, " and j=", jj)
+    println(" which is ti=", ti)
 
     cmax = norm(cs[ti]) ./ sqrt(length(cs[ti]))
     ∇c = [[cys[ti] ./ cmax] [czs[ti] ./ cmax]]
