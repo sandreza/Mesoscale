@@ -3,7 +3,6 @@ using JLD2, LinearAlgebra, Statistics
 include(pwd() * "/oceananigans_scripts/utils.jl")
 include(pwd() * "/diffusivity_scripts/utils_file.jl")
 
-
 # trial0 and attempt8
 diffusivities = []
 cases = ["trial1", "trial2", "trial3", "trial4"]
@@ -50,7 +49,8 @@ for case in cases
     # to incorporate multiple files, use: [cs[1:2]..., cs[3:4]...]
 
 
-    tracer_index_partitions = [1:4, 5:8, 9:12]
+    # tracer_index_partitions = [1:4, 5:8, 9:12]
+    tracer_index_partitions = [1:12]
 
     for tracer_indices in tracer_index_partitions
         m, n = size(cys[1])
@@ -141,9 +141,9 @@ mask = zeros(1,1, size(diffusivities[1])[3:end]...)
 for j in 80:(254-80), k in 9:30-9
     mask[1,1, j,k] = 1.0
 end
-error_matrix = zeros(length(diffusivities), length(diffusivities))
+error_matrix_local = zeros(length(diffusivities), length(diffusivities))
 for i in eachindex(diffusivities), j in eachindex(diffusivities)
-    error_matrix[i, j] = norm(diffusivities[i] .* mask - diffusivities[j] .* mask) / norm(0.5 * (diffusivities[i] .* mask + diffusivities[j] .* mask))
+    error_matrix_local[i, j] = norm(diffusivities[i] .* mask - diffusivities[j] .* mask) / norm(0.5 * (diffusivities[i] .* mask + diffusivities[j] .* mask))
     # println(norm(diffusivities[i] - diffusivities[j]) / mean(norm.(diffusivities)))
 end
-error_matrix
+error_matrix_local

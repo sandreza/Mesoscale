@@ -68,9 +68,9 @@ for case in cases
 end
 
 ##
-skip = 60 # number of tracers used to estimate diffusivity
-skipper = floor(Int, length(cs)/skip)
-tracer_index_partitions = [skip*(j-1) + 1: skip*j for j in 1:skipper]
+skip = 12 # number of tracers used to estimate diffusivity
+skipper = floor(Int, length(cs) / skip)
+tracer_index_partitions = [skip*(j-1)+1:skip*j for j in 1:skipper]
 
 for tracer_indices in tracer_index_partitions
     println("currently on ", tracer_indices)
@@ -78,8 +78,8 @@ for tracer_indices in tracer_index_partitions
 
     jn_u = 0 #jn_u, j "neighbors" right
     jn_d = 0 #jn_d, j "neighbors" left
-    kn_u = 12 #kn_u, k "neighbors" up
-    kn_d = 12 #kn_d, k "neighbors" down
+    kn_u = 0 #kn_u, k "neighbors" up
+    kn_d = 0 #kn_d, k "neighbors" down
 
     numtracers = length(cs)
 
@@ -93,19 +93,19 @@ for tracer_indices in tracer_index_partitions
 
 
     @assert tg < (tracer_indices[end] - tracer_indices[1])
-        
+
     for j in 1:m, k in 1:n
         # fix for boundaries
         l_jn_d = (j - jn_d < 1) ? j - 1 : jn_d
         l_kn_d = (k - kn_d < 1) ? k - 1 : kn_d
         l_jn_u = (j + jn_u > m) ? m - j : jn_u
         l_kn_u = (k + kn_u > n) ? n - k : kn_u
-    
+
         ntg = 2 * (l_jn_u + l_jn_d + 1) * (l_kn_u + l_kn_d + 1)
         AA = zeros(ntg, ntg)
         BB = zeros(ntg, 2)
-    
-    
+
+
         for i in tracer_indices
             ωⁱ = case_weights[i]
             # calculate matrix entries,  czs[i][j, k+1], czs[i][j, k-1], czs[i][j-1, k], czs[i][j+1, k]
@@ -121,30 +121,32 @@ for tracer_indices in tracer_index_partitions
             Δ[i, i+1] = -1
             Δ[i+1, i] = -1
         end
+        #=
         hntg = (l_jn_u + l_jn_d + 1) * (l_kn_u + l_kn_d + 1)
         # Handle boundaries (only valid for 1D)
         Δ[1, 1] = 1
         Δ[hntg, hntg] = 1
         Δ[hntg, hntg+1] = 0
         Δ[hntg, hntg-1] = -1
-    
+
         Δ[hntg+1, hntg+1] = 1
         Δ[hntg+1, hntg+1+1] = -1
         Δ[hntg+1, hntg-1+1] = 0
         Δ[end, end] = 1
-    
+
         λ = 1e-8 * maximum(abs.(AA))
         AA += λ * Δ
+        =#
         # save
         K[:, 1:ntg, j, k] .= Transpose(AA \ BB)
         if (j == 100) & (k == 10)
             println("------------")
             println("j = ", j, " k = ", k)
             println(K[:, 1:ntg, j, k])
-            println(Transpose(AA \ BB))
+            # println(Transpose(AA \ BB))
             println("------------")
         end
-    
+
     end
     push!(diffusivities, K)
 
@@ -191,3 +193,25 @@ for i in eachindex(diffusivities), j in eachindex(diffusivities)
     # println(norm(diffusivities[i] - diffusivities[j]) / mean(norm.(diffusivities)))
 end
 error_matrix
+##
+# find smallest distance to something  per node
+min_distance = [minimum(error_matrix[j, error_matrix[j, :] .> 0]) for j in 1:length(error_matrix[1, :])]
+# make sure that there is a nearest neighbo
+threshold = maximum(min_distance) + eps(maximum(error_matrix))
+##
+# weighted graph laplacian 
+weighted_graph_lap = Diagonal(sum(error_matrix, dims = 1)[:]) - error_matrix
+# construct graph laplacian
+adj_mat = I - (error_matrix .< threshold)
+graph_lap = adj_mat - Diagonal(sum(adj_mat, dims = 1)[:])
+Λ, V = eigen(graph_lap)
+
+cluster_indices = []
+
+for (i,λ) in enumerate(Λ)
+    if λ < eps(maximum(Λ))
+        indices = eachindex(V[:, i])[V[:, i].>eps(maximum(Λ))]
+        push!(cluster_indices,indices)
+    end
+end
+

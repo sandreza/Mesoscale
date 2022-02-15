@@ -1,7 +1,7 @@
+using JLD2, LinearAlgebra, Statistics
+
 include(pwd() * "/oceananigans_scripts/utils.jl")
 include(pwd() * "/diffusivity_scripts/utils_file.jl")
-
-using JLD2, LinearAlgebra, Statistics
 
 case = "attempt5"
 if case[1:5] == "trial"
