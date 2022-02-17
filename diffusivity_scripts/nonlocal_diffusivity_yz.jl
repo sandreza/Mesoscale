@@ -2,6 +2,7 @@ using JLD2, LinearAlgebra, Statistics
 
 include(pwd() * "/oceananigans_scripts/utils.jl")
 include(pwd() * "/diffusivity_scripts/utils_file.jl")
+include(pwd() * "/diffusivity_scripts/spectral_bisection_utils.jl")
 
 error_vc = []
 error_wc = []
@@ -187,31 +188,62 @@ for j in 80:(254-80), k in 9:30-9
     mask[1, 1, j, k] = 1.0
 end
 
+symmetric_diffusivity = similar(diffusivities)
+antisymmetric_diffusivity = similar(diffusivities)
+sym_dif = similar(diffusivities[1]) # for temporary allocation
+for (i, diffusivity) in enumerate(diffusivities)
+    _, _, m, n = size(diffusivity)
+    # symmetric part
+    for j in 1:m, k in 1:n
+        sym_dif[:, :, j, k] .= (diffusivity[:, :, j, k] + diffusivity[:, :, j, k]') * 0.5
+    end
+    symmetric_diffusivity[i] = copy(sym_dif)
+
+    # anti-symmetric part
+    for j in 1:m, k in 1:n
+        sym_dif[:, :, j, k] .= (diffusivity[:, :, j, k] - diffusivity[:, :, j, k]') * 0.5
+    end
+    antisymmetric_diffusivity[i] = copy(sym_dif)
+end
+
 error_matrix = zeros(length(diffusivities), length(diffusivities))
+sym_distance_matrix = similar(error_matrix)
+antisym_distance_matrix = similar(error_matrix)
 for i in eachindex(diffusivities), j in eachindex(diffusivities)
     error_matrix[i, j] = norm(diffusivities[i] .* mask - diffusivities[j] .* mask) / norm(0.5 * (diffusivities[i] .* mask + diffusivities[j] .* mask))
-    # println(norm(diffusivities[i] - diffusivities[j]) / mean(norm.(diffusivities)))
+    sym_distance_matrix[i, j] = norm(symmetric_diffusivity[i] .* mask - symmetric_diffusivity[j] .* mask) / norm(0.5 * (symmetric_diffusivity[i] .* mask + symmetric_diffusivity[j] .* mask))
+    antisym_distance_matrix[i, j] = norm(antisymmetric_diffusivity[i] .* mask - antisymmetric_diffusivity[j] .* mask) / norm(0.5 * (antisymmetric_diffusivity[i] .* mask + antisymmetric_diffusivity[j] .* mask))
 end
 error_matrix
 ##
-# find smallest distance to something  per node
-min_distance = [minimum(error_matrix[j, error_matrix[j, :] .> 0]) for j in 1:length(error_matrix[1, :])]
-# make sure that there is a nearest neighbo
-threshold = maximum(min_distance) + eps(maximum(error_matrix))
+
+## Apply Spectral Bisection
+graph_lap = construct_graph_lap(error_matrix)
+weighted_cluster_indices = [collect(1:size(graph_lap)[2])]
+weighted_cluster_indices = refine(weighted_cluster_indices, graph_lap)
+
+threshold = heuristic_threshold(error_matrix)
+graph_lap = construct_graph_lap(error_matrix, threshold = threshold)
+cluster_indices = [collect(1:size(graph_lap)[2])]
+cluster_indices = refine(cluster_indices, graph_lap)
+
 ##
-# weighted graph laplacian 
-weighted_graph_lap = Diagonal(sum(error_matrix, dims = 1)[:]) - error_matrix
-# construct graph laplacian
-adj_mat = I - (error_matrix .< threshold)
-graph_lap = adj_mat - Diagonal(sum(adj_mat, dims = 1)[:])
-Λ, V = eigen(graph_lap)
+graph_lap = construct_graph_lap(sym_distance_matrix)
+sym_weighted_cluster_indices = [collect(1:size(graph_lap)[2])]
+sym_weighted_cluster_indices = refine(sym_weighted_cluster_indices, graph_lap)
 
-cluster_indices = []
+threshold = heuristic_threshold(sym_distance_matrix)
+graph_lap = construct_graph_lap(sym_distance_matrix, threshold = threshold)
+sym_weighted_cluster_indices = [collect(1:size(graph_lap)[2])]
+sym_weighted_cluster_indices = refine(sym_weighted_cluster_indices, graph_lap)
 
-for (i,λ) in enumerate(Λ)
-    if λ < eps(maximum(Λ))
-        indices = eachindex(V[:, i])[V[:, i].>eps(maximum(Λ))]
-        push!(cluster_indices,indices)
-    end
-end
+##
+graph_lap = construct_graph_lap(antisym_distance_matrix)
+antisym_weighted_cluster_indices = [collect(1:size(graph_lap)[2])]
+antisym_weighted_cluster_indices = refine(antisym_weighted_cluster_indices, graph_lap)
 
+
+threshold = heuristic_threshold(antisym_distance_matrix)
+graph_lap = construct_graph_lap(antisym_distance_matrix, threshold = threshold)
+antisym_weighted_cluster_indices = [collect(1:size(graph_lap)[2])]
+antisym_weighted_cluster_indices = refine(sym_weighted_cluster_indices, graph_lap)
