@@ -32,7 +32,7 @@ prefix = "video_case"
 
 # time
 Δt = 300 * 2
-stop_time = 60days # 300years
+stop_time = 180days # 300years
 # number of grid points
 Nx = 16 * 8
 Ny = Nx * 2
